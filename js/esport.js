@@ -25,7 +25,17 @@ const Esport = (function () {
     coche: '<path d="M9.5 16.2 4.8 11.5l-1.4 1.4 6.1 6.1L21 7.5l-1.4-1.4z"/>',
     alerte: '<path d="M12 2 1 21h22zm0 4 7.5 13h-15zm-1 4v5h2v-5zm0 6v2h2v-2z"/>',
     boutique: '<path d="M3 3h18l-1 6a3 3 0 0 1-5 1.5A3 3 0 0 1 12 12a3 3 0 0 1-3-1.5A3 3 0 0 1 4 9zm2 9.6a5 5 0 0 0 0 .1V21h14v-8.3a5 5 0 0 1-2 .3 5 5 0 0 1-2-.5 5 5 0 0 1-6 0 5 5 0 0 1-4 .1zM9 15h6v4H9z"/>',
-    article: '<path d="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zm0 2v14h14V5zm2 2h10v2H7zm0 4h10v2H7zm0 4h6v2H7z"/>'
+    article: '<path d="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zm0 2v14h14V5zm2 2h10v2H7zm0 4h10v2H7zm0 4h6v2H7z"/>',
+    // Lot 7 : preuves, discussion, badges, MaxPoints
+    photo: '<path fill-rule="evenodd" d="M9 3h6l1.8 2H20a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h3.2zm3 5a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9zm0 2a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5z"/>',
+    bulle: '<path d="M5 3h14a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H8l-5 4V5a2 2 0 0 1 2-2zm0 2v12.6L7.3 16H19V5z"/>',
+    envoyer: '<path d="M3 20.5V14l9-2-9-2V3.5L22 12z"/>',
+    etoile: '<path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4l-5.9 3.1 1.2-6.5L2.5 9.4l6.6-.9z"/>',
+    medaille: '<path fill-rule="evenodd" d="M7 2h3.5L12 6l1.5-4H17l-3 7.3a6.5 6.5 0 1 1-4 0zm5 9a4 4 0 1 0 0 8 4 4 0 0 0 0-8z"/>',
+    eclair: '<path d="M13 2 4 14h6l-1 8 9-12h-6z"/>',
+    bouclier: '<path d="M12 2l8 3v6c0 5-3.4 9.4-8 11-4.6-1.6-8-6-8-11V5z"/>',
+    podium: '<path d="M9 7h6v14H9zM2 12h6v9H2zm14 3h6v6h-6z"/>',
+    fanion: '<path d="M5 2h2v20H5zm3 1h11l-2.5 4.5L19 12H8z"/>'
   };
 
   /* Renvoie un SVG prêt à insérer. classe : classe de remplissage (f-text, f-primary…) */
@@ -527,6 +537,192 @@ const Esport = (function () {
     }
   }
 
+  /* ---------- Captures d'écran jointes (déclaration 14, litige 15) ----------
+     La photo choisie est réduite en vignette (320 px) pour être mémorisée entre les pages ;
+     rien n'est envoyé, elle reste sur l'appareil. Renvoie une promesse : { url, nom }. */
+  function vignette(fichier) {
+    return new Promise((resolu) => {
+      const lecteur = new FileReader();
+      lecteur.onload = () => {
+        const image = new Image();
+        image.onload = () => {
+          const echelle = Math.min(1, 320 / Math.max(image.width, image.height));
+          const toile = document.createElement("canvas");
+          toile.width = Math.round(image.width * echelle);
+          toile.height = Math.round(image.height * echelle);
+          toile.getContext("2d").drawImage(image, 0, 0, toile.width, toile.height);
+          resolu({ url: toile.toDataURL("image/jpeg", 0.7), nom: fichier.name });
+        };
+        // Fichier illisible comme image : on garde seulement son nom
+        image.onerror = () => resolu({ url: "", nom: fichier.name });
+        image.src = lecteur.result;
+      };
+      lecteur.readAsDataURL(fichier);
+    });
+  }
+
+  /* Grille de captures (3 au plus) avec la case « Ajouter » liée au champ de fichiers idChamp */
+  function grilleCaptures(captures, max, idChamp) {
+    return '<div class="captures">' + captures.map((cap, i) =>
+      '<div class="capture">' + (cap.url ? '<img src="' + cap.url + '" alt="Capture ' + (i + 1) + '">' : "") +
+      '<button class="retirer" data-retirer="' + i + '" aria-label="Retirer la capture">×</button></div>'
+    ).join("") +
+      (captures.length < max
+        ? '<label class="ajout" for="' + idChamp + '" tabindex="0">' + icone("photo", "f-muted") + "Ajouter une capture</label>"
+        : "") + "</div>";
+  }
+
+  /* « 1er », « 2e », « 117e » */
+  function rangTexte(n) { return n === 1 ? "1er" : n + "e"; }
+
+  /* ---------- Statistiques et badges d'un joueur (17, 23) ---------- */
+
+  /* Nombre stable tiré d'un pseudo (chiffres crédibles pour un joueur absent des données) */
+  function empreinte(texte) {
+    let h = 7;
+    for (const c of texte) h = (h * 31 + c.charCodeAt(0)) % 100003;
+    return h;
+  }
+
+  /* Statistiques d'un joueur : matchs, gagnes, meilleurePlace, meilleurTournoi, serieRecord, sansForfait, jeux, obtenus.
+     pseudoDonnees : pseudo dans les données (le mien est celui de data.js, même après un changement de pseudo). */
+  function statsJoueur(pseudoDonnees) {
+    if (pseudoDonnees === DONNEES.joueur.pseudo) {
+      const base = DONNEES.joueur.stats;
+      // Historique repris de l'ancienne plateforme, sauf refus du joueur (S01-05)
+      const repris = Etat.get("historiqueNonRepris") ? null : DONNEES.joueur.historiqueRepris;
+      const s = Object.assign({}, base, { obtenus: Object.assign({}, base.obtenus) });
+      if (repris) {
+        s.matchs += repris.matchs;
+        s.gagnes += repris.gagnes;
+        s.obtenus.veteran = "2026-08-10";
+      }
+      // Mon quart de finale, une fois son résultat connu
+      const r = resultatsMatchs()[cleMonMatch()];
+      if (r && !DOUBLES_ELIMINATIONS.includes(r.mention)) {
+        s.matchs++;
+        if (r.vainqueur === DONNEES.joueur.pseudo) { s.gagnes++; s.sansForfait++; }
+        else s.sansForfait = r.mention === "Forfait" ? 0 : s.sansForfait + 1;
+      }
+      return s;
+    }
+    if (DONNEES.statsJoueurs[pseudoDonnees]) return DONNEES.statsJoueurs[pseudoDonnees];
+    const h = empreinte(pseudoDonnees);
+    const matchs = 6 + (h % 34);
+    return {
+      matchs, gagnes: Math.round(matchs * (0.3 + (h % 45) / 100)),
+      meilleurePlace: [1, 2, 3, 4, 6, 8, 12, 16][h % 8], meilleurTournoi: null,
+      serieRecord: 1 + (h % 6), sansForfait: h % 14, jeux: 1 + (h % 3),
+      obtenus: Object.assign({ "premier-tournoi": "2026-0" + (5 + (h % 4)) + "-1" + (h % 9) }, h % 3 ? {} : { equipe: "2026-09-12" })
+    };
+  }
+
+  /* Ratio de victoires en pourcentage entier */
+  function ratioVictoires(s) { return s.matchs ? Math.round((100 * s.gagnes) / s.matchs) : 0; }
+
+  /* Collection de badges d'un joueur : [{ badge, obtenu, date, progres: [valeur, objectif] }], obtenus d'abord */
+  function badgesJoueur(s) {
+    const liste = DONNEES.badges.map((b) => {
+      let obtenu = false;
+      let progres = null;
+      if (b.compteur) {
+        obtenu = s[b.compteur] >= b.objectif;
+        progres = [Math.min(s[b.compteur], b.objectif), b.objectif];
+      } else if (b.place) {
+        obtenu = !!s.meilleurePlace && s.meilleurePlace <= b.place;
+      } else {
+        obtenu = !!s.obtenus[b.id];
+      }
+      return { badge: b, obtenu, date: s.obtenus[b.id] || null, progres };
+    });
+    return liste.filter((x) => x.obtenu).concat(liste.filter((x) => !x.obtenu));
+  }
+
+  /* Pastille d'un badge (bouton : le détail s'ouvre au toucher, voir ouvrirBadge) */
+  function medaille(x) {
+    const p = !x.obtenu && x.progres ? '<span class="progres" aria-hidden="true"><i style="width:' + Math.round((100 * x.progres[0]) / x.progres[1]) + '%"></i></span>' : "";
+    return '<button class="medaille' + (x.obtenu ? "" : " verrouillee") + '" data-badge="' + x.badge.id + '">' +
+      '<span class="medaille-icone">' + icone(x.badge.icone, x.obtenu ? "f-white" : "f-muted") +
+      (x.obtenu ? "" : '<span class="cadenas-mini">' + icone("cadenas", "f-muted") + "</span>") + "</span>" +
+      x.badge.nom + p + "</button>";
+  }
+
+  /* Détail d'un badge : condition d'obtention, date ou progression */
+  function ouvrirBadge(x) {
+    const etat = x.obtenu
+      ? (x.date ? "Obtenu le " + jourCourt(x.date) + "." : "Obtenu.")
+      : x.progres ? "Progression : " + x.progres[0] + " sur " + x.progres[1] + "." : "Pas encore obtenu.";
+    Nav.dialogue({
+      icone: icone(x.badge.icone, x.obtenu ? "f-primary" : "f-muted"),
+      titre: x.badge.nom,
+      texte: x.badge.description + " " + etat,
+      boutons: [{ libelle: "Fermer", primaire: true }]
+    });
+  }
+
+  /* ---------- MaxPoints et classement mensuel (E15, lot 7) ---------- */
+
+  /* Mes crédits de MaxPoints, du plus récent au plus ancien (S15-01) */
+  function historiquePoints() {
+    return (Etat.get("maxpointsCredites") || []).concat(DONNEES.maxpoints.historique)
+      .slice().sort((a, b) => b.date.localeCompare(a.date));
+  }
+  function pointsDuMois(idMois) {
+    return historiquePoints().filter((h) => h.date.startsWith(idMois)).reduce((total, h) => total + h.points, 0);
+  }
+  function moisPoints(id) { return DONNEES.maxpoints.mois.find((m) => m.id === id) || DONNEES.maxpoints.mois[0]; }
+
+  /* Joueurs du Maroc du mois en cours, générés : vedettes, pseudos connus, puis combinaisons de pseudos.
+     Environ un joueur sur deux est gratuit. Points décroissants ; les 4e et 5e sont à égalité. */
+  function joueursDuMois() {
+    const mp = DONNEES.maxpoints;
+    const noms = new Set(mp.vedettes.concat(DONNEES.pseudosClassement));
+    mp.suffixes.forEach((s) => mp.bases.forEach((b) => noms.add(b + s)));
+    noms.delete(DONNEES.joueur.pseudo);
+    return [...noms].map((pseudo, i) => {
+      const r = i + 1;
+      return {
+        pseudo,
+        points: Math.round(1300 * Math.exp(-r / 55)) + (150 - r),
+        gratuit: i % 2 === 1,
+        // Heure à laquelle le total a été atteint : départage des égalités (S15-02)
+        atteint: "2026-10-0" + (1 + (i % 8)) + "T2" + (i % 4) + ":" + String((i * 7) % 60).padStart(2, "0")
+      };
+    }).map((j, i, liste) => (i === 4 ? Object.assign({}, j, { points: liste[3].points, atteint: "2026-10-08T22:14" }) : j))
+      .map((j, i) => (i === 3 ? Object.assign({}, j, { atteint: "2026-10-07T21:02" }) : j));
+  }
+
+  /* Classement d'un mois. type : "tous" ou "gratuits".
+     Renvoie { lignes: [{ rang, pseudo, points, moi, atteint, egalite }], moi: ma ligne ou null, total } */
+  function classementMensuel(type, idMois) {
+    const m = moisPoints(idMois);
+    const monPseudo = pseudo();
+    // Un joueur abonné ne figure pas dans le classement des joueurs gratuits (S15-03)
+    const jeFigure = type === "tous" || !abonne();
+    if (!m.enCours) {
+      // Mois clôturé : les 10 premiers et ma place finale
+      const lignes = m[type].map((x, i) => ({ rang: i + 1, pseudo: x[0] || monPseudo, points: x[1], moi: !x[0] }));
+      const place = type === "tous" ? m.maPlaceTous : m.maPlaceGratuits;
+      const moi = place ? lignes.find((l) => l.moi) || { rang: place, pseudo: monPseudo, points: pointsDuMois(m.id), moi: true } : null;
+      return { lignes, moi, total: null };
+    }
+    let joueurs = joueursDuMois().filter((j) => type === "tous" || j.gratuit);
+    if (jeFigure) joueurs.push({ pseudo: monPseudo, points: pointsDuMois(m.id), moi: true, atteint: "2026-10-06T22:30" });
+    // Plus de points d'abord ; à égalité, le premier à atteindre le total passe devant (S15-02)
+    joueurs.sort((a, b) => b.points - a.points || a.atteint.localeCompare(b.atteint));
+    const lignes = joueurs.map((j, i) => Object.assign({ rang: i + 1 }, j, {
+      egalite: joueurs.some((k) => k !== j && k.points === j.points)
+    }));
+    return { lignes, moi: lignes.find((l) => l.moi) || null, total: lignes.length };
+  }
+
+  /* Jours restants avant la clôture du mois (minuit, heure du pays) : du 9 au 31 octobre, 22 jours */
+  function joursRestants(idMois) {
+    const fin = date(moisPoints(idMois).fin);
+    const aujourdhui = date(DONNEES.maintenant.slice(0, 10));
+    return Math.max(0, Math.round((fin - aujourdhui) / 86400000));
+  }
+
   /* ---------- En-tête et barre du bas, remplis automatiquement ----------
      <header class="entete-esport" data-titre="Tournois" data-repli="03"></header>
        data-repli : affiche un bouton retour (écran si pas d'historique)
@@ -594,6 +790,8 @@ const Esport = (function () {
     familleActive, notifications, notificationsVisibles, nonLues, marquerLue, toutMarquerLu, notifier, majCloches, souscrire, resilier, expirer, gamertags,
     horloge, regleHorloge, demarrerHorloge, plus, hhmm, rebours,
     monMatch, majMonMatch, cleMonMatch, preparerMatchDemo, finPrevue, limiteDeclaration, resultatsMatchs, enregistrerResultat, enregistrerMonResultat,
-    vainqueur, doubleElimination, propager, arbre, recalculeApresArbitrage, prochainMatch, carteProchainMatch
+    vainqueur, doubleElimination, propager, arbre, recalculeApresArbitrage, prochainMatch, carteProchainMatch,
+    vignette, grilleCaptures, rangTexte, statsJoueur, ratioVictoires, badgesJoueur, medaille, ouvrirBadge,
+    historiquePoints, pointsDuMois, moisPoints, classementMensuel, joursRestants
   };
 })();

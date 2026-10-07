@@ -33,7 +33,8 @@ const ECRANS = {
   "25": { fichier: "25-notifications.html", titre: "Notifications", pret: true },
   "26": { fichier: "26-contestation.html", titre: "Contestation", pret: true },
   "27": { fichier: "27-preferences-notif.html", titre: "Préférences", pret: true },
-  "28": { fichier: "28-mes-donnees.html", titre: "Mes données", pret: true }
+  "28": { fichier: "28-mes-donnees.html", titre: "Mes données", pret: true },
+  "29": { fichier: "29-classement-mensuel.html", titre: "Classement MaxPoints", pret: true }
 };
 
 /* ---- Fichier unique (maquette-esport.html) ----
@@ -105,6 +106,9 @@ const Etat = (function () {
     telechargement: null,   // demande de téléchargement des données (28)
     suppression: null,      // date de la demande de suppression du compte (28)
     compteSupprime: false,  // démo : suppression effective, résultats sous un pseudonyme anonyme
+    chat: null,             // messages échangés dans la salle de match (11, lot 7)
+    chatSignale: false,     // discussion signalée au responsable local (11)
+    maxpointsCredites: null, // MaxPoints crédités pendant la démo (29, lot 7)
     scenario: null,         // état alternatif forcé pour l'écran visé
     origine: null           // écran à retrouver après le paiement (S11-03)
   };
@@ -283,6 +287,8 @@ document.addEventListener("click", (evenement) => {
     if (cible.dataset.id) params.id = cible.dataset.id;
     if (cible.dataset.pseudo) params.pseudo = cible.dataset.pseudo;
     if (cible.dataset.decision) params.decision = cible.dataset.decision;
+    if (cible.dataset.mois) params.mois = cible.dataset.mois;
+    if (cible.dataset.onglet && cible.dataset.ecran === "29") params.onglet = cible.dataset.onglet;
     if (cible.dataset.origine !== undefined) Nav.memoriserOrigine();
     Nav.aller(cible.dataset.ecran, cible.dataset.scenario, Object.keys(params).length ? params : null);
   } else if (cible.dataset.action === "esport") {

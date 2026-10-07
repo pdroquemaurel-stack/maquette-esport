@@ -1,7 +1,9 @@
 <!DOCTYPE html>
 <!-- Écran 17 — Profil public d'un joueur (17-profil-public.html?pseudo=Rachid_GOAT).
      US : S01-02 (pseudo, tournois joués, classements), S05-03 (aucune donnée personnelle :
-     seulement le pseudo et le profil public). -->
+     seulement le pseudo et le profil public).
+     Lot 7 : ratio de victoires, meilleur classement, meilleure série et badges à collectionner
+     (les badges sont prévus par S01-02 « lorsque la fonction est activée »). -->
 <html lang="fr">
 <head>
   <meta charset="utf-8">
@@ -20,6 +22,7 @@
     .chiffre b { display: block; font-size: var(--font-size-xl); color: var(--color-text); }
 
     .mon-profil { margin-top: var(--space-4); }
+    .collection { margin-bottom: var(--space-2); }
     .resultat { font-weight: var(--font-weight-bold); font-size: var(--font-size-sm); white-space: nowrap; }
     .resultat.victoire { color: var(--color-success-dark); }
     .resultat.en-lice { color: var(--color-primary); }
@@ -93,8 +96,15 @@
     const liste = resultats();
     // Historique repris de l'ancienne plateforme (S01-05), sauf refus du joueur
     const repris = estMoi && !Etat.get("historiqueNonRepris") ? DONNEES.joueur.historiqueRepris : { tournois: 0, victoires: 0 };
-    const victoires = liste.filter((r) => r.classe === "victoire").length + repris.victoires;
+    // Mes tournois terminés absents des données (Défis eFootball du jeudi et du mardi)
+    const horsListe = estMoi ? DONNEES.joueur.stats.horsListe : { tournois: 0, gagnes: 0 };
+    const victoires = liste.filter((r) => r.classe === "victoire").length + repris.victoires + horsListe.gagnes;
     const jeux = [...new Set(liste.map((r) => r.tournoi.jeu))].map((id) => Esport.jeu(id).nom);
+    // Indicateurs et badges (lot 7)
+    const s = Esport.statsJoueur(pseudoDonnees);
+    const ratio = Esport.ratioVictoires(s);
+    const collection = Esport.badgesJoueur(s);
+    const obtenus = collection.filter((x) => x.obtenu).length;
     let html = "";
 
     html += '<div class="identite"><span class="avatar' + (estMoi ? " avatar-moi" : "") + '">' + pseudo[0] + "</span>" +
@@ -102,15 +112,30 @@
       '<div class="jeux">' + jeux.map((j) => '<span class="puce-etat puce-mea">' + j + "</span>").join("") + "</div></div>";
 
     html += '<div class="chiffres">' +
-      '<div class="chiffre"><b>' + (liste.length + repris.tournois) + "</b>Tournois joués</div>" +
-      '<div class="chiffre"><b>' + victoires + "</b>Victoires</div>" +
+      '<div class="chiffre"><b>' + (liste.length + repris.tournois + horsListe.tournois) + "</b>Tournois joués</div>" +
+      '<div class="chiffre"><b>' + victoires + "</b>Tournois gagnés</div>" +
       '<div class="chiffre"><b>' + liste.filter((r) => r.classe === "en-lice").length + "</b>En cours</div></div>";
+
+    // Performances : ratio de victoires, meilleur classement, meilleure série
+    html += '<section class="perf" aria-label="Performances">' +
+      '<div class="ratio-tete"><b>' + ratio + " %</b><span>de victoires</span></div>" +
+      '<div class="jauge" aria-hidden="true"><i style="width:' + ratio + '%"></i></div>' +
+      "<p>" + s.gagnes + " matchs gagnés sur " + s.matchs + " disputés" + (estMoi && repris.tournois ? ", ancienne plateforme comprise" : "") + "</p>" +
+      '<div class="perf-grille">' +
+      "<div><small>Meilleur classement</small><b>" + (s.meilleurePlace ? Esport.rangTexte(s.meilleurePlace) : "—") + "</b><span>" +
+      (s.meilleurTournoi || "en tournoi") + "</span></div>" +
+      "<div><small>Meilleure série</small><b>" + s.serieRecord + "</b><span>" + (s.serieRecord > 1 ? "victoires d'affilée" : "victoire") + "</span></div>" +
+      "</div></section>";
 
     if (estMoi) {
       html += '<a href="#" class="encart mon-profil" data-ecran="23">' + Esport.icone("profil", "f-primary") +
         "<div><strong>C'est ton profil public</strong><p>Voici ce que voient les autres joueurs.</p>" +
         '<span class="lien-encart">Modifier mon profil</span></div></a>';
     }
+
+    // Badges à collectionner : obtenus d'abord, puis ceux à débloquer avec leur progression
+    html += '<h2 class="titre-section">Badges <span class="ligne-sous-titre">' + obtenus + " sur " + collection.length + "</span></h2>" +
+      '<div class="collection">' + collection.map(Esport.medaille).join("") + "</div>";
 
     html += '<h2 class="titre-section">Tournois joués</h2>';
     html += liste.map((r) =>
@@ -132,6 +157,14 @@
     document.getElementById("page").innerHTML = html;
   }
   Esport.monter(rendre);
+
+  /* Détail d'un badge au toucher */
+  document.getElementById("page").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-badge]");
+    if (!b) return;
+    const x = Esport.badgesJoueur(Esport.statsJoueur(pseudoDonnees)).find((y) => y.badge.id === b.dataset.badge);
+    Esport.ouvrirBadge(x);
+  });
 </script>
 </body>
 </html>

@@ -26,14 +26,7 @@
 
     .bloc-rebours { text-align: center; padding: var(--space-5) var(--page-gutter) var(--space-2); }
 
-    /* Captures d'écran (3 au plus) */
-    .captures { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-2); padding: 0 var(--page-gutter); }
-    .capture { position: relative; aspect-ratio: 3 / 4; border-radius: var(--radius-sm); overflow: hidden; background: var(--color-bg-muted); }
-    .capture img { width: 100%; height: 100%; object-fit: cover; display: block; }
-    .capture .retirer { position: absolute; top: var(--space-1); right: var(--space-1); width: 28px; height: 28px; border-radius: var(--radius-round); background: var(--color-glass-dark); color: var(--color-text-on-dark); font-weight: var(--font-weight-bold); }
-    .ajout { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-1); aspect-ratio: 3 / 4; border-radius: var(--radius-sm); border: 2px dashed var(--color-border-strong); color: var(--color-text-secondary); font-size: var(--font-size-xs); font-weight: var(--font-weight-bold); cursor: pointer; text-align: center; padding: var(--space-1); }
-    .ajout svg { width: 24px; height: 24px; }
-    .note-section { font-size: var(--font-size-xs); color: var(--color-text-secondary); padding: var(--space-2) var(--page-gutter) 0; }
+    /* Captures d'écran (3 au plus) : styles communs .captures, .capture, .ajout dans style.css */
 
     .decision { margin: var(--space-4) var(--page-gutter) 0; padding: var(--space-4); border-radius: var(--radius-lg); background: var(--color-surface); box-shadow: var(--shadow-card); }
     .decision h2 { font-size: var(--font-size-lg); margin-bottom: var(--space-2); }
@@ -80,8 +73,9 @@
   }
   Esport.demarrerHorloge();
 
-  // Captures choisies (aperçus locaux, rien n'est envoyé)
-  let captures = [];
+  // Captures choisies (vignettes locales, rien n'est envoyé), mémorisées dans monMatch.preuves :
+  // celles jointes à la déclaration (14) sont reprises ici (lot 7)
+  function captures() { return Esport.monMatch().preuves || []; }
   let minuteurDecision = null;
 
   function limitePieces(mm) { return Esport.plus(mm.litige.ouverture, c.delaiPieces); }
@@ -109,7 +103,7 @@
     if (!mm.litige || mm.litige.decision) return;
     // Délai de 30 min écoulé : le litige part à l'arbitrage avec les pièces déjà jointes
     if (!mm.litige.envoye && Esport.horloge() >= limitePieces(mm)) {
-      passerEnArbitrage(captures.length);
+      passerEnArbitrage(captures().length);
       return;
     }
     if (mm.litige.envoye && !minuteurDecision) minuteurDecision = setTimeout(rendreDecision, DELAI_DECISION);
@@ -161,17 +155,16 @@
       // Pièces à joindre dans les 30 minutes
       const limite = limitePieces(mm);
       html += '<div class="bloc-rebours"><div class="rebours">' + Esport.rebours(limite) + '</div><p class="rebours-legende">pour joindre tes preuves, jusqu\'à ' + Esport.hhmm(limite) + "</p></div>";
-      html += '<h2 class="titre-section">Captures d\'écran <span class="ligne-sous-titre">' + captures.length + " / " + MAX_CAPTURES + "</span></h2>";
-      html += '<div class="captures">' + captures.map((cap, i) =>
-        '<div class="capture"><img src="' + cap.url + '" alt="Capture ' + (i + 1) + '"><button class="retirer" data-retirer="' + i + '" aria-label="Retirer la capture">×</button></div>'
-      ).join("") +
-        (captures.length < MAX_CAPTURES
-          ? '<label class="ajout" for="fichiers" tabindex="0">' + Esport.icone("article", "f-muted") + "Ajouter une capture</label>"
-          : "") + "</div>";
+      const n = captures().length;
+      html += '<h2 class="titre-section">Captures d\'écran <span class="ligne-sous-titre">' + n + " / " + MAX_CAPTURES + "</span></h2>";
+      if (mm.litige.pieces && !mm.litige.contestation) {
+        html += '<p class="note-section" style="padding-top:0;padding-bottom:var(--space-2)">Les captures jointes à ta déclaration sont reprises. Tu peux en ajouter ou en retirer.</p>';
+      }
+      html += Esport.grilleCaptures(captures(), MAX_CAPTURES, "fichiers");
       html += '<p class="note-section">Montre l\'écran de fin de match avec le score. Les pièces sont conservées 90 jours après la clôture du litige.</p>';
-      action = '<button class="bouton bouton-primaire bouton-pleine-largeur" id="envoyer"' + (captures.length ? "" : " disabled") + ">Envoyer " +
-        (captures.length > 1 ? "les " + captures.length + " captures" : "la capture") + "</button>" +
-        '<button class="bouton bouton-lien bouton-pleine-largeur" id="sans-piece">Laisser trancher sans capture</button>';
+      action = '<button class="bouton bouton-primaire bouton-pleine-largeur" id="envoyer"' + (n ? "" : " disabled") + ">Envoyer " +
+        (n > 1 ? "les " + n + " captures" : "la capture") + "</button>" +
+        (n ? "" : '<button class="bouton bouton-lien bouton-pleine-largeur" id="sans-piece">Laisser trancher sans capture</button>');
     }
     page.innerHTML = html + '<p class="note-section" style="text-align:center">Démo : il est ' + Esport.hhmm(Esport.horloge()) + ", le temps défile 30 fois plus vite.</p>" +
       '<div class="fin-contenu"></div>';
@@ -179,17 +172,23 @@
   }
 
   /* ---- Actions ---- */
-  document.getElementById("fichiers").addEventListener("change", (e) => {
-    const fichiers = [...e.target.files].slice(0, MAX_CAPTURES - captures.length);
-    fichiers.forEach((f) => captures.push({ url: URL.createObjectURL(f), nom: f.name }));
-    if (e.target.files.length > fichiers.length) Nav.toast("3 captures au maximum");
+  document.getElementById("fichiers").addEventListener("change", async (e) => {
+    const place = MAX_CAPTURES - captures().length;
+    const fichiers = [...e.target.files].slice(0, place);
+    if (e.target.files.length > place) Nav.toast("3 captures au maximum");
     e.target.value = "";
-    rendre();
+    const nouvelles = await Promise.all(fichiers.map(Esport.vignette));
+    Esport.majMonMatch({ preuves: captures().concat(nouvelles).slice(0, MAX_CAPTURES) });
   });
   document.querySelector(".telephone").addEventListener("click", (e) => {
     const retirer = e.target.closest("[data-retirer]");
-    if (retirer) { captures.splice(Number(retirer.dataset.retirer), 1); return rendre(); }
-    if (e.target.closest("#envoyer") && captures.length) { passerEnArbitrage(captures.length); Nav.toast("Captures envoyées"); }
+    if (retirer) {
+      const liste = captures().slice();
+      liste.splice(Number(retirer.dataset.retirer), 1);
+      Esport.majMonMatch({ preuves: liste });
+      return;
+    }
+    if (e.target.closest("#envoyer") && captures().length) { passerEnArbitrage(captures().length); Nav.toast("Captures envoyées"); }
     if (e.target.closest("#sans-piece")) passerEnArbitrage(0);
   });
 

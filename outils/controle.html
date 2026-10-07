@@ -37,12 +37,21 @@
     "18-video.html?id=c01", "18-video.html?id=c02", "18-video.html?id=c09", "19-article.html?id=c03", "19-article.html?id=c04",
     "20-contenus.html", "21-offre.html", "22-paiement-maxit.html?offre=mensuelle", "23-profil.html", "24-abonnement.html",
     "12-arbre.html?id=t05", "12-arbre.html?id=t03", "12-arbre.html?id=t10",
-    "13-jeu.html?id=freefire", "13-jeu.html?id=codm", "17-profil-public.html?pseudo=Rachid_GOAT"
+    "13-jeu.html?id=freefire", "13-jeu.html?id=codm", "17-profil-public.html?pseudo=Rachid_GOAT",
+    // Lot 7 : profil avec badges, classement MaxPoints, preuve à la déclaration, litige, équipe fermée
+    "17-profil-public.html?pseudo=Youss_KZ", "17-profil-public.html?pseudo=Taha_Sniper",
+    "29-classement-mensuel.html", "29-classement-mensuel.html?onglet=gratuits",
+    "29-classement-mensuel.html?mois=2026-09&onglet=gratuits", "29-classement-mensuel.html?mois=2026-08&onglet=gratuits",
+    ["29-classement-mensuel.html", { scenario: "points-credites" }],
+    ["14-resultat.html", () => ({ monMatch: { presenceMoi: "21:21", issue: "demarre", demarrage: "21:23", demarrageIso: "2026-10-09T21:23" },
+      horloge: { reel: Date.now(), simule: "2026-10-09T21:40" } })],
+    ["15-litige.html", { scenario: "litige-ouvert" }],
+    ["10-equipe.html?id=t12", { scenario: "equipe-fermee" }]
   ];
   const abonne = location.hash === "#abonne";
   const sortie = document.getElementById("sortie");
   // Zones qui défilent horizontalement : un débordement y est normal
-  const DEFILANTS = ".carrousel, .puces, .arbre, .offres-jeu, .visuel-jeu";
+  const DEFILANTS = ".carrousel, .puces, .arbre, .offres-jeu, .visuel-jeu, .collection-courte";
 
   function decrire(e) {
     const classes = typeof e.className === "string" && e.className.trim() ? "." + e.className.trim().split(/\s+/).join(".") : "";
@@ -116,9 +125,12 @@
   async function lancer() {
     let texte = "Mode " + (abonne ? "joueur abonné" : "joueur gratuit") + (Banc.unique ? " · fichier unique" : "") + "\n\n";
     let total = 0;
-    for (const page of PAGES) {
+    for (const entree of PAGES) {
+      // Une entrée est une page, ou [page, état de démo en plus (objet ou fonction)]
+      const page = Array.isArray(entree) ? entree[0] : entree;
+      const supplement = Array.isArray(entree) ? (typeof entree[1] === "function" ? entree[1]() : entree[1]) : {};
       // Chaque écran part du même état de démonstration
-      localStorage.setItem("maquette-esport-etat", JSON.stringify({ abonne }));
+      localStorage.setItem("maquette-esport-etat", JSON.stringify(Object.assign({ abonne }, supplement)));
       await Banc.charger(page);
       await new Promise((fini) => setTimeout(fini, 700));
       let defauts, mode = "";
@@ -131,7 +143,8 @@
       }
       defauts = [...new Set(defauts)];
       total += defauts.length;
-      texte += (defauts.length ? "✗ " : "✓ ") + page + (mode ? "  [" + mode + "]" : "") + "\n" +
+      const variante = Array.isArray(entree) && supplement.scenario ? " (" + supplement.scenario + ")" : Array.isArray(entree) ? " (état préparé)" : "";
+      texte += (defauts.length ? "✗ " : "✓ ") + page + variante + (mode ? "  [" + mode + "]" : "") + "\n" +
         defauts.slice(0, 8).map((d) => "    " + d + "\n").join("");
     }
     localStorage.removeItem("maquette-esport-etat");

@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<!-- Écran 29 — Classement mensuel des MaxPoints (29-classement-mensuel.html?mois=2026-10&onglet=tous).
+     Epic E15 (V2, ajoutée au lot 7) :
+     S15-01 (barème : participation et place finale ; mes points sont détaillés dans 23),
+     S15-02 (classement du pays ouvert à tous, cadeaux, remise à zéro le 1er du mois, égalité départagée
+     par l'heure à laquelle le total a été atteint),
+     S15-03 (classement réservé aux joueurs gratuits : un abonné n'y figure pas ; abonnements à gagner),
+     S15-04 (100 premiers puis ma position, jours restants, récompenses, mois précédents avec leurs gagnants ;
+     accès depuis l'accueil 03 et le profil 23).
+     S15-05 (remise des récompenses par le responsable local) relève du back-office : seul son effet est visible. -->
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Classement MaxPoints</title>
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .tete-classement { margin-top: 0; }
+    .tete-classement h2 { margin-bottom: var(--space-1); }
+    .tete-classement .cloture { font-size: var(--font-size-sm); margin-bottom: var(--space-4); }
+    .ma-position { display: flex; align-items: center; gap: var(--space-4); padding: var(--space-3) var(--space-4); border-radius: var(--radius-md); background: var(--color-glass-dark); }
+    .ma-position .grand { font-size: var(--font-size-display); font-weight: var(--font-weight-bold); line-height: 1; }
+    .ma-position small { display: block; font-size: var(--font-size-xs); opacity: .8; }
+    .ma-position .separateur { width: 1px; align-self: stretch; background: var(--color-border-dark); }
+    .ma-position b { display: block; }
+
+    .barre-onglets { padding-top: var(--space-4); }
+    .puces-mois { margin-top: var(--space-3); }
+
+    .recompenses { margin: var(--space-4) var(--page-gutter) 0; padding: var(--space-3) var(--space-4); border-radius: var(--radius-md); background: var(--color-surface-warm); }
+    .recompenses h2 { font-size: var(--font-size-md); display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-2); }
+    .recompenses h2 svg { width: 18px; height: 18px; }
+    .recompenses ul { list-style: none; display: flex; flex-direction: column; gap: var(--space-1); font-size: var(--font-size-sm); }
+    .recompenses li { display: flex; gap: var(--space-3); }
+    .recompenses li b { width: 64px; flex-shrink: 0; }
+    .recompenses p { font-size: var(--font-size-xs); color: var(--color-text-secondary); margin-top: var(--space-2); }
+
+    .info-maj { display: flex; justify-content: space-between; gap: var(--space-2); font-size: var(--font-size-xs); color: var(--color-text-muted); padding: var(--space-4) var(--page-gutter) var(--space-1); }
+    .ligne-classement { gap: var(--space-2); }
+    .ligne-classement .avatar { width: 32px; height: 32px; font-size: var(--font-size-sm); }
+    .ligne-classement .ligne-titre { overflow-wrap: anywhere; }
+    .ligne-classement.moi { background: var(--color-primary-soft); }
+    .ligne-classement .lot { color: var(--color-primary); font-weight: var(--font-weight-bold); }
+    /* Ma position épinglée sous les 100 premiers : reste visible pendant le défilement */
+    .epinglee { position: sticky; bottom: 0; background: var(--color-primary-soft); box-shadow: var(--shadow-nav); border-bottom: 0; }
+    .ellipse { text-align: center; color: var(--color-text-muted); padding: var(--space-1) 0; }
+
+    .lien-bareme { display: flex; justify-content: center; padding-top: var(--space-4); }
+
+    /* Feuille « Comment gagner des MaxPoints » */
+    .feuille h2 { font-size: var(--font-size-xl); margin-bottom: var(--space-1); }
+    .feuille .aide { font-size: var(--font-size-sm); color: var(--color-text-secondary); margin-bottom: var(--space-3); }
+    .bareme { list-style: none; margin-bottom: var(--space-4); }
+    .bareme li { display: flex; justify-content: space-between; padding: var(--space-2) 0; border-bottom: 1px solid var(--color-border); font-size: var(--font-size-sm); }
+    .regles { list-style: none; display: flex; flex-direction: column; gap: var(--space-2); font-size: var(--font-size-sm); color: var(--color-text-secondary); margin-bottom: var(--space-4); }
+    .regles li { display: flex; gap: var(--space-2); }
+    .regles svg { width: 16px; height: 16px; margin-top: 2px; }
+  </style>
+</head>
+<body data-zone="esport">
+<div class="cadre">
+  <div class="telephone">
+    <div class="barre-etat" data-heure="21:10"></div>
+    <header class="entete-esport" data-titre="Classement MaxPoints" data-repli="03"></header>
+    <main class="contenu" id="page"></main>
+    <nav class="nav-bas" data-onglet=""></nav>
+
+    <div class="voile" id="voile">
+      <div class="feuille" role="dialog" aria-modal="true" aria-labelledby="titre-bareme">
+        <div class="poignee"></div>
+        <h2 id="titre-bareme">Comment gagner des MaxPoints</h2>
+        <p class="aide">Chaque tournoi disputé rapporte des MaxPoints, crédités à sa clôture. Le barème est le même dans les 17 pays.</p>
+        <ul class="bareme" id="bareme"></ul>
+        <ul class="regles" id="regles"></ul>
+        <button class="bouton bouton-primaire bouton-pleine-largeur" id="fermer-bareme">J'ai compris</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/esport.js"></script>
+<script src="js/demo.js"></script>
+<script>
+  const MP = DONNEES.maxpoints;
+  const MOIS_EN_COURS = MP.mois[0].id;
+  let idMois = MP.mois.some((m) => m.id === Nav.param("mois")) ? Nav.param("mois") : MOIS_EN_COURS;
+  let onglet = Nav.param("onglet") === "gratuits" ? "gratuits" : "tous";
+
+  /* ---- Démo « MaxPoints crédités » : clôture du Défi eFootball du vendredi (S15-01, S15-04) ---- */
+  if (Esport.lireScenario() === "points-credites") {
+    const avant = Esport.classementMensuel("tous", MOIS_EN_COURS).moi.rang;
+    const credites = Etat.get("maxpointsCredites") || [];
+    if (!credites.some((c) => c.tournoi === MP.creditDemo.tournoi)) {
+      Etat.set("maxpointsCredites", credites.concat([Object.assign({ date: DONNEES.maintenant.slice(0, 10) }, MP.creditDemo)]));
+    }
+    const apres = Esport.classementMensuel("tous", MOIS_EN_COURS).moi.rang;
+    Esport.notifier({ famille: "classement", ecran: "29", titre: MP.creditDemo.points + " MaxPoints crédités",
+      texte: MP.creditDemo.tournoi + " : " + MP.creditDemo.detail.toLowerCase() + ". Tu passes " + Esport.rangTexte(apres) + " du classement." });
+    idMois = MOIS_EN_COURS;
+    onglet = "tous";
+    document.addEventListener("DOMContentLoaded", () => setTimeout(() =>
+      Nav.toast("+" + MP.creditDemo.points + " MaxPoints : de la " + Esport.rangTexte(avant) + " à la " + Esport.rangTexte(apres) + " place"), 400));
+  }
+
+  /* Lot gagné à un rang donné, ou null */
+  function lotPour(type, rang) {
+    const r = MP.recompenses[type].find((x) => rang <= x.jusqua);
+    return r ? r.lot : null;
+  }
+
+  /* Points lisibles : « 1 426 » */
+  function nombre(n) { return n.toLocaleString("fr-FR").replace(/ | /g, " "); }
+
+  /* Une ligne du classement ; lot : lot gagné (mois clôturé) */
+  function ligne(l, classeEnPlus, lot) {
+    const egalite = l.egalite && l.atteint
+      ? '<span class="ligne-sous-titre">À égalité · total atteint le ' + Esport.jourCourt(l.atteint.slice(0, 10)) + " à " + l.atteint.slice(11, 16) + "</span>" : "";
+    return '<a href="#" class="ligne ligne-classement' + (l.moi ? " moi" : "") + (classeEnPlus ? " " + classeEnPlus : "") + '" data-ecran="17" data-pseudo="' + l.pseudo + '">' +
+      '<span class="rang' + (l.rang <= 3 ? " podium-" + l.rang : "") + '">' + l.rang + "</span>" +
+      '<span class="avatar' + (l.moi ? " avatar-moi" : "") + '">' + l.pseudo[0] + "</span>" +
+      '<span class="ligne-corps"><span class="ligne-titre">' + l.pseudo + (l.moi ? " (toi)" : "") + "</span>" + egalite +
+      (lot ? '<span class="ligne-sous-titre lot">' + lot + "</span>" : "") + "</span>" +
+      '<span class="points">' + nombre(l.points) + " <small>pts</small></span></a>";
+  }
+
+  function rendre() {
+    const mois = Esport.moisPoints(idMois);
+    const c = Esport.classementMensuel(onglet, idMois);
+    // Un joueur abonné n'apparaît que dans le classement ouvert à tous (S15-03, S15-04)
+    const absent = onglet === "gratuits" && !c.moi;
+    let html = "";
+
+    // En-tête sombre : mois, clôture, ma position
+    const jours = Esport.joursRestants(idMois);
+    html += '<div class="carte-match tete-classement"><span class="flamme"></span>' +
+      '<p class="surtitre">MaxPoints · ' + Esport.pays().nom + "</p><h2>" + mois.libelle + "</h2>" +
+      '<p class="cloture">' + (mois.enCours
+        ? "Clôture dans " + jours + (jours > 1 ? " jours" : " jour") + ", le " + Esport.jourCourt(mois.fin) + " à minuit (heure du " + Esport.pays().nom + ")"
+        : "Mois clôturé le " + Esport.jourCourt(mois.fin) + " · récompenses remises") + "</p>" +
+      '<div class="ma-position">' + (absent
+        ? mois.enCours
+          ? "<div><b>Tu ne figures pas dans ce classement</b><small>Tu es abonné : il est réservé aux joueurs gratuits. Tes points comptent dans le classement ouvert à tous.</small></div>"
+          : "<div><b>Tu ne figurais pas dans ce classement</b><small>Tu étais abonné ce mois-là : tes points ont compté dans le classement ouvert à tous.</small></div>"
+        : c.moi
+          ? '<div><span class="grand">' + Esport.rangTexte(c.moi.rang) + "</span><small>" + (c.total ? "sur " + c.total + " joueurs" : "place finale") + "</small></div>" +
+            '<span class="separateur"></span><div><span class="grand">' + nombre(c.moi.points) + "</span><small>MaxPoints " + (mois.enCours ? "ce mois-ci" : "gagnés") + "</small></div>"
+          : "<div><b>Pas encore de MaxPoints</b><small>Dispute un tournoi pour entrer au classement.</small></div>") +
+      "</div></div>";
+
+    // Choix du classement et du mois
+    html += '<div class="barre-onglets"><div class="onglets" role="tablist">' +
+      '<button role="tab" data-onglet="tous" class="' + (onglet === "tous" ? "actif" : "") + '" aria-selected="' + (onglet === "tous") + '">Ouvert à tous</button>' +
+      '<button role="tab" data-onglet="gratuits" class="' + (onglet === "gratuits" ? "actif" : "") + '" aria-selected="' + (onglet === "gratuits") + '">Joueurs gratuits</button>' +
+      "</div></div>";
+    html += '<div class="puces puces-mois">' + MP.mois.map((m) =>
+      '<button class="puce' + (m.id === idMois ? " actif" : "") + '" data-mois-choisi="' + m.id + '">' + m.libelle.replace(" 2026", "") + (m.enCours ? " · en cours" : "") + "</button>"
+    ).join("") + "</div>";
+
+    // Récompenses du classement affiché
+    html += '<section class="recompenses"><h2>' + Esport.icone("trophee", "f-primary") +
+      (onglet === "tous" ? "Cadeaux à gagner" : "Abonnements à gagner") + "</h2><ul>" +
+      MP.recompenses[onglet].map((r) => "<li><b>" + r.rangs + "</b><span>" + r.lot + "</span></li>").join("") + "</ul>" +
+      "<p>" + (onglet === "tous"
+        ? "Tous les joueurs du pays, gratuits comme abonnés. Les points des tournois MEA comptent dans le classement de ton pays."
+        : "Réservé aux joueurs non abonnés. Un joueur qui s'abonne en cours de mois en sort ; ses points restent dans le classement ouvert à tous.") +
+      " Récompenses définies par le responsable local du " + Esport.pays().nom + ".</p></section>";
+
+    if (mois.enCours) {
+      // 100 premiers, puis ma position épinglée (S15-04)
+      const top = c.lignes.slice(0, 100);
+      html += '<div class="info-maj"><span>Mis à jour il y a quelques secondes</span><span>À égalité, le premier à atteindre le total passe devant</span></div>';
+      html += top.map((l) => ligne(l)).join("");
+      if (c.moi && c.moi.rang > 100) html += '<p class="ellipse" aria-hidden="true">···</p>' + ligne(c.moi, "epinglee");
+    } else {
+      // Mois clôturé : les 10 premiers, gagnants de leur lot, et ma place finale
+      html += '<h2 class="titre-section">Gagnants</h2>';
+      html += c.lignes.map((l) => ligne(l, "", lotPour(onglet, l.rang))).join("");
+      if (c.moi && c.moi.rang > c.lignes.length) html += '<p class="ellipse" aria-hidden="true">···</p>' + ligne(c.moi);
+    }
+
+    html += '<div class="lien-bareme"><button class="bouton bouton-secondaire" id="ouvrir-bareme">' + Esport.icone("etoile", "f-primary") + "Comment gagner des MaxPoints</button></div>" +
+      '<div class="fin-contenu"></div>';
+    document.getElementById("page").innerHTML = html;
+  }
+
+  /* ---- Barème (S15-01) ---- */
+  function remplirBareme() {
+    document.getElementById("bareme").innerHTML =
+      "<li><span>Participation (au moins un match disputé)</span><b>" + MP.bareme.participation + " pts</b></li>" +
+      MP.bareme.places.map((p) => "<li><span>" + p.libelle + "</span><b>+ " + p.points + " pts</b></li>").join("");
+    const coche = Esport.icone("coche", "f-primary");
+    document.getElementById("regles").innerHTML = [
+      "Un forfait au premier match ne rapporte aucun point.",
+      "En équipe, chaque membre reçoit les points de l'équipe.",
+      "Un joueur exclu d'un tournoi ne reçoit aucun point pour ce tournoi.",
+      "Après un arbitrage qui change le classement final, les points sont recalculés.",
+      "Le classement repart à zéro le 1er de chaque mois ; les mois précédents restent consultables."
+    ].map((r) => "<li>" + coche + "<span>" + r + "</span></li>").join("");
+  }
+
+  const voile = document.getElementById("voile");
+  document.getElementById("page").addEventListener("click", (e) => {
+    const o = e.target.closest("[data-onglet]");
+    if (o) { onglet = o.dataset.onglet; return rendre(); }
+    const m = e.target.closest("[data-mois-choisi]");
+    if (m) { idMois = m.dataset.moisChoisi; return rendre(); }
+    if (e.target.closest("#ouvrir-bareme")) voile.classList.add("ouvert");
+  });
+  voile.addEventListener("click", (e) => {
+    if (e.target === voile || e.target.closest("#fermer-bareme")) voile.classList.remove("ouvert");
+  });
+
+  remplirBareme();
+  Esport.monter(rendre);
+</script>
+</body>
+</html>

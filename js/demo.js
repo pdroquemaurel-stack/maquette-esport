@@ -30,6 +30,8 @@ const Demo = (function () {
     { libelle: "Suspension après 3 forfaits", ecran: "08", scenario: "suspension" },
     { libelle: "Inscription annulée (abonnement expiré)", ecran: "08", scenario: "abonnement-expire" },
     { libelle: "Équipe incomplète à la clôture", ecran: "10", scenario: "equipe-incomplete" },
+    { libelle: "Équipe fermée à compléter", ecran: "10", scenario: "equipe-fermee", params: { id: "t12" } },
+    { libelle: "MaxPoints crédités (clôture d'un tournoi)", ecran: "29", scenario: "points-credites" },
     { libelle: "Paiement refusé", ecran: "22", scenario: "paiement-refuse" },
     { libelle: "Paiement abandonné", ecran: "22", scenario: "paiement-abandonne" },
     { libelle: "Abonnement résilié", ecran: "24", scenario: "resilie" },
@@ -139,7 +141,7 @@ const Demo = (function () {
       fermer();
       // Paiement : on revient ensuite sur l'écran affiché (S11-03)
       if (r.ecran === "22") Nav.memoriserOrigine();
-      return Nav.aller(r.ecran, r.scenario);
+      return Nav.aller(r.ecran, r.scenario, r.params || null);
     }
 
     if (cible.closest("[data-reinit]")) {

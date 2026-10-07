@@ -3,7 +3,9 @@
      US : S06-02 (convocation, compte à rebours, « Je suis présent » de -10 min au début, rappel à -5 min,
      le match démarre dès que les deux joueurs sont présents), S06-03 (forfait : motif et heure ;
      double absence : les deux éliminés, adversaire suivant qualifié d'office), S06-01 (progression automatique).
-     Démo : le temps défile 30 fois plus vite (voir Esport.horloge). -->
+     Démo : le temps défile 30 fois plus vite (voir Esport.horloge).
+     Discussion entre les deux joueurs (lot 7, hors backlog MVP) : messages libres ou rapides pour s'organiser
+     (code ami, invitation) ; réponses de l'adversaire simulées ; signalement au responsable local. -->
 <html lang="fr">
 <head>
   <meta charset="utf-8">
@@ -26,6 +28,8 @@
     .issue p { color: var(--color-text-secondary); }
     .details { margin: 0 var(--page-gutter) var(--space-4); }
     .barre-action .bouton + .bouton { margin-top: var(--space-2); }
+    .lien-chat { display: flex; justify-content: center; margin-top: calc(-1 * var(--space-2)); }
+    .lien-chat .bouton { min-height: 36px; font-size: var(--font-size-sm); padding: 0 var(--space-4); }
   </style>
 </head>
 <body data-zone="esport">
@@ -33,7 +37,23 @@
   <div class="telephone">
     <div class="barre-etat" data-heure="21:10"></div>
     <header class="entete-esport" data-titre="Salle de match" data-repli="05"></header>
-    <main class="contenu" id="page"></main>
+    <main class="contenu">
+      <!-- Partie redessinée chaque seconde (compte à rebours, présences) -->
+      <div id="page"></div>
+      <!-- Discussion : redessinée seulement à l'arrivée d'un message, pour ne pas perdre la saisie -->
+      <section id="chat" aria-labelledby="titre-chat">
+        <h2 class="titre-section" id="titre-chat">Discussion <span class="ligne-sous-titre" id="avec"></span></h2>
+        <div class="fil" id="fil" aria-live="polite"></div>
+        <div class="puces chat-rapides" id="rapides"></div>
+        <form class="chat-saisie" id="form-chat" autocomplete="off">
+          <label class="champ"><span class="cache-visuel">Ton message</span><input id="message" maxlength="200" placeholder="Écris un message…"></label>
+          <button class="bouton-rond-orange" id="envoyer-message" aria-label="Envoyer le message"></button>
+        </form>
+        <div class="note-section chat-pied"><span id="note-chat">Visible par vous deux seulement. Reste correct : les propos insultants peuvent être sanctionnés.</span>
+          <button class="bouton-lien" id="signaler" type="button">Signaler</button></div>
+      </section>
+      <div class="fin-contenu"></div>
+    </main>
     <div class="barre-action" id="action"></div>
   </div>
 </div>
@@ -137,7 +157,7 @@
       '<span class="vs">VS</span>' +
       '<a href="#" class="joueur" data-ecran="17" data-pseudo="' + c.adversaire + '"><span class="avatar">' + c.adversaire[0] + "</span>" + c.adversaire +
       statut(adversairePresent(mm, maintenant), adversairePresent(mm, maintenant) ? "Présent à " + Esport.hhmm(presenceAdversaire) : "Pas encore confirmé") + "</a>" +
-      "</div></div>";
+      '</div><div class="lien-chat"><button class="bouton bouton-verre" id="aller-chat">' + Esport.icone("bulle", "f-white") + "Discuter avec " + c.adversaire + "</button></div></div>";
   }
 
   function issueHtml(picto, succes, titre, texte) {
@@ -204,8 +224,7 @@
         }
       }
     }
-    html += '<p class="horloge-demo">Démo : il est ' + Esport.hhmm(maintenant) + ", le temps défile 30 fois plus vite.</p>" +
-      '<div class="fin-contenu"></div>';
+    html += '<p class="horloge-demo">Démo : il est ' + Esport.hhmm(maintenant) + ", le temps défile 30 fois plus vite.</p>";
     document.getElementById("page").innerHTML = html;
     if (zone.innerHTML !== action) zone.innerHTML = action;
   }
@@ -219,8 +238,103 @@
     Nav.toast("Présence confirmée");
   });
 
+  /* ---------- Discussion entre les deux joueurs (lot 7) ---------- */
+  const CHAT = DONNEES.chatMatch;
+  let adversaireEcrit = false;   // « Rachid_GOAT écrit… »
+  let reponsesDonnees = 0;       // pour varier les réponses par défaut
+  let dernierRendu = "";
+
+  function messages() { return Etat.get("chat") || CHAT.messages; }
+  /* Discussion fermée une fois le match annulé ou perdu par forfait */
+  function chatFerme() { return ["forfait-adverse", "mon-forfait", "double-absence"].includes(Esport.monMatch().issue); }
+
+  function rendreChat() {
+    const ferme = chatFerme();
+    const fil = messages().map((m) =>
+      m.de === "systeme"
+        ? '<p class="bulle systeme">' + m.texte + "</p>"
+        : '<p class="bulle' + (m.de === "moi" ? " moi" : "") + '">' + m.texte.replace(/</g, "&lt;") + "<small>" +
+          (m.de === "moi" ? "Toi" : m.de) + " · " + m.heure + "</small></p>"
+    ).join("") +
+      (adversaireEcrit ? '<p class="ecrit">' + c.adversaire + " écrit…</p>" : "") +
+      (ferme ? '<p class="bulle systeme">Discussion fermée : le match n\'a pas eu lieu.</p>' : "");
+    // Redessin seulement si le fil a changé (la saisie en cours n'est jamais touchée)
+    const etat = fil + ferme;
+    if (etat === dernierRendu) return;
+    dernierRendu = etat;
+    const zone = document.getElementById("fil");
+    zone.innerHTML = fil;
+    zone.scrollTop = zone.scrollHeight;
+    document.getElementById("avec").textContent = "avec " + c.adversaire;
+    document.getElementById("rapides").innerHTML = ferme ? "" :
+      CHAT.rapides.map((r) => '<button class="puce" type="button" data-rapide="' + r + '">' + r + "</button>").join("");
+    document.getElementById("message").disabled = ferme;
+    document.getElementById("envoyer-message").disabled = ferme;
+    document.getElementById("envoyer-message").innerHTML = Esport.icone("envoyer", "f-white");
+    document.getElementById("signaler").hidden = !!Etat.get("chatSignale");
+  }
+
+  function ajouterMessage(de, texte) {
+    Etat.set("chat", messages().concat([{ de, texte, heure: Esport.hhmm(Esport.horloge()) }]));
+  }
+
+  /* Réponse simulée de l'adversaire, selon les mots du message */
+  function repondre(texte) {
+    const bas = texte.toLowerCase();
+    const trouvee = CHAT.reponses.find((r) => r.mots.some((m) => bas.includes(m)));
+    const reponse = trouvee ? trouvee.texte : CHAT.parDefaut[reponsesDonnees++ % CHAT.parDefaut.length];
+    setTimeout(() => { adversaireEcrit = true; rendreChat(); }, 800);
+    setTimeout(() => {
+      adversaireEcrit = false;
+      if (!chatFerme()) ajouterMessage(c.adversaire, reponse);
+      rendreChat();
+    }, 2600);
+  }
+
+  function envoyer(texte) {
+    texte = texte.trim();
+    if (!texte || chatFerme()) return;
+    ajouterMessage("moi", texte);
+    repondre(texte);
+  }
+
+  document.getElementById("form-chat").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const champ = document.getElementById("message");
+    envoyer(champ.value);
+    champ.value = "";
+  });
+  document.getElementById("chat").addEventListener("click", (e) => {
+    const rapide = e.target.closest("[data-rapide]");
+    if (rapide) envoyer(rapide.dataset.rapide);
+    if (e.target.closest("#signaler")) {
+      Nav.dialogue({
+        icone: Esport.icone("alerte", "f-primary"),
+        titre: "Signaler la discussion ?",
+        texte: "Les messages seront transmis au responsable local du Maroc, qui peut exclure un joueur pour propos insultants.",
+        boutons: [
+          { libelle: "Signaler", primaire: true, action: () => {
+            Etat.set("chatSignale", true);
+            ajouterMessage("systeme", "Discussion signalée au responsable local.");
+            Nav.toast("Discussion signalée");
+          } },
+          { libelle: "Annuler" }
+        ]
+      });
+    }
+  });
+  // Raccourci « Discuter » de la carte du match
+  document.getElementById("page").addEventListener("click", (e) => {
+    if (e.target.closest("#aller-chat")) {
+      document.getElementById("chat").scrollIntoView({ behavior: "smooth" });
+      document.getElementById("message").focus({ preventScroll: true });
+    }
+  });
+
   Esport.monter(rendre);
+  Esport.monter(rendreChat);
   setInterval(rendre, 1000);
+  setInterval(rendreChat, 1000);
 </script>
 </body>
 </html>

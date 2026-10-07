@@ -28,7 +28,17 @@ const DONNEES = {
     // Tournois terminés joués sur la nouvelle plateforme (écran 05)
     historique: [{ tournoi: "t10", resultat: "117e sur 128" }],
     // Ancien joueur : historique repris de l'ancienne plateforme (S01-05)
-    historiqueRepris: { tournois: 12, victoires: 2 }
+    // matchs / gagnes : matchs disputés et gagnés, pour le ratio de victoires du profil (17)
+    historiqueRepris: { tournois: 12, victoires: 2, matchs: 34, gagnes: 17 },
+    // Statistiques sur la nouvelle plateforme, hors quart de finale en cours (profil 17, lot 7)
+    // horsListe : tournois terminés absents de DONNEES.tournois (Défis eFootball du jeudi et du mardi)
+    stats: {
+      matchs: 22, gagnes: 15, meilleurePlace: 1, meilleurTournoi: "Défi eFootball du jeudi",
+      serieRecord: 5, sansForfait: 4, jeux: 2,
+      horsListe: { tournois: 2, gagnes: 1 },
+      // Badges sans compteur, avec leur date d'obtention
+      obtenus: { "premier-tournoi": "2026-08-10", equipe: "2026-10-08" }
+    }
   },
 
   /* ---- Équipes (S04-03, S04-04) ----
@@ -69,6 +79,14 @@ const DONNEES = {
   /* Joueurs qui demandent à rejoindre une équipe ouverte que le joueur vient de créer */
   demandesSimulees: ["Houda_FF", "Omar_Sniper"],
 
+  /* Démo « Équipe fermée à compléter » (lot 7) : mon équipe fermée de la PUBG Squad Casablanca,
+     à rendre ouverte pour trouver les joueurs manquants */
+  equipeFermeeDemo: {
+    tournoi: "t12",
+    equipe: { nom: "Atlas Raiders", ouverte: false, capitaine: "Youss_KZ", membres: ["Youss_KZ", "Ismail_Pro"],
+      demandes: [], invitations: [], lien: "maxit.ma/e/ATLA4471" }
+  },
+
   /* ---- Mon prochain match : quart de finale du Défi eFootball (t05), lot 4 ----
      Heures « simulées » : dans les écrans 11, 14 et 15, le temps défile 30 fois plus vite.
      tour / match : position dans DONNEES.arbres.t05.matchs. */
@@ -89,6 +107,26 @@ const DONNEES = {
       avecPieces: "Tes captures montrent le score final. La déclaration de Rachid_GOAT est écartée.",
       sansPieces: "Aucune capture de ta part. Rachid_GOAT a joint une capture montrant le score final 1–2 : sa déclaration est retenue."
     }
+  },
+
+  /* ---- Discussion de la salle de match (11, lot 7) ----
+     messages : déjà échangés à l'arrivée dans la salle (heures simulées).
+     rapides : messages proposés en un geste. reponses : réponse de l'adversaire selon les mots
+     du message reçu ; sinon l'une des réponses par défaut, à tour de rôle. */
+  chatMatch: {
+    messages: [
+      { de: "Rachid_GOAT", texte: "Salut ! Prêt pour le quart ?", heure: "21:06" },
+      { de: "Rachid_GOAT", texte: "On joue en 10 minutes par mi-temps, comme d'habitude.", heure: "21:07" }
+    ],
+    rapides: ["Je suis prêt", "Envoie-moi ton code ami", "Je lance l'invitation", "Bien joué !"],
+    reponses: [
+      { mots: ["code", "ami", "id"], texte: "Mon code ami eFootball : 4821-7730-1156. Ajoute-moi, je valide tout de suite." },
+      { mots: ["invit", "lance", "salon"], texte: "Reçu, je rejoins le salon." },
+      { mots: ["prêt", "pret", "go"], texte: "Moi aussi. Confirme ta présence dans la salle et on démarre." },
+      { mots: ["bien joué", "gg", "bravo", "merci"], texte: "Merci, toi aussi ! Bon match." },
+      { mots: ["score", "résultat", "resultat"], texte: "N'oublie pas de déclarer le score, je fais pareil de mon côté." }
+    ],
+    parDefaut: ["Ok, ça marche.", "Pas de souci 👍", "On fait comme ça."]
   },
 
   /* ---- Décisions contestables (écran 26, S08-04, S04-05) ---- */
@@ -132,7 +170,8 @@ const DONNEES = {
     { id: "equipe", libelle: "Équipe", aide: "Invitation, demande, équipe inscrite" },
     { id: "abonnement", libelle: "Abonnement", aide: "Activation, reconduction, échec de paiement, expiration" },
     { id: "dotation", libelle: "Dotations", aide: "Dotation versée sur ton numéro Max it" },
-    { id: "exclusion", libelle: "Décisions", aide: "Exclusion d'un tournoi ou de la plateforme" }
+    { id: "exclusion", libelle: "Décisions", aide: "Exclusion d'un tournoi ou de la plateforme" },
+    { id: "classement", libelle: "Classement mensuel", aide: "MaxPoints crédités, récompenses du mois" }
   ],
 
   notifications: [
@@ -177,7 +216,11 @@ const DONNEES = {
     { id: "n20", famille: "abonnement", date: "2026-09-04T09:00", lue: true, ecran: "24",
       titre: "Reconduction à venir", texte: "Ton abonnement mensuel sera reconduit le 7 sept. pour 49 MAD." },
     { id: "n21", famille: "abonnement", date: "2026-08-08T19:30", lue: true, ecran: "21",
-      titre: "Abonnement activé", texte: "Bienvenue chez les abonnés : tous les tournois et contenus réservés sont ouverts." }
+      titre: "Abonnement activé", texte: "Bienvenue chez les abonnés : tous les tournois et contenus réservés sont ouverts." },
+    { id: "n22", famille: "classement", date: "2026-10-01T00:10", lue: true, ecran: "29", params: { mois: "2026-09", onglet: "gratuits" },
+      titre: "Classement de septembre : tu gagnes !", texte: "9e des joueurs gratuits du Maroc avec 290 MaxPoints : 1 semaine d'abonnement offerte, activée automatiquement." },
+    { id: "n23", famille: "classement", date: "2026-10-02T22:45", lue: true, ecran: "29",
+      titre: "170 MaxPoints crédités", texte: "Défi eFootball du jeudi : 20 points de participation et 150 points pour la 1re place." }
   ],
 
   /* Pseudonyme anonyme après suppression du compte (S01-04) */
@@ -466,6 +509,103 @@ const DONNEES = {
 
   /* Solde Orange Money affiché dans la brique de paiement simulée (22) */
   soldeOrangeMoney: 230.5,
+
+  /* ---- Badges à collectionner (profil 17, lot 7) ----
+     Un badge est obtenu :
+     - compteur / objectif : quand la statistique du joueur atteint l'objectif (progression affichée sinon) ;
+     - place : quand le meilleur classement du joueur est dans les « place » premiers ;
+     - sinon : quand il figure dans stats.obtenus, avec sa date. */
+  badges: [
+    { id: "premier-tournoi", nom: "Baptême du feu", description: "Disputer son premier tournoi.", icone: "fanion" },
+    { id: "premiere-victoire", nom: "Premier succès", description: "Gagner son premier match.", icone: "coche", compteur: "gagnes", objectif: 1 },
+    { id: "dix-victoires", nom: "10 victoires", description: "Gagner 10 matchs en tournoi.", icone: "medaille", compteur: "gagnes", objectif: 10 },
+    { id: "cinquante-victoires", nom: "50 victoires", description: "Gagner 50 matchs en tournoi.", icone: "medaille", compteur: "gagnes", objectif: 50 },
+    { id: "serie-5", nom: "Inarrêtable", description: "Gagner 5 matchs d'affilée.", icone: "eclair", compteur: "serieRecord", objectif: 5 },
+    { id: "podium", nom: "Podium", description: "Finir dans les 3 premiers d'un tournoi.", icone: "podium", place: 3 },
+    { id: "champion", nom: "Champion", description: "Remporter un tournoi.", icone: "trophee", place: 1 },
+    { id: "fair-play", nom: "Fair-play", description: "Disputer 10 matchs d'affilée sans forfait.", icone: "bouclier", compteur: "sansForfait", objectif: 10 },
+    { id: "polyvalent", nom: "Polyvalent", description: "Disputer des tournois sur 3 jeux différents.", icone: "manette", compteur: "jeux", objectif: 3 },
+    { id: "equipe", nom: "Esprit d'équipe", description: "Disputer un tournoi en équipe.", icone: "groupe" },
+    { id: "mea", nom: "Voyageur MEA", description: "Disputer un tournoi MEA, ouvert à plusieurs pays.", icone: "globe" },
+    { id: "top-mensuel", nom: "Top 10 du mois", description: "Finir dans les 10 premiers du classement mensuel MaxPoints de son pays.", icone: "etoile" },
+    { id: "veteran", nom: "Vétéran", description: "Joueur de l'ancienne plateforme, historique repris.", icone: "calendrier" }
+  ],
+
+  /* Statistiques publiques des autres joueurs (17) ; un joueur absent reçoit des chiffres tirés de son pseudo */
+  statsJoueurs: {
+    Rachid_GOAT: { matchs: 41, gagnes: 27, meilleurePlace: 1, meilleurTournoi: "Défi eFootball du mardi", serieRecord: 7, sansForfait: 18, jeux: 2,
+      obtenus: { "premier-tournoi": "2026-06-02", "top-mensuel": "2026-09-30", veteran: "2026-06-01" } },
+    "Nour.ElHoda": { matchs: 29, gagnes: 18, meilleurePlace: 2, meilleurTournoi: "Ligue eFootball du Royaume", serieRecord: 4, sansForfait: 29, jeux: 1,
+      obtenus: { "premier-tournoi": "2026-07-11" } },
+    Simba_FF: { matchs: 63, gagnes: 44, meilleurePlace: 1, meilleurTournoi: "Free Fire Rentrée Cup", serieRecord: 9, sansForfait: 31, jeux: 3,
+      obtenus: { "premier-tournoi": "2026-05-20", equipe: "2026-06-14", mea: "2026-07-05", "top-mensuel": "2026-09-30", veteran: "2026-05-20" } },
+    Zizou10: { matchs: 52, gagnes: 39, meilleurePlace: 1, meilleurTournoi: "Masters Casablanca", serieRecord: 11, sansForfait: 52, jeux: 1,
+      obtenus: { "premier-tournoi": "2026-05-02", mea: "2026-08-22", "top-mensuel": "2026-08-31", veteran: "2026-05-01" } }
+  },
+
+  /* ---- MaxPoints et classement mensuel (Epic E15, V2, ajouté au lot 7) ----
+     Chaque tournoi rapporte des MaxPoints ; chaque mois et dans chaque pays, deux classements :
+     ouvert à tous (cadeaux) et réservé aux joueurs gratuits (abonnements offerts). */
+  maxpoints: {
+    // Barème commun aux 17 pays, défini par le responsable MEA (S15-01)
+    bareme: {
+      participation: 20,
+      places: [
+        { libelle: "1re place", points: 150 }, { libelle: "2e place", points: 100 }, { libelle: "3e – 4e place", points: 70 },
+        { libelle: "5e – 8e place", points: 30 }, { libelle: "9e – 16e place", points: 15 }
+      ]
+    },
+    // Récompenses du mois, définies par le responsable local du Maroc (S15-02, S15-03)
+    // jusqua : dernier rang qui reçoit ce lot ; les 10 premiers de chaque classement sont récompensés
+    recompenses: {
+      tous: [
+        { rangs: "1er", jusqua: 1, lot: "Un smartphone Samsung Galaxy A16" },
+        { rangs: "2e – 3e", jusqua: 3, lot: "Un casque gaming sans fil" },
+        { rangs: "4e – 10e", jusqua: 10, lot: "5 Go de data Orange" }
+      ],
+      gratuits: [
+        { rangs: "1er – 3e", jusqua: 3, lot: "1 mois d'abonnement offert" },
+        { rangs: "4e – 10e", jusqua: 10, lot: "1 semaine d'abonnement offerte" }
+      ]
+    },
+
+    // Mes MaxPoints, un crédit par tournoi clôturé (S15-01 : tournoi, date, points)
+    historique: [
+      { tournoi: "Défi eFootball du mardi", date: "2026-10-06", points: 50, detail: "Participation 20 + 5e – 8e place 30" },
+      { tournoi: "Défi eFootball du jeudi", date: "2026-10-02", points: 170, detail: "Participation 20 + 1re place 150" },
+      { tournoi: "Défi eFootball du jeudi", date: "2026-09-25", points: 120, detail: "Participation 20 + 2e place 100" },
+      { tournoi: "Free Fire Rentrée Cup", date: "2026-09-20", points: 0, detail: "Exclu du tournoi : aucun point" },
+      { tournoi: "Défi eFootball du jeudi", date: "2026-09-18", points: 170, detail: "Participation 20 + 1re place 150" },
+      { tournoi: "Défi eFootball du jeudi", date: "2026-08-27", points: 50, detail: "Participation 20 + 5e – 8e place 30" },
+      { tournoi: "Coupe d'été Free Fire", date: "2026-08-14", points: 35, detail: "Participation 20 + 9e – 16e place 15" }
+    ],
+    // Crédit ajouté par le raccourci de démo « MaxPoints crédités » (clôture du Défi du vendredi)
+    creditDemo: { tournoi: "Défi eFootball du vendredi", points: 50, detail: "Participation 20 + 5e – 8e place 30" },
+
+    // Mois consultables ; les mois clôturés gardent leurs 10 premiers et leurs gagnants (S15-04)
+    mois: [
+      { id: "2026-10", libelle: "Octobre 2026", fin: "2026-10-31", enCours: true },
+      { id: "2026-09", libelle: "Septembre 2026", fin: "2026-09-30",
+        tous: [["Simba_FF", 1180], ["Rachid_GOAT", 1105], ["Zizou10", 990], ["Lina.Fire", 870], ["Reda_KAC", 815],
+          ["Rayan_212", 760], ["Kenza_GG", 702], ["Badr_Pro", 655], ["Nour.ElHoda", 610], ["Ilyas_Pro", 575]],
+        gratuits: [["Lina.Fire", 870], ["Rayan_212", 760], ["Ilyas_Pro", 575], ["Dounia_X", 498], ["Sara_Goal", 455],
+          ["Hamza_OCS", 402], ["Omar_Sniper", 351], ["Meryem.FF", 318], [null, 290], ["Chaimae_FF", 270]],
+        maPlaceTous: 16, maPlaceGratuits: 9 },
+      { id: "2026-08", libelle: "Août 2026", fin: "2026-08-31",
+        tous: [["Zizou10", 1240], ["Simba_FF", 1090], ["Reda_KAC", 960], ["Rachid_GOAT", 905], ["Kenza_GG", 780],
+          ["Badr_Pro", 744], ["Lina.Fire", 690], ["Amine.Booyah", 640], ["Hakim_FF", 590], ["Mouad_FC", 560]],
+        gratuits: [["Lina.Fire", 690], ["Amine.Booyah", 640], ["Hakim_FF", 590], ["Sanaa_FC", 520], ["Taha_Sniper", 470],
+          ["Asmae.G", 415], ["Driss_Rush", 380], ["Houda_FF", 341], ["Jihane_GG", 300], ["Ali_Headshot", 276]],
+        // Abonné en août : absent du classement des joueurs gratuits
+        maPlaceTous: 74, maPlaceGratuits: null }
+    ],
+
+    // Mois en cours : joueurs du Maroc générés à partir de ces pseudos (voir Esport.classementMensuel)
+    vedettes: ["Zizou10", "Simba_FF", "Rachid_GOAT", "Reda_KAC", "Lina.Fire", "Badr_Pro", "Nour.ElHoda", "Kenza_GG",
+      "Rayan_212", "Ilyas_Pro", "Mouad_FC", "Sara_Goal", "Hamza_OCS", "AtlasKing", "Imane_GG", "Brahim.10"],
+    bases: ["Atlas", "Casa", "Rabat", "Tanger", "Fes", "Agadir", "Oujda", "Sahara", "Lion", "Faucon", "Viper", "Ninja", "Storm", "Booyah"],
+    suffixes: ["_FF", "_212", ".Pro", "_GG", "10", "_MA", "_Rush", "99"]
+  },
 
   /* ---- Fonctionnalités activées par pays (S08-02) ---- */
   fonctions: {

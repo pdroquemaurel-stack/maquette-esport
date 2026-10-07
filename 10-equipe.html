@@ -2,7 +2,8 @@
 <!-- Écran 10 — Mon équipe (10-equipe.html?id=t01).
      US : S04-03 (effectif et taille exigée, inscription automatique une fois complète,
      invitation par pseudo ou par lien, transmission du rôle de capitaine, équipe incomplète à la clôture),
-     S04-04 (le capitaine accepte ou refuse les demandes ; le joueur peut quitter l'équipe). -->
+     S04-04 (le capitaine accepte ou refuse les demandes ; le joueur peut quitter l'équipe).
+     Lot 7 : le capitaine d'une équipe incomplète peut la rendre ouverte (visible dans 09) pour la compléter, ou la refermer. -->
 <html lang="fr">
 <head>
   <meta charset="utf-8">
@@ -36,6 +37,7 @@
     .erreur-champ { color: var(--color-alert); font-size: var(--font-size-sm); padding: var(--space-2) var(--page-gutter) 0; }
     .lien-equipe { display: flex; align-items: center; gap: var(--space-3); margin: var(--space-3) var(--page-gutter) 0; padding: var(--space-3) var(--space-4); border-radius: var(--radius-md); background: var(--color-surface-warm); font-size: var(--font-size-sm); }
     .lien-equipe span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .lien-equipe svg { width: 20px; height: 20px; }
     .note-section { font-size: var(--font-size-xs); color: var(--color-text-secondary); padding: var(--space-2) var(--page-gutter) 0; }
 
     .actions-equipe { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-6) var(--page-gutter) 0; }
@@ -62,6 +64,11 @@
   const moi = DONNEES.joueur.pseudo;
   // Démo « Équipe incomplète à la clôture » : l'équipe de t01 avec 3 joueurs sur 4, inscriptions closes
   const incompleteCloture = scenario === "equipe-incomplete";
+  // Démo « Équipe fermée à compléter » : mon équipe fermée de 2 joueurs sur 4 (lot 7)
+  if (scenario === "equipe-fermee") {
+    Esport.changerEquipe(DONNEES.equipeFermeeDemo.tournoi, JSON.parse(JSON.stringify(DONNEES.equipeFermeeDemo.equipe)));
+    Esport.changerInscription(DONNEES.equipeFermeeDemo.tournoi, null);
+  }
 
   /* Pseudos connus de la plateforme (pour les invitations) */
   function pseudosConnus() {
@@ -169,6 +176,18 @@
       html += '<p class="note-section" style="padding-top: var(--space-4)">Seul le capitaine, ' + eq.capitaine + ", peut inviter des joueurs et accepter les demandes.</p>";
     }
 
+    // Visibilité : le capitaine peut ouvrir une équipe fermée pour la compléter (lot 7), ou la refermer
+    if (!incompleteCloture && capitaine && !complete) {
+      html += '<h2 class="titre-section">Qui peut rejoindre ?</h2>' +
+        '<div class="encart">' + Esport.icone(eq.ouverte ? "globe" : "cadenas", "f-primary") + "<div><strong>" +
+        (eq.ouverte ? "Équipe ouverte" : "Équipe fermée") + "</strong><p>" +
+        (eq.ouverte
+          ? "Elle figure dans la liste des équipes ouvertes de " + t.nom + ". Tu acceptes ou refuses chaque demande."
+          : "Seuls les joueurs invités ou qui ont le lien peuvent la rejoindre. Rends-la ouverte pour trouver " +
+            (manque > 1 ? "les " + manque + " joueurs manquants." : "le joueur manquant.")) +
+        '</p><button class="bouton-lien" id="visibilite">' + (eq.ouverte ? "Repasser en équipe fermée" : "Rendre l'équipe ouverte") + "</button></div></div>";
+    }
+
     // Actions sur l'équipe
     html += '<div class="actions-equipe">';
     if (incompleteCloture) {
@@ -206,6 +225,7 @@
       try { navigator.clipboard.writeText("https://" + eq.lien); } catch (erreur) { /* presse-papiers indisponible */ }
       Nav.toast("Lien de l'équipe copié");
     }
+    if (e.target.closest("#visibilite")) changerVisibilite(eq);
     if (e.target.closest("#transmettre")) transmettre(eq);
     if (e.target.closest("#quitter")) quitter(eq);
   });
@@ -234,6 +254,38 @@
         invitations: actuelle.invitations.filter((p) => p !== connu)
       }));
     }, 3500);
+  }
+
+  /* Équipe fermée → ouverte (pour la compléter) ou ouverte → fermée (lot 7).
+     Une fois ouverte, l'équipe apparaît dans la liste des équipes ouvertes : une demande arrive (simulée). */
+  function changerVisibilite(eq) {
+    if (eq.ouverte) {
+      enregistrer(Object.assign({}, eq, { ouverte: false }));
+      Nav.toast("Équipe fermée : elle n'apparaît plus dans la liste" + (eq.demandes.length ? ". Les demandes reçues restent à traiter." : ""));
+      return;
+    }
+    Nav.dialogue({
+      icone: Esport.icone("globe", "f-primary"),
+      titre: "Rendre l'équipe ouverte ?",
+      texte: eq.nom + " apparaîtra dans la liste des équipes ouvertes de " + t.nom + ". Tout joueur pourra demander à la rejoindre ; tu valideras chaque demande. Tes invitations en cours restent valables.",
+      boutons: [
+        { libelle: "Rendre l'équipe ouverte", primaire: true, action: () => {
+          enregistrer(Object.assign({}, Esport.equipe(t.id), { ouverte: true }));
+          Nav.toast("Équipe ouverte : elle est visible dans la liste du tournoi");
+          setTimeout(() => {
+            const actuelle = Esport.equipe(t.id);
+            if (!actuelle || !actuelle.ouverte || actuelle.membres.length >= taille) return;
+            const candidat = DONNEES.demandesSimulees.find((p) => !actuelle.membres.includes(p) && !actuelle.demandes.includes(p));
+            if (!candidat) return;
+            enregistrer(Object.assign({}, actuelle, { demandes: actuelle.demandes.concat([candidat]) }));
+            Esport.notifier({ famille: "equipe", ecran: "10", params: { id: t.id }, titre: "Nouvelle demande",
+              texte: candidat + " veut rejoindre " + actuelle.nom + "." });
+            Nav.toast(candidat + " demande à rejoindre l'équipe");
+          }, 3500);
+        } },
+        { libelle: "Annuler" }
+      ]
+    });
   }
 
   /* Transmettre le rôle de capitaine à un autre membre (S04-03) */

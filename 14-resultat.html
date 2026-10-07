@@ -5,7 +5,9 @@
      S07-02 (une seule déclaration à l'échéance : elle est retenue, l'autre joueur a 30 min pour contester),
      S07-03 (déclarations divergentes : litige ouvert automatiquement, écran 15).
      Aucune déclaration dans le délai : les deux joueurs sont éliminés, comme en double absence (décision du 2026-10-07).
-     Match nul : refusé en élimination, accepté en poules et en championnat. -->
+     Match nul : refusé en élimination, accepté en poules et en championnat.
+     Preuve (lot 7) : à chaque déclaration, le joueur est invité à joindre jusqu'à 3 captures ; il peut déclarer sans.
+     Les captures jointes sont reprises dans le litige (15) si les déclarations divergent. -->
 <html lang="fr">
 <head>
   <meta charset="utf-8">
@@ -42,6 +44,8 @@
     .encart { margin-bottom: var(--space-3); }
     .erreur-saisie { color: var(--color-alert); font-size: var(--font-size-sm); text-align: center; padding: 0 var(--page-gutter); }
     .barre-action .bouton + .bouton { margin-top: var(--space-2); }
+    .preuves-jointes { display: flex; align-items: center; justify-content: center; gap: var(--space-2); font-size: var(--font-size-sm); color: var(--color-text-secondary); }
+    .preuves-jointes svg { width: 18px; height: 18px; }
   </style>
 </head>
 <body data-zone="esport">
@@ -51,6 +55,8 @@
     <header class="entete-esport" data-titre="Résultat du match" data-repli="11"></header>
     <main class="contenu" id="page"></main>
     <div class="barre-action" id="action"></div>
+    <!-- Champ de fichiers hors de la zone redessinée chaque seconde -->
+    <input type="file" accept="image/*" multiple class="cache-visuel" id="fichiers" tabindex="-1">
   </div>
 </div>
 
@@ -82,6 +88,15 @@
 
   function limiteContestation() { return Esport.plus(Esport.limiteDeclaration().toISOString(), c.delaiContestation); }
 
+  /* ---- Preuves jointes à ma déclaration (3 captures au plus), mémorisées dans monMatch.preuves ---- */
+  const MAX_CAPTURES = 3;
+  function preuves() { return Esport.monMatch().preuves || []; }
+  function lignePreuves() {
+    const n = preuves().length;
+    return '<p class="preuves-jointes">' + Esport.icone("photo", n ? "f-success-dark" : "f-muted") +
+      (n ? n + (n > 1 ? " captures jointes" : " capture jointe") + " à ta déclaration" : "Déclaration envoyée sans capture") + "</p>";
+  }
+
   /* Score lisible : « Youss_KZ 2 – 1 Rachid_GOAT » */
   function score(d) {
     return '<div class="score"><span class="nom">' + Esport.pseudo() + '</span><span class="chiffres">' + d.moi + " – " + d.adv +
@@ -106,8 +121,11 @@
       if (mm.adversaireDiverge) {
         // Déclarations divergentes : litige ouvert automatiquement (S07-03)
         const divergente = mm.declMoi.moi > mm.declMoi.adv ? { moi: mm.declMoi.adv, adv: mm.declMoi.moi } : { moi: mm.declMoi.moi, adv: mm.declMoi.adv + 1 };
-        Esport.majMonMatch({ declAdv: divergente, statut: "litige", correction: false, litige: { ouverture: maintenant.toISOString(), pieces: 0 } });
-        Esport.notifier({ famille: "match", ecran: "15", titre: "Litige ouvert", texte: "Vos déclarations divergent : joins tes captures dans les 30 minutes." });
+        // Les captures jointes à la déclaration sont reprises dans le litige
+        Esport.majMonMatch({ declAdv: divergente, statut: "litige", correction: false, litige: { ouverture: maintenant.toISOString(), pieces: preuves().length } });
+        Esport.notifier({ famille: "match", ecran: "15", titre: "Litige ouvert",
+          texte: preuves().length ? "Vos déclarations divergent : tes captures sont jointes, tu peux en ajouter dans les 30 minutes."
+                                  : "Vos déclarations divergent : joins tes captures dans les 30 minutes." });
         Nav.toast("Déclarations divergentes : un litige est ouvert");
       } else {
         // Déclarations identiques : match clos, le vainqueur progresse (S07-01)
@@ -174,10 +192,16 @@
         '<div class="compteur"><span class="nom">' + c.adversaire + "</span><span class=\"valeur\">" + saisie.adv + "</span>" +
         '<span class="boutons"><button data-score="adv" data-pas="-1" aria-label="Retirer un but">−</button><button data-score="adv" data-pas="1" aria-label="Ajouter un but">+</button></span></div>' +
         "</div>" + (erreur ? '<p class="erreur-saisie" role="alert">' + erreur + "</p>" : "");
-      action = '<button class="bouton bouton-primaire bouton-pleine-largeur" id="envoyer">' + (mm.correction ? "Enregistrer la correction" : "Envoyer ma déclaration") + "</button>";
+      // Preuve demandée à chaque déclaration, mais facultative
+      html += '<h2 class="titre-section">Preuve <span class="ligne-sous-titre">facultative · ' + preuves().length + " / " + MAX_CAPTURES + "</span></h2>" +
+        Esport.grilleCaptures(preuves(), MAX_CAPTURES, "fichiers") +
+        '<p class="note-section">Ajoute une capture de l\'écran de fin de match montrant le score. Si ' + c.adversaire +
+        " déclare un autre score, elle sera transmise au responsable local qui tranchera le litige.</p>";
+      action = '<button class="bouton bouton-primaire bouton-pleine-largeur" id="envoyer">' + (mm.correction ? "Enregistrer la correction" : "Envoyer ma déclaration") + "</button>" +
+        '<p class="aide-action">' + (preuves().length ? preuves().length + (preuves().length > 1 ? " captures jointes" : " capture jointe") : "Aucune capture jointe pour l'instant") + "</p>";
     } else if (mm.statut === "attente-adv") {
       html += '<div class="issue"><span class="pictogramme">' + Esport.icone("calendrier", "f-primary") + "</span>" +
-        "<h2>Déclaration envoyée</h2><p>En attente de la déclaration de " + c.adversaire + ".</p></div>" + score(mm.declMoi) +
+        "<h2>Déclaration envoyée</h2><p>En attente de la déclaration de " + c.adversaire + ".</p></div>" + score(mm.declMoi) + lignePreuves() +
         '<div class="bloc-rebours"><div class="rebours">' + Esport.rebours(limite) + '</div><p class="rebours-legende">avant la clôture des déclarations (' + Esport.hhmm(limite) + ")</p></div>";
       action = '<button class="bouton bouton-secondaire bouton-pleine-largeur" id="corriger">Corriger ma déclaration</button>';
     } else if (mm.statut === "clos" || mm.statut === "definitif") {
@@ -186,12 +210,14 @@
         "<h2>" + (mm.statut === "clos" ? "Match clos" : "Résultat définitif") + "</h2><p>" +
         (mm.statut === "clos" ? "Vos deux déclarations concordent. " : "Pas de contestation dans le délai : la déclaration de " + c.adversaire + " est définitive. ") +
         (nul(d) ? "Match nul : un point chacun." : t.format !== "elimination" ? (gagne(d) ? "Victoire : 3 points." : "Défaite.") :
-          gagne(d) ? "Tu passes au tour suivant." : "Tu es éliminé du tournoi.") + "</p></div>" + score(d);
+          gagne(d) ? "Tu passes au tour suivant." : "Tu es éliminé du tournoi.") + "</p></div>" + score(d) +
+        (mm.statut === "clos" ? lignePreuves() : "");
       action = '<a href="#" class="bouton bouton-primaire bouton-pleine-largeur" data-ecran="12" data-id="' + t.id + '">Voir l\'arbre</a>' +
         '<a href="#" class="bouton bouton-secondaire bouton-pleine-largeur" data-ecran="05">Mes matchs</a>';
     } else if (mm.statut === "litige" || mm.statut === "arbitre") {
       html += '<div class="issue"><span class="pictogramme">' + Esport.icone("alerte", "f-primary") + "</span>" +
-        "<h2>Déclarations divergentes</h2><p>Un litige est ouvert. Joins tes captures d'écran pour appuyer ta déclaration.</p></div>";
+        "<h2>Déclarations divergentes</h2><p>Un litige est ouvert. " +
+        (preuves().length ? "Tes captures sont déjà jointes ; tu peux en ajouter jusqu'à " + MAX_CAPTURES + "." : "Joins tes captures d'écran pour appuyer ta déclaration.") + "</p></div>";
       action = '<a href="#" class="bouton bouton-primaire bouton-pleine-largeur" data-ecran="15">Voir le litige</a>' + arbre;
     } else if (mm.statut === "sans-declaration") {
       if (mm.refusMoi) {
@@ -221,6 +247,26 @@
   }
 
   /* ---- Actions ---- */
+  /* Captures choisies : réduites en vignettes et mémorisées, 3 au plus */
+  document.getElementById("fichiers").addEventListener("change", async (e) => {
+    const place = MAX_CAPTURES - preuves().length;
+    const fichiers = [...e.target.files].slice(0, place);
+    if (e.target.files.length > place) Nav.toast("3 captures au maximum");
+    e.target.value = "";
+    const nouvelles = await Promise.all(fichiers.map(Esport.vignette));
+    Esport.majMonMatch({ preuves: preuves().concat(nouvelles).slice(0, MAX_CAPTURES) });
+    if (nouvelles.length) Nav.toast(nouvelles.length > 1 ? "Captures ajoutées" : "Capture ajoutée");
+  });
+
+  /* Enregistre ma déclaration (avec ou sans preuve) */
+  function envoyerDeclaration() {
+    const mm = Esport.monMatch();
+    const maintenant = Esport.horloge();
+    const decl = { moi: saisie.moi, adv: saisie.adv, heureIso: (mm.declMoi && mm.correction ? mm.declMoi.heureIso : maintenant.toISOString()) };
+    Esport.majMonMatch({ declMoi: decl, statut: "attente-adv", correction: false });
+    Nav.toast((mm.correction ? "Déclaration corrigée" : "Déclaration envoyée") + (preuves().length ? " avec ta preuve" : ""));
+  }
+
   document.querySelector(".telephone").addEventListener("click", (e) => {
     const pas = e.target.closest("[data-score]");
     if (pas) {
@@ -228,6 +274,13 @@
       saisie[cle] = Math.min(20, Math.max(0, saisie[cle] + Number(pas.dataset.pas)));
       erreur = "";
       return rendre();
+    }
+    const retirer = e.target.closest("[data-retirer]");
+    if (retirer) {
+      const liste = preuves().slice();
+      liste.splice(Number(retirer.dataset.retirer), 1);
+      Esport.majMonMatch({ preuves: liste });
+      return;
     }
     const mm = Esport.monMatch();
     const maintenant = Esport.horloge();
@@ -243,9 +296,17 @@
         erreur = "Un match à élimination ne peut pas finir sur un nul : indique le score après prolongation ou tirs au but.";
         return rendre();
       }
-      const decl = { moi: saisie.moi, adv: saisie.adv, heureIso: (mm.declMoi && mm.correction ? mm.declMoi.heureIso : maintenant.toISOString()) };
-      Esport.majMonMatch({ declMoi: decl, statut: "attente-adv", correction: false });
-      Nav.toast(mm.correction ? "Déclaration corrigée" : "Déclaration envoyée");
+      if (preuves().length) return envoyerDeclaration();
+      // Aucune capture : la preuve est demandée, mais le joueur peut s'en passer
+      Nav.dialogue({
+        icone: Esport.icone("photo", "f-primary"),
+        titre: "Ajouter une preuve ?",
+        texte: "Une capture de l'écran de fin de match appuie ta déclaration si " + c.adversaire + " déclare un autre score. Sans capture, un litige est tranché sur les seules déclarations.",
+        boutons: [
+          { libelle: "Ajouter une capture", primaire: true, action: () => document.getElementById("fichiers").click() },
+          { libelle: "Déclarer sans preuve", action: envoyerDeclaration }
+        ]
+      });
     }
     if (e.target.closest("#corriger")) {
       saisie = { moi: mm.declMoi.moi, adv: mm.declMoi.adv };

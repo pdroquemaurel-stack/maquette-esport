@@ -3,7 +3,9 @@
      US : S01-02 (pseudo unique, modifiable une fois tous les 30 jours ; identifiant de jeu par jeu, refusé
      s'il est déjà rattaché à un autre profil ; pseudo jugé offensant remplacé par un pseudo neutre),
      S01-05 (historique repris compris), S11-04 (résumé de l'abonnement, ou « S'abonner »).
-     Liens : 17 (profil public), 05, 21, 24, 27, 28. -->
+     Lot 7 : ratio de victoires, meilleur classement, badges obtenus ; MaxPoints du mois et historique
+     des crédits (S15-01), accès au classement mensuel (S15-04).
+     Liens : 17 (profil public), 05, 21, 24, 27, 28, 29. -->
 <html lang="fr">
 <head>
   <meta charset="utf-8">
@@ -19,6 +21,10 @@
     .chiffres { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-2); padding: 0 var(--page-gutter); }
     .chiffre { background: var(--color-surface-warm); border-radius: var(--radius-md); padding: var(--space-3) var(--space-2); text-align: center; font-size: var(--font-size-xs); color: var(--color-text-secondary); }
     .chiffre b { display: block; font-size: var(--font-size-xl); color: var(--color-text); }
+    .points-gagnes { font-weight: var(--font-weight-bold); color: var(--color-success-dark); white-space: nowrap; }
+    .plus-historique summary { color: var(--color-primary); font-weight: var(--font-weight-bold); font-size: var(--font-size-sm); cursor: pointer; list-style: none; }
+    .plus-historique summary::-webkit-details-marker { display: none; }
+    .plus-historique[open] summary { display: none; }
     .bloc { margin: 0 var(--page-gutter); background: var(--color-surface); border-radius: var(--radius-md); box-shadow: var(--shadow-card); }
     .bloc .ligne { padding-left: var(--space-4); padding-right: var(--space-3); }
     .bloc .puce { flex-shrink: 0; }
@@ -79,7 +85,6 @@
     const a = Esport.etatAbonnement();
     const tags = Esport.gamertags();
     const repris = Etat.get("historiqueNonRepris") ? { tournois: 0, victoires: 0 } : DONNEES.joueur.historiqueRepris;
-    const inscrits = DONNEES.tournois.filter((t) => { const i = Esport.inscription(t.id); return i && i.etat === "inscrit"; }).length;
     const offensant = Etat.get("pseudoOffensant");
     let html = "";
 
@@ -94,10 +99,37 @@
         " ». Choisis-en un nouveau : la limite de 30 jours ne s'applique pas.</p></div></div>";
     }
 
+    // Indicateurs (lot 7) : ratio de victoires, meilleur classement, MaxPoints du mois
+    const s = Esport.statsJoueur(DONNEES.joueur.pseudo);
+    const classement = Esport.classementMensuel("tous", DONNEES.maxpoints.mois[0].id);
     html += '<div class="chiffres">' +
-      '<div class="chiffre"><b>' + (DONNEES.joueur.historique.length + inscrits + repris.tournois) + "</b>Tournois joués</div>" +
-      '<div class="chiffre"><b>' + repris.victoires + "</b>Victoires</div>" +
-      '<div class="chiffre"><b>' + inscrits + "</b>En cours</div></div>";
+      '<a href="#" class="chiffre" data-ecran="17" data-pseudo="' + pseudo + '"><b>' + Esport.ratioVictoires(s) + " %</b>de victoires</a>" +
+      '<a href="#" class="chiffre" data-ecran="17" data-pseudo="' + pseudo + '"><b>' + (s.meilleurePlace ? Esport.rangTexte(s.meilleurePlace) : "—") + "</b>Meilleur classement</a>" +
+      '<a href="#" class="chiffre" data-ecran="29"><b>' + classement.moi.points + "</b>MaxPoints en " + DONNEES.maxpoints.mois[0].libelle.split(" ")[0].toLowerCase() + "</a></div>";
+
+    // Mes badges : ceux obtenus, la collection complète est sur le profil public
+    const obtenus = Esport.badgesJoueur(s).filter((x) => x.obtenu);
+    html += '<h2 class="titre-section">Mes badges <span class="ligne-sous-titre">' + obtenus.length + " sur " + DONNEES.badges.length + "</span>" +
+      '<a href="#" class="voir-tout" data-ecran="17" data-pseudo="' + pseudo + '">Voir tout</a></h2>' +
+      '<div class="collection-courte">' + obtenus.map(Esport.medaille).join("") + "</div>";
+
+    // Mes MaxPoints : position du mois et historique des crédits (S15-01, S15-04)
+    const historique = Esport.historiquePoints();
+    html += '<h2 class="titre-section">Mes MaxPoints</h2><div class="bloc">' +
+      '<a href="#" class="ligne" data-ecran="29">' + Esport.icone("podium", "f-primary") +
+      '<span class="ligne-corps"><span class="ligne-titre">' + Esport.rangTexte(classement.moi.rang) + " du " + Esport.pays().nom + " en " +
+      DONNEES.maxpoints.mois[0].libelle.split(" ")[0].toLowerCase() + '</span><span class="ligne-sous-titre">Classement mensuel · clôture dans ' +
+      Esport.joursRestants(DONNEES.maxpoints.mois[0].id) + " jours</span></span>" + Esport.icone("chevron", "f-muted") + "</a>" +
+      historique.slice(0, 4).map((h) =>
+        '<div class="ligne"><span class="ligne-corps"><span class="ligne-titre">' + h.tournoi + '</span><span class="ligne-sous-titre">' +
+        Esport.jourCourt(h.date) + " · " + h.detail + '</span></span><span class="points-gagnes">' + (h.points ? "+" + h.points : "0") + "</span></div>"
+      ).join("") +
+      (historique.length > 4 ? '<details class="plus-historique"><summary class="ligne">Voir les ' + (historique.length - 4) + " crédits précédents</summary>" +
+        historique.slice(4).map((h) =>
+          '<div class="ligne"><span class="ligne-corps"><span class="ligne-titre">' + h.tournoi + '</span><span class="ligne-sous-titre">' +
+          Esport.jourCourt(h.date) + " · " + h.detail + '</span></span><span class="points-gagnes">' + (h.points ? "+" + h.points : "0") + "</span></div>"
+        ).join("") + "</details>" : "") +
+      "</div>";
 
     // Pseudo
     html += '<h2 class="titre-section">Mon pseudo</h2><div class="bloc"><div class="ligne"><span class="ligne-corps"><span class="ligne-titre">' + pseudo + "</span>" +
@@ -189,6 +221,9 @@
   document.getElementById("page").addEventListener("click", (e) => {
     const b = e.target.closest("[data-modifier]");
     if (b && !b.disabled) ouvrir(b.dataset.modifier);
+    // Détail d'un badge
+    const m = e.target.closest("[data-badge]");
+    if (m) Esport.ouvrirBadge(Esport.badgesJoueur(Esport.statsJoueur(DONNEES.joueur.pseudo)).find((x) => x.badge.id === m.dataset.badge));
   });
   voile.addEventListener("click", (e) => {
     if (e.target === voile || e.target.closest("#annuler")) voile.classList.remove("ouvert");

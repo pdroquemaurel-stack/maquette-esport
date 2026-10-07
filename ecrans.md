@@ -88,12 +88,14 @@ En-tête : cloche → 25 Notifications.
 - US : S04-03, S04-04
 - Éléments : effectif / taille requise ; inviter par pseudo, partager le lien ; demandes en attente (capitaine : accepter / refuser) ; transmettre le rôle de capitaine ; quitter.
 - États : équipe inscrite automatiquement ; équipe incomplète à la clôture.
+- Lot 7 : le capitaine d'une équipe incomplète la rend ouverte pour la compléter (« Rendre l'équipe ouverte » : elle rejoint la liste des équipes ouvertes de 09, une demande arrive), ou la referme.
 - Liens : → 06.
 
 ### 11 `11-match.html` — Salle de match
 - US : S06-02, S06-03
 - Éléments : adversaire, heure, compte à rebours, bouton « Je suis présent » (actif de -10 min au début).
 - États : attente de l'adversaire ; match démarré ; forfait adverse (qualifié) ; mon forfait (motif et heure) ; deux absents.
+- Lot 7, discussion entre les deux joueurs : messages libres et messages rapides (« Envoie-moi ton code ami »…), réponses de l'adversaire simulées, « Signaler » au responsable local ; fermée si le match n'a pas lieu (forfait, double absence). Bouton « Discuter avec … » sur la carte du match.
 - Liens : → 14, 12.
 
 ### 12 `12-arbre.html` — Arbre, poules et classement du tournoi
@@ -110,17 +112,19 @@ En-tête : cloche → 25 Notifications.
 ### 14 `14-resultat.html` — Déclarer le résultat
 - US : S07-01, S07-02
 - Éléments : saisie du score ; délai 30 min ; correction possible tant que l'adversaire n'a pas déclaré.
+- Lot 7, preuve à chaque déclaration : section « Preuve facultative » (jusqu'à 3 captures) ; sans capture, « Ajouter une preuve ? » propose « Ajouter une capture » ou « Déclarer sans preuve ». Les captures jointes sont reprises dans le litige (15).
 - États : en attente de l'adversaire ; match clos ; résultat adverse retenu avec « Contester » (30 min) ; délai dépassé.
 - Liens : → 15, 12.
 
 ### 15 `15-litige.html` — Litige et preuves
 - US : S07-03, S07-02
-- Éléments : les deux déclarations ; jusqu'à 3 captures ; compte à rebours 30 min ; état « En attente d'arbitrage » puis décision.
+- Éléments : les deux déclarations ; jusqu'à 3 captures (celles de la déclaration déjà jointes, modifiables) ; compte à rebours 30 min ; état « En attente d'arbitrage » puis décision.
 - Liens : → 12.
 
 ### 17 `17-profil-public.html` — Profil public d'un joueur
 - US : S01-02, S05-03
-- Éléments : pseudo, tournois joués, résultats ; aucune donnée personnelle.
+- Éléments : pseudo, tournois joués et gagnés, résultats ; aucune donnée personnelle.
+- Lot 7 : ratio de victoires (jauge, matchs gagnés / disputés), meilleur classement, meilleure série ; collection de 13 badges (obtenus, ou verrouillés avec leur progression ; détail au toucher).
 
 ### 18 `18-video.html` — Lecteur vidéo
 - US : S10-01, S10-02, S11-01
@@ -151,7 +155,8 @@ En-tête : cloche → 25 Notifications.
 ### 23 `23-profil.html` — Mon profil
 - US : S01-02, S01-05, S11-04
 - Éléments : pseudo (modifiable une fois tous les 30 jours) ; gamertags par jeu (refus si déjà rattaché) ; tournois joués (historique repris compris) ; résumé de l'abonnement, ou « S'abonner » pour un joueur gratuit ; état « pseudo remplacé car jugé offensant ».
-- Liens : → 21, 24, 27, 28.
+- Lot 7 : ratio de victoires, meilleur classement, MaxPoints du mois ; badges obtenus ; « Mes MaxPoints » : position du mois et historique des crédits (tournoi, date, points).
+- Liens : → 17, 21, 24, 27, 28, 29.
 
 ### 24 `24-abonnement.html` — Mon abonnement
 - US : S11-04
@@ -183,6 +188,13 @@ En-tête : cloche → 25 Notifications.
 - Éléments : « Télécharger mes données » ; « Supprimer mon profil » (effacement sous 30 jours, résultats anonymisés) ; « Ne pas reprendre mon historique ».
 - Pas de consentement parental (S01-03 en suspens).
 
+### 29 `29-classement-mensuel.html` — Classement mensuel des MaxPoints (lot 7)
+- US : E15 (V2) S15-01, S15-02, S15-03, S15-04 ; S15-05 (remise des récompenses) relève du back-office.
+- Éléments : mois, clôture et jours restants, ma position et mes points ; onglets « Ouvert à tous » (cadeaux) et « Joueurs gratuits » (abonnements offerts) ; récompenses du responsable local ; 100 premiers puis ma position épinglée ; égalité départagée par l'heure d'atteinte du total ; mois précédents avec leurs gagnants et ma place finale ; feuille « Comment gagner des MaxPoints » (barème).
+- Joueur abonné : absent du classement des joueurs gratuits, avec explication.
+- Paramètres : `mois` (2026-10, 2026-09, 2026-08), `onglet` (tous, gratuits).
+- Liens : → 17 (joueur) ; accès depuis 03, 23 et les notifications « Classement mensuel » (25).
+
 ---
 
 ## Menu de démonstration — `js/demo.js`
@@ -201,6 +213,8 @@ Icône discrète en haut à droite, présente sur tous les écrans. Ce n'est pas
   - refus : identifiant de jeu, compte, pays ; liste d'attente ; suspension après 3 forfaits ;
     inscription annulée par abonnement expiré (08) ;
   - équipe incomplète à la clôture (10) ;
+  - équipe fermée à compléter (10, PUBG Squad Casablanca, lot 7) ;
+  - MaxPoints crédités à la clôture d'un tournoi (29 : +50 points, la position monte, notification ; lot 7) ;
   - paiement refusé, paiement abandonné (22, retour sur l'écran affiché) ;
   - abonnement résilié, abonnement expiré (24) ;
   - pseudo jugé offensant (23) ;
@@ -240,8 +254,11 @@ En-tête      : 🔔 25 Notifications        Menu démo : icône en haut à droi
 21 Offre ─► 22 Paiement Max it ─(confirmé/refusé/abandonné)─► écran d'origine
 
 23 Profil ─┬─► 24 Abonnement ─► 21
+           ├─► 17 Profil public (badges, ratio de victoires)
+           ├─► 29 Classement MaxPoints
            ├─► 27 Préférences notif
            └─► 28 Mes données
+03 Accueil ─► 29 Classement MaxPoints ─► 17 Profil public
 25 Notifications ─► 06 / 07 / 08 / 10 / 11 / 14 / 15 / 24 / 26 Contestation
 08 Résultat (refus doublon) ─► 26 Contestation
 ```
@@ -258,6 +275,7 @@ En-tête      : 🔔 25 Notifications        Menu démo : icône en haut à droi
 | 4 | 11, 14, 15, 26 et test de parcours `outils/parcours-match.html` | terminé |
 | 5 | 18, 19, 20, 21, 22, 23, 24 et test de parcours `outils/parcours-abonnement.html` | terminé |
 | 6 | 25, 27, 28, fichier unique `maquette-esport.html`, tests `outils/parcours-notifications.html` et `outils/test-fichier-unique.html` | terminé |
+| 7 | Preuve à chaque déclaration (14, 15), discussion de match (11), indicateurs et badges (17, 23), équipe fermée → ouverte (10), bouton « S'abonner pour s'inscrire » réduit (style.css), 29 classement mensuel des MaxPoints (accès 03, 23, 25) | terminé |
 
 **Tests** (dossier `outils/`, à ouvrir avec l'accès entre fichiers locaux autorisé, par exemple `msedge --allow-file-access-from-files`) : `controle.html#gratuit` et `#abonne` (débordements, textes coupés, barre du bas, liens, impasses), `parcours-match.html`, `parcours-abonnement.html`, `parcours-notifications.html`, `test-fichier-unique.html`. Ajouter `?unique` pour les rejouer dans le fichier unique.
 **Fichier unique** : `maquette-esport.html`, reconstruit par `node outils/construire-fichier-unique.js` après chaque modification.
@@ -274,7 +292,7 @@ Démo des matchs (lot 4) : dans 11, 14 et 15, le temps défile 30 fois plus vite
 | US | Titre | Couverture | Écrans | Limites et remarques |
 |---|---|---|---|---|
 | S01-01 | Authentification déléguée à Max it | En partie | 00c, 02, 03 | Entrée depuis Max it ; compte suspendu et session expirée simulés par le menu de démo. L'authentification elle-même est celle de Max it. |
-| S01-02 | Profil de joueur esport | En partie | 02, 17, 23 | Pseudo unique modifiable une fois tous les 30 jours, identifiant de jeu refusé s'il est déjà rattaché, pseudo offensant remplacé (02, 23, raccourci « Pseudo jugé offensant »). Les badges ne sont pas maquettés (fonction non activée). |
+| S01-02 | Profil de joueur esport | En partie | 02, 17, 23 | Pseudo unique modifiable une fois tous les 30 jours, identifiant de jeu refusé s'il est déjà rattaché, pseudo offensant remplacé (02, 23, raccourci « Pseudo jugé offensant »). Badges, ratio de victoires et meilleur classement ajoutés au lot 7 (17, 23). |
 | S01-03 | Âge du joueur et accès des mineurs | En suspens | — | Ni refus pour âge, ni consentement parental. |
 | S01-04 | Droits du joueur sur ses données | Couverte | 28, 12, 17 | Téléchargement : confirmation simulée, aucun fichier produit. Suppression sous 30 jours puis pseudonyme anonyme (raccourci « Compte supprimé »). |
 | S01-05 | Reprise des données de l'ancienne plateforme | En partie | 02, 05, 17, 23, 28 | La reprise elle-même est côté serveur ; seul son résultat est visible (02, 23, 28). |
@@ -289,13 +307,13 @@ Démo des matchs (lot 4) : dans 11, 14 et 15, le temps défile 30 fois plus vite
 | S03-07 | Créer un tournoi MEA ouvert à plusieurs pays | Couverte (côté joueur) | 04, 06 | Seuls les tournois ouverts dans le pays du joueur sont visibles. Création et ouverture par pays : back-office. |
 | S04-01 | Inscription d'un joueur gratuit | En partie | 06, 07, 08 | Place acquise, liste d'attente avec rang, refus pour pays (08), désinscription avant le début (06). Le passage du premier de la liste d'attente en cas de désistement est côté serveur ; il n'est visible que par notification (25). Pas de refus pour l'âge (S01-03 en suspens). |
 | S04-02 | Inscription d'un joueur abonné | En partie | 06, 07, 08 | Comme S04-01 ; la réponse en moins de 5 s est figurée par l'affichage immédiat de 08. Le joueur abonné s'inscrit aux tournois réservés comme aux autres. |
-| S04-03 | Créer une équipe pour un tournoi | En partie | 09, 10 | Création, nom unique, ouverte / fermée, demandes, invitation par pseudo, lien, transmission du rôle, départ du capitaine, inscription automatique, équipe incomplète à la clôture (09, 10). Les réponses des autres joueurs sont simulées par des délais ; la réception d'une invitation côté invité et les avis aux membres passent par les notifications (25). |
+| S04-03 | Créer une équipe pour un tournoi | En partie | 09, 10 | Création, nom unique, ouverte / fermée (modifiable ensuite par le capitaine, lot 7), demandes, invitation par pseudo, lien, transmission du rôle, départ du capitaine, inscription automatique, équipe incomplète à la clôture (09, 10). Les réponses des autres joueurs sont simulées par des délais ; la réception d'une invitation côté invité et les avis aux membres passent par les notifications (25). |
 | S04-04 | Rejoindre une équipe | En partie | 09, 10 | Liste des équipes ouvertes, demande acceptée par le capitaine (simulée), une seule équipe par tournoi (09). Non maquettés : le refus d'une demande pour critère non rempli et l'arrivée par le lien d'une équipe fermée. |
 | S04-05 | Un seul compte par joueur et par tournoi | En partie | 08, 26 | Refus pour compte ou identifiant de jeu déjà inscrit, avec motif et « Contester » vers 26 (08). La consignation du refus et sa consultation par le responsable local relèvent du back-office. |
 | S05-01 | Calendrier, recherche et filtres (abonné) | Couverte | 04, 05, 03 | — |
 | S05-02 | Calendrier, recherche et filtres (gratuit) | Couverte | 04, 06, 21, 22 | — |
 | S05-03 | Page d'un tournoi et arbre consultables par tous | Couverte | 06, 12, 17 | Mise à jour sans rechargement simulée (résultat en direct après 4 s). |
-| S05-04 | Classement d'un tournoi | Couverte | 12 | La correction des E-Sport Orange Points (E15, V2) n'est pas maquettée. |
+| S05-04 | Classement d'un tournoi | Couverte | 12 | La correction des MaxPoints après arbitrage (E15) est seulement mentionnée dans le barème (29). |
 | S05-05 | Page d'un jeu et lien vers la boutique | Couverte | 13 | La boutique Max it est hors maquette (message) ; l'attribution des achats relève des rapports. |
 | S06-01 | Progression du tournoi sans intervention | En partie | 11, 12 | Automatismes sans écran propre ; leurs effets sont visibles dans 11 et 12 (vainqueur au tour suivant, qualification d'office après double absence). |
 | S06-02 | Convocation et confirmation de présence | En partie | 11, 25 | Compte à rebours, présence de -10 min au début, rappel à -5 min, démarrage dès que les deux sont présents (11). La convocation reçue 15 min avant arrive par notification (25). |
@@ -303,7 +321,7 @@ Démo des matchs (lot 4) : dans 11, 14 et 15, le temps défile 30 fois plus vite
 | S06-04 | Départage des égalités | En partie | 12 | Automatismes sans écran propre ; leurs effets sont visibles dans 11 et 12 (vainqueur au tour suivant, qualification d'office après double absence). |
 | S07-01 | Résultat déclaré par les deux joueurs | En partie | 14 | Saisie, correction tant que l'adversaire n'a pas déclaré, match clos par concordance, refus après le délai (14). Ouverture de la déclaration : voir « Décisions ». |
 | S07-02 | Résultat déclaré par un seul joueur | En partie | 14, 15 | Déclaration adverse retenue, contestation pendant 30 min, résultat définitif sans contestation (14). Les avis à l'adversaire passent par les notifications (25). Aucune déclaration dans le délai : voir « Décisions ». |
-| S07-03 | Déclarations divergentes et preuve | En partie | 15 | Litige automatique, 3 captures au plus, délai de 30 min, arbitrage puis décision avec motif (15). Les captures restent sur l'appareil ; la conservation 90 jours est seulement mentionnée. La décision est simulée : avec au moins une capture, la déclaration du joueur l'emporte. |
+| S07-03 | Déclarations divergentes et preuve | En partie | 14, 15 | Preuve proposée dès la déclaration (14, lot 7). Litige automatique, 3 captures au plus, délai de 30 min, arbitrage puis décision avec motif (15). Les captures restent sur l'appareil ; la conservation 90 jours est seulement mentionnée. La décision est simulée : avec au moins une capture, la déclaration du joueur l'emporte. |
 | S07-04 | File d'arbitrage outillée | Hors périmètre | — | Back-office ; le joueur voit l'attente et la décision (15). |
 | S08-01 | Rôles et périmètres | Hors périmètre | — | Back-office. |
 | S08-02 | Activation des fonctionnalités par pays | En partie | 03, 18, 20, 27 | Activation par pays simulée par un indicateur dans `data.js` (ex. masquer les vidéos). |
@@ -322,10 +340,23 @@ Démo des matchs (lot 4) : dans 11, 14 et 15, le temps défile 30 fois plus vite
 | S12-01 | Être averti de ce qui me concerne | Couverte | 25, 27, cloche de chaque écran | Toutes les familles, dont « nouveau tournoi sur un jeu suivi ». Hors maquette : consentement parental (S01-03 en suspens) et début d'un direct (V2). Le délai de moins de 5 s est figuré par le raccourci « Nouvelle notification ». |
 | S12-02 | Avertir par courriel et par SMS | En partie | 27 | Refus des SMS (si le pays les a activés) et consentement promotionnel. Les envois eux-mêmes et le choix des canaux par le responsable local sont hors application. |
 
-### US V2 liées, non maquettées
-- E15 Leaderboard mensuel (S15-01 à S15-05) : points, leaderboards mensuels ouvert à tous et réservé aux joueurs gratuits.
+### US V2 maquettées à la demande (lot 7)
+| US | Titre | Couverture | Écrans | Limites et remarques |
+|---|---|---|---|---|
+| S15-01 | Gagner des MaxPoints | En partie | 23, 29 | Barème (participation, place finale) affiché ; historique des crédits dans 23, dont un tournoi d'exclusion à 0 point. Le calcul à la clôture et le recalcul après arbitrage sont côté serveur (raccourci « MaxPoints crédités »). |
+| S15-02 | Classement mensuel ouvert à tous | Couverte | 29, 03 | Classement du Maroc seulement ; joueurs du mois en cours générés ; égalité départagée par l'heure d'atteinte du total. |
+| S15-03 | Classement mensuel des joueurs gratuits | Couverte | 29 | Un abonné n'y figure pas (interrupteur de démo). La sortie en cours de mois après un abonnement est seulement expliquée. |
+| S15-04 | Consulter les classements | Couverte | 29, 03, 23 | 100 premiers puis ma position épinglée, jours restants, récompenses, mois précédents avec gagnants. La mise à jour en moins de 10 s est figurée par le raccourci « MaxPoints crédités ». |
+| S15-05 | Récompenser les gagnants du mois | Hors périmètre | 25, 29 | Back-office ; le joueur voit la notification de gain (n22) et les gagnants des mois clôturés. |
+
+Le nom « E-Sport Orange Points » du backlog est affiché « MaxPoints » (décision du 2026-10-07). S01-02 : les badges, prévus « lorsque la fonction est activée », sont maquettés (17, 23).
 
 ### Décisions prises pendant la maquette
+- 2026-10-07, lot 7 : une preuve (capture) est demandée à chaque déclaration de résultat, et non plus seulement en cas de litige ; elle reste facultative (14), et les captures jointes sont reprises dans le litige (15).
+- 2026-10-07, lot 7 : discussion entre les deux joueurs dans la salle de match (11), avec signalement au responsable local (hors backlog).
+- 2026-10-07, lot 7 : profil enrichi d'indicateurs (ratio de victoires, meilleur classement, meilleure série) et de 13 badges à collectionner (17, 23).
+- 2026-10-07, lot 7 : le capitaine peut rendre ouverte une équipe fermée pour la compléter, puis la refermer (10).
+- 2026-10-07, lot 7 : Epic E15 (V2) maquettée sous le nom « MaxPoints » (29).
 - 2026-10-07, S07-02 : si aucun joueur ne déclare dans le délai, les deux sont éliminés, comme en double absence ; l'adversaire prévu au tour suivant est qualifié d'office (14, 12 ; raccourci « Aucune déclaration dans le délai »).
 - 2026-10-07, S07-01 : la déclaration du résultat est ouverte dès le démarrage du match (et non à la fin prévue) ; elle se ferme 30 min après la fin prévue.
 - 2026-10-07 : le match nul est refusé en élimination directe, accepté en poules et en championnat (14).

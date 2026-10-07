@@ -7,7 +7,7 @@
 <body><pre id="s"></pre><iframe id="f" style="width:390px;height:844px"></iframe>
 <script src="banc.js"></script>
 <script>
-// Parcours : 05 → 11 (présence) → 14 (déclaration divergente) → 15 (capture, arbitrage) → 12 → 05
+// Parcours : 05 → 11 (présence) → 14 (preuve demandée, déclaration divergente) → 15 (capture, arbitrage) → 12 → 05
 const R="../", f=document.getElementById("f"), s=document.getElementById("s");
 const log=(ok,m)=>{s.textContent+=(ok?"✓ ":"✗ ")+m+"\n";};
 const pause=ms=>new Promise(r=>setTimeout(r,ms));
@@ -33,13 +33,16 @@ function cliquerTexte(t){const e=[...doc().querySelectorAll("a,button")].find(x=
   n=attendreNav(); cliquerTexte("Déclarer le résultat"); await n; await pause(500);
   cliquer('[data-score="moi"][data-pas="1"]'); cliquer('[data-score="moi"][data-pas="1"]'); cliquer('[data-score="adv"][data-pas="1"]');
   log(/2\s*–\s*1/.test(doc().querySelector(".saisie").innerText.replace(/\n/g," ")) || doc().querySelectorAll(".valeur")[0].textContent==="2","14 : score saisi 2–1");
+  log(/Preuve facultative/i.test(texte()) && doc().querySelector("label.ajout"),"14 : section « Preuve » avec ajout de capture");
   cliquer("#envoyer"); await pause(400);
-  log(/Déclaration envoyée/i.test(texte()) && doc().querySelector("#corriger"),"14 : déclaration envoyée, « Corriger » disponible");
+  log(/Ajouter une preuve/i.test(texte()),"14 : sans capture, la preuve est demandée avant l'envoi");
+  cliquerTexte("Déclarer sans preuve"); await pause(400);
+  log(/Déclaration envoyée/i.test(texte()) && doc().querySelector("#corriger") && /sans capture/i.test(texte()),"14 : déclaration envoyée sans preuve, « Corriger » disponible");
   await attendre(()=>/Déclarations divergentes/i.test(texte()),60000,"déclaration adverse");
   log(true,"14 : déclaration adverse divergente → litige ouvert");
   n=attendreNav(); cliquerTexte("Voir le litige"); await n; await pause(500);
   log(/Ta déclaration/i.test(texte()) && /2 – 1/i.test(texte()) && /1 – 2/i.test(texte()),"15 : les deux déclarations côte à côte (2–1 / 1–2)");
-  win().eval('captures.push({url:"data:image/gif;base64,R0lGODlhAQABAAAAACw=",nom:"fin.png"}); rendre();'); await pause(300);
+  win().eval('Esport.majMonMatch({preuves:[{url:"data:image/gif;base64,R0lGODlhAQABAAAAACw=",nom:"fin.png"}]})'); await pause(300);
   log(/1 \/ 3/i.test(texte()),"15 : une capture jointe (1 / 3)");
   cliquer("#envoyer"); await pause(400);
   log(/En attente d'arbitrage/i.test(texte()),"15 : en attente d'arbitrage");

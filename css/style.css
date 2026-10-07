@@ -201,6 +201,8 @@ svg { display: block; flex-shrink: 0; }
   font-weight: var(--font-weight-bold);
   font-size: var(--font-size-md);
 }
+/* Icône dans un bouton (cadenas de « S'abonner pour s'inscrire »…) : taille fixe, sinon elle remplit le bouton */
+.bouton svg { width: 20px; height: 20px; }
 .bouton-primaire { background: var(--color-primary); color: var(--color-on-primary); }
 .bouton-primaire:active { background: var(--color-primary-pressed); }
 .bouton-secondaire { background: var(--color-surface); color: var(--color-text); border: 1px solid var(--color-border-strong); }
@@ -824,3 +826,71 @@ svg { display: block; flex-shrink: 0; }
 
 /* Espace sous le contenu pour que la dernière carte ne colle pas à la barre du bas */
 .fin-contenu { height: var(--space-6); }
+
+/* =====================================================================
+   Lot 7 — preuves, discussion de match, badges, MaxPoints
+   ===================================================================== */
+
+/* ============ Captures d'écran jointes (déclaration 14, litige 15) : 3 au plus ============ */
+.captures { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-2); padding: 0 var(--page-gutter); }
+.capture { position: relative; aspect-ratio: 3 / 4; border-radius: var(--radius-sm); overflow: hidden; background: var(--color-bg-muted); }
+.capture img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.capture .retirer { position: absolute; top: var(--space-1); right: var(--space-1); width: 28px; height: 28px; border-radius: var(--radius-round); background: var(--color-glass-dark); color: var(--color-text-on-dark); font-weight: var(--font-weight-bold); }
+.ajout { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-1); aspect-ratio: 3 / 4; border-radius: var(--radius-sm); border: 2px dashed var(--color-border-strong); color: var(--color-text-secondary); font-size: var(--font-size-xs); font-weight: var(--font-weight-bold); cursor: pointer; text-align: center; padding: var(--space-1); }
+.ajout svg { width: 24px; height: 24px; }
+.note-section { font-size: var(--font-size-xs); color: var(--color-text-secondary); padding: var(--space-2) var(--page-gutter) 0; }
+
+/* ============ Discussion entre joueurs (salle de match 11) ============ */
+.fil { display: flex; flex-direction: column; gap: var(--space-2); max-height: 280px; overflow-y: auto; margin: 0 var(--page-gutter); padding: var(--space-3); border-radius: var(--radius-md); background: var(--color-surface-warm); scrollbar-width: none; }
+.fil::-webkit-scrollbar { display: none; }
+.bulle { max-width: 80%; padding: var(--space-2) var(--space-3); border-radius: var(--radius-md); background: var(--color-surface); font-size: var(--font-size-sm); overflow-wrap: anywhere; align-self: flex-start; box-shadow: var(--shadow-sm); }
+.bulle small { display: block; font-size: var(--font-size-xs); color: var(--color-text-muted); margin-top: 2px; }
+.bulle.moi { align-self: flex-end; background: var(--color-primary); color: var(--color-on-primary); }
+.bulle.moi small { color: var(--color-on-primary); opacity: .8; }
+.bulle.systeme { align-self: center; max-width: 100%; background: none; box-shadow: none; color: var(--color-text-secondary); font-size: var(--font-size-xs); text-align: center; }
+.ecrit { font-size: var(--font-size-xs); color: var(--color-text-muted); font-style: italic; }
+.chat-rapides { margin-top: var(--space-3); }
+.chat-saisie { display: flex; gap: var(--space-2); align-items: center; padding: var(--space-3) var(--page-gutter) 0; }
+.chat-saisie .champ { flex: 1; }
+.chat-saisie .bouton-rond-orange:disabled { background: var(--color-bg-muted); cursor: default; }
+.chat-pied { display: flex; align-items: center; gap: var(--space-2); }
+.chat-pied span { flex: 1; }
+.chat-pied .bouton-lien { min-height: 32px; font-size: var(--font-size-xs); }
+
+/* ============ Performances d'un joueur (profil 17) ============ */
+.perf { margin: var(--space-4) var(--page-gutter) 0; padding: var(--space-4); border-radius: var(--radius-lg); background: var(--color-surface); box-shadow: var(--shadow-card); }
+.ratio-tete { display: flex; align-items: baseline; gap: var(--space-2); }
+.ratio-tete b { font-size: var(--font-size-display); line-height: 1; }
+.ratio-tete span { color: var(--color-text-secondary); font-size: var(--font-size-sm); }
+.jauge { height: 8px; border-radius: var(--radius-pill); background: var(--color-bg-muted); overflow: hidden; margin: var(--space-2) 0 var(--space-1); }
+.jauge i { display: block; height: 100%; border-radius: var(--radius-pill); background: var(--color-primary); }
+.perf > p { font-size: var(--font-size-xs); color: var(--color-text-secondary); }
+.perf-grille { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-2); margin-top: var(--space-4); }
+.perf-grille > div { background: var(--color-surface-warm); border-radius: var(--radius-md); padding: var(--space-3); min-width: 0; }
+.perf-grille small { display: block; font-size: var(--font-size-xs); color: var(--color-text-secondary); }
+.perf-grille b { display: block; font-size: var(--font-size-xl); line-height: var(--line-height-tight); margin: 2px 0; }
+.perf-grille span { display: block; font-size: var(--font-size-xs); color: var(--color-text-secondary); overflow-wrap: anywhere; }
+
+/* ============ Collection de badges (17, aperçu dans 23) ============ */
+.collection { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-4) var(--space-2); padding: 0 var(--page-gutter); }
+.medaille { display: flex; flex-direction: column; align-items: center; gap: var(--space-1); text-align: center; font-size: var(--font-size-xs); font-weight: var(--font-weight-bold); line-height: var(--line-height-tight); min-width: 0; overflow-wrap: anywhere; }
+.medaille-icone { position: relative; width: 56px; height: 56px; border-radius: var(--radius-round); display: flex; align-items: center; justify-content: center; background: var(--color-primary); box-shadow: var(--shadow-fab); }
+.medaille-icone svg { width: 26px; height: 26px; }
+.medaille.verrouillee { color: var(--color-text-muted); }
+.medaille.verrouillee .medaille-icone { background: var(--color-bg-muted); box-shadow: none; }
+.medaille .progres { width: 44px; height: 4px; border-radius: var(--radius-pill); background: var(--color-bg-muted); overflow: hidden; }
+.medaille .progres i { display: block; height: 100%; background: var(--color-primary); }
+.medaille .cadenas-mini { position: absolute; right: -2px; bottom: -2px; width: 22px; height: 22px; border-radius: var(--radius-round); background: var(--color-surface); display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-sm); }
+.medaille .cadenas-mini svg { width: 12px; height: 12px; }
+.collection-courte { display: flex; gap: var(--space-3); overflow-x: auto; padding: 0 var(--page-gutter); scrollbar-width: none; }
+.collection-courte::-webkit-scrollbar { display: none; }
+.collection-courte .medaille { width: 64px; flex-shrink: 0; }
+
+/* ============ Rang dans un classement (MaxPoints, 29) ============ */
+.rang { width: 32px; flex-shrink: 0; text-align: center; font-weight: var(--font-weight-bold); font-variant-numeric: tabular-nums; color: var(--color-text-secondary); font-size: var(--font-size-sm); }
+.rang.podium-1, .rang.podium-2, .rang.podium-3 { height: 28px; line-height: 28px; border-radius: var(--radius-round); color: var(--color-on-primary); }
+.rang.podium-1 { background: var(--illu-gold); }
+.rang.podium-2 { background: var(--illu-gray); }
+.rang.podium-3 { background: var(--illu-terracotta); }
+.points { font-weight: var(--font-weight-bold); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.points small { font-weight: var(--font-weight-medium); color: var(--color-text-muted); font-size: var(--font-size-xs); }

@@ -2,7 +2,8 @@
 <!-- Écran 03 — Accueil e-sport.
      US : S05-01 (prochaine échéance de mes tournois), S05-02 (tournois réservés visibles avec leur condition),
      S11-01 (ce que débloque l'abonnement, sans jamais s'imposer), S10-02 (contenus réservés verrouillés),
-     S08-02 (rubrique vidéo masquée si la fonction est désactivée dans le pays). -->
+     S08-02 (rubrique vidéo masquée si la fonction est désactivée dans le pays),
+     S15-04 (lot 7 : accès au classement mensuel des MaxPoints, avec ma position). -->
 <html lang="fr">
 <head>
   <meta charset="utf-8">
@@ -48,6 +49,9 @@
     .encart-offre .prix-des { font-size: var(--font-size-sm); color: var(--color-text-secondary); }
     .encart-offre .prix-des b { display: block; font-size: var(--font-size-lg); color: var(--color-text); }
 
+    /* Classement mensuel des MaxPoints */
+    .encart-classement { margin-top: var(--space-3); }
+
     /* Abonné : rappel compact de l'abonnement */
     .rappel-abonnement { margin-top: var(--space-6); }
   </style>
@@ -72,6 +76,9 @@
     <main class="contenu">
       <!-- Prochaine échéance (S05-01) -->
       <section aria-label="Ta prochaine échéance" id="echeances"></section>
+
+      <!-- Classement mensuel des MaxPoints (E15, lot 7) -->
+      <div id="classement"></div>
 
       <h2 class="titre-section">À la une
         <a href="#" class="voir-tout" data-ecran="04">Calendrier</a>
@@ -157,6 +164,19 @@
       html + (lignes ? '<div class="autres-echeances">' + lignes + "</div>" : "");
   }
 
+  /* ---- Classement mensuel des MaxPoints : ma position et jours restants (S15-04) ---- */
+  function rendreClassement() {
+    const mois = DONNEES.maxpoints.mois[0];
+    const tous = Esport.classementMensuel("tous", mois.id).moi;
+    const gratuits = Esport.abonne() ? null : Esport.classementMensuel("gratuits", mois.id).moi;
+    document.getElementById("classement").innerHTML =
+      '<a href="#" class="encart encart-classement" data-ecran="29">' + Esport.icone("podium", "f-primary") +
+      "<div><strong>Classement MaxPoints · " + mois.libelle.split(" ")[0].toLowerCase() + "</strong><p>Tu es " + Esport.rangTexte(tous.rang) + " du " + Esport.pays().nom +
+      " avec " + tous.points + " MaxPoints" + (gratuits ? ", " + Esport.rangTexte(gratuits.rang) + " des joueurs gratuits" : "") +
+      ". Clôture dans " + Esport.joursRestants(mois.id) + " jours.</p>" +
+      '<span class="lien-encart">Voir le classement et les cadeaux</span></div></a>';
+  }
+
   /* ---- Tournois à la une : à venir, réservés aux abonnés et MEA en premier (S05-02, S03-07) ---- */
   function rendreUne() {
     const ordre = (t) => (t.portee === "MEA" ? 0 : 1) + (t.acces === "abonnes" ? 0 : 1);
@@ -215,6 +235,7 @@
     document.getElementById("initiale").textContent = pseudo[0];
     document.getElementById("nom-pays").textContent = Esport.pays().nom;
     rendreEcheances();
+    rendreClassement();
     rendreUne();
     rendreJeux();
     rendreAbonnement();
