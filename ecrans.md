@@ -195,7 +195,7 @@ Icône discrète en haut à droite, présente sur tous les écrans. Ce n'est pas
   - session Max it expirée (retour vers Max it puis vers l'écran d'origine) ;
   - premier accès (00c → 02) ;
   - forfait adverse, mon forfait, double absence (11) ;
-  - résultat divergent, déclaration adverse à contester, délai de déclaration dépassé (14) ;
+  - résultat divergent, déclaration adverse à contester, délai de déclaration dépassé, aucune déclaration dans le délai (14) ;
   - litige ouvert, décision d'arbitrage rendue (15) ;
   - exclusion d'un tournoi, à contester (26) ;
   - refus : identifiant de jeu, compte, pays ; liste d'attente ; suspension après 3 forfaits ;
@@ -266,8 +266,8 @@ Démo des matchs (lot 4) : dans 11, 14 et 15, le temps défile 30 fois plus vite
 | S06-01, S06-04 | Automatismes sans écran propre ; leurs effets sont visibles dans 11 et 12 (vainqueur au tour suivant, qualification d'office après double absence). |
 | S06-02 | Compte à rebours, présence de -10 min au début, rappel à -5 min, démarrage dès que les deux sont présents (11). La convocation reçue 15 min avant arrive par notification (25). |
 | S06-03 | Forfait (motif, heure), victoire par forfait, double absence (11, 12). Le compteur de forfaits est fixe (1 sur 30 jours) ; la suspension après 3 forfaits est montrée en 08. Le forfait en poule (défaite au score de la fiche jeu) n'est pas maquetté. |
-| S07-01 | Saisie, correction tant que l'adversaire n'a pas déclaré, match clos par concordance, refus après le délai (14). La déclaration est ouverte dès le démarrage du match, pas seulement après la fin prévue. |
-| S07-02 | Déclaration adverse retenue, contestation pendant 30 min, résultat définitif sans contestation (14). Les avis à l'adversaire passent par les notifications (25). Le cas « aucune déclaration dans le délai » n'est pas maquetté (voir US en suspens). |
+| S07-01 | Saisie, correction tant que l'adversaire n'a pas déclaré, match clos par concordance, refus après le délai (14). Ouverture de la déclaration : voir « Décisions ». |
+| S07-02 | Déclaration adverse retenue, contestation pendant 30 min, résultat définitif sans contestation (14). Les avis à l'adversaire passent par les notifications (25). Aucune déclaration dans le délai : voir « Décisions ». |
 | S07-03 | Litige automatique, 3 captures au plus, délai de 30 min, arbitrage puis décision avec motif (15). Les captures restent sur l'appareil ; la conservation 90 jours est seulement mentionnée. La décision est simulée : avec au moins une capture, la déclaration du joueur l'emporte. |
 | S08-04 | Côté joueur seulement : décision d'exclusion (motif, durée, conséquences) et contestation transmise au responsable local (26). L'exclusion elle-même relève du back-office. |
 | S08-02 | Activation par pays simulée par un indicateur dans `data.js` (ex. masquer les vidéos). |
@@ -286,9 +286,13 @@ Démo des matchs (lot 4) : dans 11, 14 et 15, le temps défile 30 fois plus vite
 ### US V2 liées, non maquettées
 - E15 Leaderboard mensuel (S15-01 à S15-05) : points, leaderboards mensuels ouvert à tous et réservé aux joueurs gratuits.
 
+### Décisions prises pendant la maquette
+- 2026-10-07, S07-02 : si aucun joueur ne déclare dans le délai, les deux sont éliminés, comme en double absence ; l'adversaire prévu au tour suivant est qualifié d'office (14, 12 ; raccourci « Aucune déclaration dans le délai »).
+- 2026-10-07, S07-01 : la déclaration du résultat est ouverte dès le démarrage du match (et non à la fin prévue) ; elle se ferme 30 min après la fin prévue.
+- 2026-10-07 : le match nul est refusé en élimination directe, accepté en poules et en championnat (14).
+
 ### US en suspens
 - S01-03 Âge du joueur et accès des mineurs : ni refus pour âge, ni consentement parental.
-- S07-02, cas « aucun joueur ne déclare dans le délai » : la règle (deux éliminés ou litige) n'est pas tranchée dans le backlog ; non maquetté.
 
 ### US MVP hors périmètre (back-office)
 S02-01, S03-01, S03-02, S07-04, S08-01, S08-03, S08-05, S09-01, S09-03, et la partie gestion de S09-02.

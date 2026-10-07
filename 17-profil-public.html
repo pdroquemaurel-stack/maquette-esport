@@ -64,7 +64,7 @@
       arbre.matchs.forEach((tourMatchs, r) => tourMatchs.forEach((m) => {
         const g = vainqueur(m);
         if (m[0] !== pseudoDonnees && m[1] !== pseudoDonnees) return;
-        if (m[6] === "Double absence") { texte = "Éliminé en " + arbre.tours[r].toLowerCase(); classe = ""; return; }
+        if (Esport.doubleElimination(m)) { texte = "Éliminé en " + arbre.tours[r].toLowerCase(); classe = ""; return; }
         if (!g) return;
         if (g !== pseudoDonnees) { texte = "Éliminé en " + arbre.tours[r].toLowerCase(); classe = ""; }
         else if (r === arbre.matchs.length - 1) { texte = "Vainqueur"; classe = "victoire"; }

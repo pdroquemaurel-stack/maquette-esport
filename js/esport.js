@@ -297,7 +297,7 @@ const Esport = (function () {
     const c = DONNEES.monMatch;
     const moiEnA = DONNEES.arbres[c.tournoi].matchs[c.tour][c.match][0] === DONNEES.joueur.pseudo;
     const gagnant = vainqueurForce !== undefined ? vainqueurForce
-      : scoreMoi > scoreAdv ? DONNEES.joueur.pseudo : c.adversaire;
+      : scoreMoi === scoreAdv ? null : scoreMoi > scoreAdv ? DONNEES.joueur.pseudo : c.adversaire;
     enregistrerResultat(cleMonMatch(), {
       a: moiEnA ? scoreMoi : scoreAdv, b: moiEnA ? scoreAdv : scoreMoi, vainqueur: gagnant, mention: mention || null
     });
@@ -305,15 +305,20 @@ const Esport = (function () {
 
   /* ---------- Arbre à élimination ----------
      Match : [joueur A, joueur B, score A, score B, vainqueur (égalité, forfait), état, mention]. */
+  /* Match sans vainqueur où les deux joueurs sont éliminés :
+     double absence (S06-03) ou aucune déclaration dans le délai (S07-02, décision du 2026-10-07) */
+  const DOUBLES_ELIMINATIONS = ["Double absence", "Aucune déclaration"];
+  function doubleElimination(m) { return DOUBLES_ELIMINATIONS.includes(m[6]); }
+
   function vainqueur(m) {
-    if (m[6] === "Double absence") return null;
+    if (doubleElimination(m)) return null;
     if (m[4] && (m[2] === null || m[3] === null || m[2] === m[3])) return m[4];
     if (!m[0] || !m[1] || m[2] === null || m[3] === null || m[2] === m[3]) return null;
     return m[2] > m[3] ? m[0] : m[1];
   }
 
   /* Les vainqueurs d'un tour remplissent le tour suivant, sans action humaine (S06-01).
-     Après une double absence, l'adversaire prévu au tour suivant est qualifié d'office (S06-03). */
+     Après une double élimination, l'adversaire prévu au tour suivant est qualifié d'office (S06-03). */
   function propager(a) {
     for (let r = 1; r < a.matchs.length; r++) {
       a.matchs[r].forEach((m, i) => {
@@ -322,8 +327,8 @@ const Esport = (function () {
         m[0] = vainqueur(gauche);
         m[1] = vainqueur(droite);
         if (m[2] === null && m[3] === null) {
-          if (gauche[6] === "Double absence" && m[1]) { m[4] = m[1]; m[6] = "Qualifié d'office"; }
-          else if (droite[6] === "Double absence" && m[0]) { m[4] = m[0]; m[6] = "Qualifié d'office"; }
+          if (doubleElimination(gauche) && m[1]) { m[4] = m[1]; m[6] = "Qualifié d'office"; }
+          else if (doubleElimination(droite) && m[0]) { m[4] = m[0]; m[6] = "Qualifié d'office"; }
         }
       });
     }
@@ -477,6 +482,6 @@ const Esport = (function () {
     badges, libelleFormat, libelleMode, carteTournoi, carteUne, contenusVisibles, ligneContenu, monter,
     horloge, regleHorloge, demarrerHorloge, plus, hhmm, rebours,
     monMatch, majMonMatch, cleMonMatch, preparerMatchDemo, finPrevue, limiteDeclaration, resultatsMatchs, enregistrerResultat, enregistrerMonResultat,
-    vainqueur, propager, arbre, recalculeApresArbitrage, prochainMatch, carteProchainMatch
+    vainqueur, doubleElimination, propager, arbre, recalculeApresArbitrage, prochainMatch, carteProchainMatch
   };
 })();

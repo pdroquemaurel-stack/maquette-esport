@@ -126,6 +126,7 @@
   function libelleMention(m) {
     if (m[6] === "Forfait") return "Forfait de " + nomAffiche(m[0] === m[4] ? m[1] : m[0]) + " : " + nomAffiche(m[4]) + " qualifié";
     if (m[6] === "Double absence") return "Double absence : les deux joueurs sont éliminés";
+    if (m[6] === "Aucune déclaration") return "Aucun résultat déclaré : les deux joueurs sont éliminés";
     if (m[6] === "Qualifié d'office") return nomAffiche(m[4]) + " qualifié d'office";
     if (m[6] === "Arbitrage") return "Résultat fixé par arbitrage";
     return m[6];
@@ -140,7 +141,7 @@
       html += '<div class="tour"><h3>' + arbre.tours[r] + '</h3><div class="matchs" style="height:' + hauteur + 'px">';
       tourMatchs.forEach((m, i) => {
         // Mon match : celui où je joue et qui n'a pas encore de vainqueur
-        const mien = (estMoi(m[0]) || estMoi(m[1])) && !vainqueur(m) && m[6] !== "Double absence";
+        const mien = (estMoi(m[0]) || estMoi(m[1])) && !vainqueur(m) && !Esport.doubleElimination(m);
         const direct = m[5] === "en-direct";
         const finit = matchQuiVientDeFinir === r + "-" + i;
         html += '<div class="match' + (mien ? " mien" : "") + (finit ? " vient-de-finir" : "") + '">';
@@ -198,7 +199,7 @@
         tourMatchs.forEach((m) => {
           const g = vainqueur(m);
           const joue = m[0] === l.pseudo || m[1] === l.pseudo;
-          if (joue && ((g && g !== l.pseudo) || m[6] === "Double absence")) l.place = Math.pow(2, nbTours - 1 - r) + 1;
+          if (joue && ((g && g !== l.pseudo) || Esport.doubleElimination(m))) l.place = Math.pow(2, nbTours - 1 - r) + 1;
           if (g === l.pseudo && r === nbTours - 1) l.place = 1;
         });
       });

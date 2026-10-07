@@ -19,6 +19,7 @@ const Demo = (function () {
     { libelle: "Résultat divergent", ecran: "14", scenario: "resultat-divergent" },
     { libelle: "Déclaration adverse à contester", ecran: "14", scenario: "declaration-adverse" },
     { libelle: "Délai de déclaration dépassé", ecran: "14", scenario: "delai-depasse" },
+    { libelle: "Aucune déclaration dans le délai", ecran: "14", scenario: "sans-declaration" },
     { libelle: "Litige ouvert", ecran: "15", scenario: "litige-ouvert" },
     { libelle: "Décision d'arbitrage rendue", ecran: "15", scenario: "decision-rendue" },
     { libelle: "Exclusion d'un tournoi (contestation)", ecran: "26", scenario: "exclusion" },

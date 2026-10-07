@@ -4,7 +4,8 @@
      déclaration ouverte 30 min après la fin prévue ; correction tant que l'adversaire n'a pas déclaré),
      S07-02 (une seule déclaration à l'échéance : elle est retenue, l'autre joueur a 30 min pour contester),
      S07-03 (déclarations divergentes : litige ouvert automatiquement, écran 15).
-     Non maquetté : aucun joueur ne déclare dans le délai (règle en suspens dans le backlog). -->
+     Aucune déclaration dans le délai : les deux joueurs sont éliminés, comme en double absence (décision du 2026-10-07).
+     Match nul : refusé en élimination, accepté en poules et en championnat. -->
 <html lang="fr">
 <head>
   <meta charset="utf-8">
@@ -69,12 +70,15 @@
   const declAdverse = { moi: 1, adv: 2, heure: "21:45" };
   if (scenario === "resultat-divergent") Esport.preparerMatchDemo({ adversaireDiverge: true }, "2026-10-09T21:40");
   if (scenario === "declaration-adverse") Esport.preparerMatchDemo({ declAdv: declAdverse, statut: "retenu-adverse" }, "2026-10-09T22:09");
+  if (scenario === "sans-declaration") Esport.preparerMatchDemo({}, "2026-10-09T22:07");
   if (scenario === "delai-depasse") Esport.preparerMatchDemo({ declAdv: declAdverse, statut: "retenu-adverse", refusMoi: "22:09" }, "2026-10-09T22:09");
   Esport.demarrerHorloge();
 
   // Score en cours de saisie (conservé entre deux affichages)
   let saisie = { moi: 0, adv: 0 };
   let erreur = "";
+  // Le match nul n'est possible qu'en poules ou en championnat
+  const nulAutorise = ["poules", "championnat"].includes(t.format);
 
   function limiteContestation() { return Esport.plus(Esport.limiteDeclaration().toISOString(), c.delaiContestation); }
 
@@ -90,8 +94,15 @@
     const maintenant = Esport.horloge();
     if (mm.issue !== "demarre") return;
 
-    // L'adversaire déclare 5 minutes après moi
-    if (mm.statut === "attente-adv" && maintenant >= Esport.plus(mm.declMoi.heureIso, c.reponseAdversaire)) {
+    // Aucune déclaration à l'échéance : les deux joueurs sont éliminés
+    if (!mm.statut && !mm.declMoi && maintenant > Esport.limiteDeclaration()) {
+      eliminerSansDeclaration();
+      return;
+    }
+    // L'adversaire déclare 5 minutes après moi (au plus tard juste avant la clôture)
+    const reponse = new Date(Math.min(Esport.plus(mm.declMoi ? mm.declMoi.heureIso : 0, c.reponseAdversaire).getTime(),
+      Esport.limiteDeclaration().getTime() - 60000));
+    if (mm.statut === "attente-adv" && maintenant >= reponse) {
       if (mm.adversaireDiverge) {
         // Déclarations divergentes : litige ouvert automatiquement (S07-03)
         const divergente = mm.declMoi.moi > mm.declMoi.adv ? { moi: mm.declMoi.adv, adv: mm.declMoi.moi } : { moi: mm.declMoi.moi, adv: mm.declMoi.adv + 1 };
@@ -112,6 +123,12 @@
     }
   }
 
+  /* Aucune déclaration dans le délai : élimination des deux joueurs, adversaire suivant qualifié d'office */
+  function eliminerSansDeclaration(refusMoi) {
+    Esport.majMonMatch({ statut: "sans-declaration", correction: false, refusMoi: refusMoi || null });
+    Esport.enregistrerResultat(Esport.cleMonMatch(), { a: null, b: null, vainqueur: null, mention: "Aucune déclaration" });
+  }
+
   function rendre() {
     evaluer();
     const mm = Esport.monMatch();
@@ -130,6 +147,7 @@
     }
     const limite = Esport.limiteDeclaration();
     const gagne = (d) => d.moi > d.adv;
+    const nul = (d) => d.moi === d.adv;
 
     if (!mm.statut || mm.correction) {
       // Saisie (ou correction) de ma déclaration
@@ -154,13 +172,23 @@
       html += '<div class="issue"><span class="pictogramme' + (gagne(d) ? " succes" : "") + '">' + Esport.icone(gagne(d) ? "coche" : "alerte", gagne(d) ? "f-white" : "f-primary") + "</span>" +
         "<h2>" + (mm.statut === "clos" ? "Match clos" : "Résultat définitif") + "</h2><p>" +
         (mm.statut === "clos" ? "Vos deux déclarations concordent. " : "Pas de contestation dans le délai : la déclaration de " + c.adversaire + " est définitive. ") +
-        (gagne(d) ? "Tu passes au tour suivant." : "Tu es éliminé du tournoi.") + "</p></div>" + score(d);
+        (nul(d) ? "Match nul : un point chacun." : t.format !== "elimination" ? (gagne(d) ? "Victoire : 3 points." : "Défaite.") :
+          gagne(d) ? "Tu passes au tour suivant." : "Tu es éliminé du tournoi.") + "</p></div>" + score(d);
       action = '<a href="#" class="bouton bouton-primaire bouton-pleine-largeur" data-ecran="12" data-id="' + t.id + '">Voir l\'arbre</a>' +
         '<a href="#" class="bouton bouton-secondaire bouton-pleine-largeur" data-ecran="05">Mes matchs</a>';
     } else if (mm.statut === "litige" || mm.statut === "arbitre") {
       html += '<div class="issue"><span class="pictogramme">' + Esport.icone("alerte", "f-primary") + "</span>" +
         "<h2>Déclarations divergentes</h2><p>Un litige est ouvert. Joins tes captures d'écran pour appuyer ta déclaration.</p></div>";
       action = '<a href="#" class="bouton bouton-primaire bouton-pleine-largeur" data-ecran="15">Voir le litige</a>' + arbre;
+    } else if (mm.statut === "sans-declaration") {
+      if (mm.refusMoi) {
+        html += '<div class="encart encart-alerte" role="alert" style="margin-top:var(--space-3)">' + Esport.icone("alerte", "f-primary") +
+          "<div><strong>Déclaration refusée : délai dépassé</strong><p>Ta tentative de " + mm.refusMoi + " arrive après la clôture.</p></div></div>";
+      }
+      html += '<div class="issue"><span class="pictogramme">' + Esport.icone("alerte", "f-primary") + "</span>" +
+        "<h2>Aucun résultat déclaré</h2><p>Ni toi ni " + c.adversaire + " n'avez déclaré de score avant " + Esport.hhmm(limite) +
+        ". Vous êtes tous les deux éliminés ; ton adversaire prévu au tour suivant est qualifié d'office.</p></div>";
+      action = '<a href="#" class="bouton bouton-primaire bouton-pleine-largeur" data-ecran="04">Trouver un autre tournoi</a>' + arbre;
     } else if (mm.statut === "retenu-adverse") {
       // Une seule déclaration à l'échéance : celle de l'adversaire est retenue (S07-02)
       const limiteC = limiteContestation();
@@ -193,12 +221,12 @@
 
     if (e.target.closest("#envoyer")) {
       if (maintenant > Esport.limiteDeclaration()) {
-        // Délai écoulé : la déclaration est refusée (S07-01) ; seule celle de l'adversaire compte
-        Esport.majMonMatch({ refusMoi: Esport.hhmm(maintenant), correction: false,
-          declAdv: mm.declAdv || declAdverse, statut: "retenu-adverse" });
+        // Délai écoulé : la déclaration est refusée (S07-01)
+        if (mm.declAdv) Esport.majMonMatch({ refusMoi: Esport.hhmm(maintenant), correction: false, statut: "retenu-adverse" });
+        else eliminerSansDeclaration(Esport.hhmm(maintenant));
         return;
       }
-      if (saisie.moi === saisie.adv) {
+      if (saisie.moi === saisie.adv && !nulAutorise) {
         erreur = "Un match à élimination ne peut pas finir sur un nul : indique le score après prolongation ou tirs au but.";
         return rendre();
       }
