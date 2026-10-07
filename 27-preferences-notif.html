@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<!-- Écran 27 — Préférences de notification.
+     US : S12-01 (un choix par famille ; les notifications d'un match en cours ne se désactivent pas),
+     S12-02 (refus des SMS sans perdre les notifications dans l'application, si le pays a activé les SMS ;
+     messages promotionnels seulement avec consentement). -->
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Préférences de notification</title>
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .bloc { margin: 0 var(--page-gutter); background: var(--color-surface); border-radius: var(--radius-md); box-shadow: var(--shadow-card); padding: 0 var(--space-4); }
+    .bloc .demo-ligne:last-child { border-bottom: 0; }
+    .demo-ligne:disabled { cursor: default; }
+    .demo-ligne:disabled .inter { opacity: .45; }
+    .toujours { font-size: var(--font-size-xs); color: var(--color-text-muted); white-space: nowrap; }
+    .note { font-size: var(--font-size-xs); color: var(--color-text-secondary); padding: var(--space-2) var(--page-gutter) 0; }
+    .case { display: flex; gap: var(--space-3); align-items: flex-start; padding: var(--space-3) 0; cursor: pointer; font-size: var(--font-size-sm); }
+    .case input { width: 22px; height: 22px; accent-color: var(--color-primary); flex-shrink: 0; margin-top: 1px; }
+  </style>
+</head>
+<body data-zone="esport">
+<div class="cadre">
+  <div class="telephone">
+    <div class="barre-etat" data-heure="21:10"></div>
+    <header class="entete-esport" data-titre="Notifications" data-repli="23"></header>
+    <main class="contenu" id="page"></main>
+    <nav class="nav-bas" data-onglet="23"></nav>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/esport.js"></script>
+<script src="js/demo.js"></script>
+<script>
+  /* Interrupteur, avec le style de ceux du menu de démo */
+  function interrupteur(attribut, valeur, actif, libelle, aide, verrouille) {
+    return '<button class="demo-ligne" role="switch" ' + attribut + '="' + valeur + '" aria-checked="' + actif + '"' + (verrouille ? " disabled" : "") + ">" +
+      "<span>" + libelle + "<small>" + aide + "</small></span>" +
+      (verrouille ? '<span class="toujours">Toujours actif</span>' : "") +
+      '<span class="inter' + (actif ? " on" : "") + '"></span></button>';
+  }
+
+  function rendre() {
+    let html = '<h2 class="titre-section">Dans l\'application</h2><div class="bloc">' +
+      DONNEES.famillesNotif.map((f) => interrupteur("data-famille", f.id, Esport.familleActive(f.id), f.libelle, f.aide, f.verrouillee)).join("") + "</div>" +
+      '<p class="note">Les notifications d\'un match en cours (convocation, rappel 5 minutes avant) ne peuvent pas être désactivées.</p>';
+
+    // SMS : seulement si le pays les a activés (S12-02)
+    html += '<h2 class="titre-section">SMS</h2>';
+    if (Esport.fonction("sms")) {
+      html += '<div class="bloc">' + interrupteur("data-sms", "1", !Etat.get("refusSms"), "Recevoir aussi par SMS",
+        "Si tu refuses, tu gardes toutes les notifications dans l'application.") + "</div>" +
+        '<p class="note">Envoyés par « MAXIT ESPORT » sur le ' + DONNEES.joueur.numero + ".</p>";
+    } else {
+      html += '<p class="note">Les SMS ne sont pas proposés dans ton pays.</p>';
+    }
+
+    // Messages promotionnels : consentement explicite
+    html += '<h2 class="titre-section">Offres et actualités</h2><div class="bloc">' +
+      '<label class="case"><input type="checkbox" id="promo"' + (Etat.get("promo") ? " checked" : "") + ">" +
+      "<span>J'accepte de recevoir les offres et actualités de Max it E-sport (nouveaux tournois, promotions). Je peux retirer mon accord à tout moment.</span></label></div>" +
+      '<div class="fin-contenu"></div>';
+    document.getElementById("page").innerHTML = html;
+  }
+
+  document.getElementById("page").addEventListener("click", (e) => {
+    const f = e.target.closest("[data-famille]");
+    if (f && !f.disabled) {
+      const prefs = Object.assign({}, Etat.get("prefsNotif") || {});
+      prefs[f.dataset.famille] = Esport.familleActive(f.dataset.famille);   // true = désactivée
+      Etat.set("prefsNotif", prefs);
+      Nav.toast(prefs[f.dataset.famille] ? "Famille désactivée" : "Famille activée");
+    }
+    if (e.target.closest("[data-sms]")) {
+      Etat.set("refusSms", !Etat.get("refusSms"));
+      Nav.toast(Etat.get("refusSms") ? "SMS refusés : notifications dans l'application seulement" : "SMS activés");
+    }
+  });
+  document.getElementById("page").addEventListener("change", (e) => {
+    if (e.target.id !== "promo") return;
+    Etat.set("promo", e.target.checked);
+    Nav.toast(e.target.checked ? "Consentement enregistré" : "Consentement retiré");
+  });
+
+  Esport.monter(rendre);
+</script>
+</body>
+</html>

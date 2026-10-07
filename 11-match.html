@@ -101,6 +101,8 @@
     // Rappel 5 minutes avant le début si je n'ai pas confirmé
     if (!mm.presenceMoi && maintenant >= rappel && maintenant < debut && !mm.rappelVu) {
       Esport.majMonMatch({ rappelVu: true });
+      Esport.notifier({ famille: "match-en-cours", ecran: "11", titre: "Rappel : ton match commence dans 5 min",
+        texte: "Confirme ta présence avant " + Esport.hhmm(debut) + ", sinon tu seras déclaré forfait." });
       Nav.toast("Rappel : confirme ta présence, le match commence dans 5 min");
       return;
     }
@@ -111,6 +113,12 @@
       const issue = moiPresent && !advPresent ? "forfait-adverse" : !moiPresent && advPresent ? "mon-forfait" : "double-absence";
       // L'issue d'abord (chaque enregistrement relance l'affichage), puis le résultat dans l'arbre
       Esport.majMonMatch({ issue });
+      const avis = {
+        "forfait-adverse": ["Qualifié : forfait de " + c.adversaire, c.adversaire + " n'a pas confirmé sa présence. Tu passes au tour suivant."],
+        "mon-forfait": ["Tu es déclaré forfait", "Présence non confirmée avant " + Esport.hhmm(debut) + ". " + c.adversaire + " passe au tour suivant."],
+        "double-absence": ["Éliminé : double absence", "Ni toi ni " + c.adversaire + " n'avez confirmé votre présence."]
+      }[issue];
+      Esport.notifier({ famille: "match", ecran: "12", params: { id: t.id }, titre: avis[0], texte: avis[1] });
       if (issue === "forfait-adverse") Esport.enregistrerMonResultat(null, null, "Forfait", moi);
       else if (issue === "mon-forfait") Esport.enregistrerMonResultat(null, null, "Forfait", c.adversaire);
       else Esport.enregistrerResultat(Esport.cleMonMatch(), { a: null, b: null, vainqueur: null, mention: "Double absence" });

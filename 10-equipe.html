@@ -86,6 +86,8 @@
     Esport.changerEquipe(t.id, eq);
     if (eq.membres.length >= taille && !etaitComplete) {
       Esport.changerInscription(t.id, { etat: "inscrit" });
+      Esport.notifier({ famille: "equipe", ecran: "10", params: { id: t.id }, titre: "Équipe inscrite",
+        texte: eq.nom + " est complète : elle est inscrite à " + t.nom + ". Tous les membres sont prévenus." });
       Nav.toast("Équipe complète : inscrite au tournoi. Tous les membres sont prévenus.");
     }
   }

@@ -5,18 +5,18 @@
      C. paiement refusé depuis un article réservé (19) → retour sur 19, toujours verrouillé ;
      D. paiement abandonné depuis une vidéo sans bande-annonce (18) → retour sur 18, toujours verrouillée ;
      E. abonné → mon abonnement (24) → mettre fin → résilié.
-     À ouvrir avec l'accès entre fichiers locaux autorisé (voir controle.html). Remplace l'état de démonstration. -->
+     À ouvrir avec l'accès entre fichiers locaux autorisé (voir controle.html). Remplace l'état de démonstration.
+     « parcours-abonnement.html?unique » : même test dans le fichier unique maquette-esport.html. -->
 <html lang="fr"><meta charset="utf-8"><title>Test des parcours d'abonnement</title>
 <body><pre id="s"></pre><iframe id="f" style="width:390px;height:844px"></iframe>
+<script src="banc.js"></script>
 <script>
   const R = "../", f = document.getElementById("f"), s = document.getElementById("s");
   const log = (ok, m) => { s.textContent += (ok ? "✓ " : "✗ ") + m + "\n"; };
   const pause = (ms) => new Promise((r) => setTimeout(r, ms));
-  const doc = () => f.contentDocument;
+  const doc = Banc.doc;
   const texte = () => doc().body.innerText.replace(/\s+/g, " ");
-  const page = () => f.contentWindow.location.href.split("/").pop();
-  const charger = (url) => new Promise((r) => { f.onload = () => r(); f.src = R + url; });
-  const navigation = () => new Promise((r) => { f.onload = () => r(); });
+  const page = Banc.page, charger = Banc.charger, navigation = Banc.navigation;
   function cliquer(sel) { const e = doc().querySelector(sel); if (!e) throw new Error("introuvable : " + sel); e.click(); }
   function cliquerTexte(t) {
     const e = [...doc().querySelectorAll("a,button")].find((x) => x.textContent.trim().startsWith(t));
@@ -72,7 +72,7 @@
     log(/La suite est réservée/.test(texte()) && !doc().querySelector(".corps"), "C · 19 c04 : titre et résumé seulement, corps absent de la page");
     n = navigation(); cliquerTexte("S'abonner"); await n; await pause(300);
     // Refus : solde insuffisant, comme le raccourci de démo « Paiement refusé »
-    f.contentWindow.eval('Etat.set("scenario", "paiement-refuse")');
+    Banc.win().eval('Etat.set("scenario", "paiement-refuse")');
     n = navigation(); cliquer("#payer"); await n; await pause(300);
     await payer(); await attendre(() => /Paiement refusé/.test(texte()), 10000, "refus");
     log(true, "C · 22 : paiement refusé");

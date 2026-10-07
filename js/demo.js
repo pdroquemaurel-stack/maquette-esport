@@ -34,7 +34,10 @@ const Demo = (function () {
     { libelle: "Paiement abandonné", ecran: "22", scenario: "paiement-abandonne" },
     { libelle: "Abonnement résilié", ecran: "24", scenario: "resilie" },
     { libelle: "Abonnement expiré", ecran: "24", scenario: "expire" },
-    { libelle: "Pseudo jugé offensant", ecran: "23", scenario: "pseudo-offensant" }
+    { libelle: "Pseudo jugé offensant", ecran: "23", scenario: "pseudo-offensant" },
+    { libelle: "Compte supprimé (30 jours après)", ecran: "28", scenario: "compte-supprime" },
+    // Sans changer d'écran : une notification arrive en moins de 5 secondes (S12-01)
+    { libelle: "Nouvelle notification", action: "notification", aide: "Arrive sur l'écran affiché en moins de 5 s" }
   ];
 
   const ICONE_REGLAGES =
@@ -71,6 +74,10 @@ const Demo = (function () {
 
     html += '<p class="demo-groupe">États alternatifs</p>';
     RACCOURCIS.forEach((r, i) => {
+      if (r.action) {
+        html += '<button class="demo-ligne" data-raccourci="' + i + '"><span>' + r.libelle + "<small>" + r.aide + "</small></span>" + ICONE_FLECHE + "</button>";
+        return;
+      }
       const ecran = ECRANS[r.ecran];
       html +=
         '<button class="demo-ligne" data-raccourci="' + i + '"' + (ecran.pret ? "" : " disabled") + ">" +
@@ -117,6 +124,16 @@ const Demo = (function () {
     const raccourci = cible.closest("[data-raccourci]");
     if (raccourci && !raccourci.disabled) {
       const r = RACCOURCIS[Number(raccourci.dataset.raccourci)];
+      if (r.action === "notification") {
+        fermer();
+        setTimeout(() => {
+          const notif = { famille: "tournoi", ecran: "06", params: { id: "t04" }, titre: "Nouveau tournoi sur un jeu suivi",
+            texte: "MEA Free Fire Championship : les inscriptions sont ouvertes." };
+          if (typeof Esport !== "undefined") Esport.notifier(notif);
+          Nav.toast("Notification : " + notif.titre);
+        }, 2000);
+        return;
+      }
       // Un abonnement expiré ramène le joueur au niveau gratuit (S11-04)
       if (r.scenario === "expire" || r.scenario === "abonnement-expire") Etat.set("abonne", false);
       fermer();

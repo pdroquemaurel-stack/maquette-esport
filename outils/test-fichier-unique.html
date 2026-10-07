@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<!-- Test propre au fichier unique maquette-esport.html (hors maquette) :
+     ouverture sur l'accueil Max it, liens classiques (href), entrée par « E-sport », bouton retour du routeur,
+     ouverture directe d'un écran par l'adresse (#06-tournoi.html?id=t02).
+     Les autres tests se lancent aussi sur le fichier unique : controle.html?unique#gratuit, parcours-*.html?unique.
+     À ouvrir avec l'accès entre fichiers locaux autorisé (voir controle.html). -->
+<html lang="fr"><meta charset="utf-8"><title>Test du fichier unique</title>
+<body><pre id="s"></pre><iframe id="f" style="width:390px;height:844px"></iframe>
+<script>
+  const f = document.getElementById("f"), s = document.getElementById("s");
+  const log = (ok, m) => { s.textContent += (ok ? "✓ " : "✗ ") + m + "\n"; };
+  const pause = (ms) => new Promise((r) => setTimeout(r, ms));
+  const ecran = () => f.contentDocument.getElementById("ecran");
+  const doc = () => ecran().contentDocument;
+  const routeur = () => f.contentWindow.MaquetteRouteur;
+  const texte = () => doc().body.innerText.replace(/\s+/g, " ");
+  const navigation = () => new Promise((r) => ecran().addEventListener("load", () => r(), { once: true }));
+  async function cliquer(sel) {
+    const e = doc().querySelector(sel);
+    if (!e) throw new Error("introuvable : " + sel);
+    const n = navigation(); e.click(); await n; await pause(300);
+  }
+  /* Ouvre le fichier unique ; on passe par une page vide pour forcer un vrai rechargement */
+  async function ouvrir(adresse) {
+    await new Promise((r) => { f.onload = () => r(); f.src = "about:blank"; });
+    await new Promise((r) => { f.onload = () => r(); f.src = "../maquette-esport.html" + adresse; });
+  }
+
+  (async () => { try {
+    localStorage.clear();
+    await ouvrir(""); await pause(500);
+    log(routeur().courant === "00a-maxit-accueil.html" && /Bonjour Youssef/.test(texte()), "Ouverture : accueil Max it (00a)");
+    log(!!doc().querySelector(".demo-bouton"), "Menu de démo présent");
+    await cliquer(".onglet-central");
+    log(routeur().courant === "00b-maxit-univers.html", "Lien classique : bouton central → 00b");
+    await cliquer('a[href="00c-maxit-gaming.html"]');
+    log(routeur().courant === "00c-maxit-gaming.html", "Gaming → 00c");
+    await cliquer('[data-action="esport"]');
+    log(routeur().courant === "03-accueil.html" && /Salut Youss_KZ/.test(texte()), "E-sport → accueil e-sport (03)");
+    await cliquer('.nav-bas [data-ecran="04"]');
+    await cliquer('[data-ecran="06"][data-id="t02"]');
+    log(routeur().courant === "06-tournoi.html?id=t02" && /eFootball Masters Casablanca/.test(texte()), "04 → 06 t02, paramètre transmis");
+    await cliquer('[data-action="retour"]');
+    log(routeur().courant === "04-calendrier.html", "Retour du routeur : 06 → 04");
+    await cliquer('.nav-bas [data-ecran="03"]');
+    await cliquer('a[href="00c-maxit-gaming.html"]');
+    log(routeur().courant === "00c-maxit-gaming.html", "03 : flèche retour → Game corner");
+
+    await ouvrir("#06-tournoi.html?id=t04"); await pause(500);
+    log(routeur().courant === "06-tournoi.html?id=t04" && /MEA Free Fire Championship/.test(texte()), "Adresse directe #06-tournoi.html?id=t04");
+  } catch (e) { log(false, "erreur : " + e.message); }
+  s.textContent += "FIN"; })();
+</script>

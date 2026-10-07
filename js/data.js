@@ -94,9 +94,9 @@ const DONNEES = {
   /* ---- Décisions contestables (écran 26, S08-04, S04-05) ---- */
   decisions: {
     exclusion: {
-      titre: "Exclusion d'un tournoi", tournoi: "t01",
-      motif: "Propos insultants envers un adversaire dans le chat d'un match, signalés le 7 oct.",
-      duree: "Jusqu'à la fin de la Coupe Atlas Free Fire (18 oct.)",
+      titre: "Exclusion d'un tournoi", tournoi: "t10",
+      motif: "Propos insultants envers un adversaire dans le chat d'un match, signalés le 19 sept.",
+      duree: "Jusqu'à la fin de la Free Fire Rentrée Cup (20 sept.)",
       consequence: "Tes matchs restants comptent comme des forfaits ; une dotation non remise est annulée."
     },
     "refus-identifiant": {
@@ -120,6 +120,68 @@ const DONNEES = {
       duree: "7 jours, jusqu'au 14 oct."
     }
   },
+
+  /* ---- Notifications (S12-01) ----
+     Familles réglables dans 27 ; « match-en-cours » (convocation, rappel) ne se désactive pas.
+     Chaque notification ouvre un écran : ecran, params (paramètres d'URL), scenario (état de 08…). */
+  famillesNotif: [
+    { id: "match-en-cours", libelle: "Match en cours", aide: "Convocation et rappel 5 min avant", verrouillee: true },
+    { id: "match", libelle: "Résultats et matchs", aide: "Résultat, litige, qualification, élimination, victoire" },
+    { id: "inscription", libelle: "Inscriptions", aide: "Acceptée, refusée, sortie de liste d'attente" },
+    { id: "tournoi", libelle: "Vie des tournois", aide: "Report, annulation, règlement modifié, nouveau tournoi sur un jeu suivi" },
+    { id: "equipe", libelle: "Équipe", aide: "Invitation, demande, équipe inscrite" },
+    { id: "abonnement", libelle: "Abonnement", aide: "Activation, reconduction, échec de paiement, expiration" },
+    { id: "dotation", libelle: "Dotations", aide: "Dotation versée sur ton numéro Max it" },
+    { id: "exclusion", libelle: "Décisions", aide: "Exclusion d'un tournoi ou de la plateforme" }
+  ],
+
+  notifications: [
+    { id: "n01", famille: "match-en-cours", date: "2026-10-09T21:10", lue: false, ecran: "11",
+      titre: "Convocation : quart de finale", texte: "Défi eFootball du vendredi, contre Rachid_GOAT à 21:30. Confirme ta présence dès 21:20." },
+    { id: "n02", famille: "match", date: "2026-10-09T20:42", lue: false, ecran: "12", params: { id: "t05" },
+      titre: "Qualifié pour les quarts de finale", texte: "Tu as battu Brahim.10 (3–1) au Défi eFootball du vendredi." },
+    { id: "n03", famille: "tournoi", date: "2026-10-08T18:00", lue: false, ecran: "07", params: { id: "t01" },
+      titre: "Règlement modifié", texte: "Coupe Atlas Free Fire : accepte la version 2 du règlement pour garder ta place." },
+    { id: "n04", famille: "match", date: "2026-10-09T20:41", lue: true, ecran: "12", params: { id: "t05" },
+      titre: "Résultat enregistré", texte: "Youss_KZ 3–1 Brahim.10 : déclarations identiques, match clos." },
+    { id: "n05", famille: "equipe", date: "2026-10-08T12:30", lue: true, ecran: "10", params: { id: "t01" },
+      titre: "Équipe inscrite", texte: "Kenitra Kings est complète : elle est inscrite à la Coupe Atlas Free Fire." },
+    { id: "n06", famille: "inscription", date: "2026-10-08T10:15", lue: true, ecran: "06", params: { id: "t11" },
+      titre: "Liste d'attente : tu es 3e", texte: "PUBG Solo Night est complet. Tu seras prévenu si une place se libère." },
+    { id: "n07", famille: "equipe", date: "2026-10-07T19:20", lue: true, ecran: "10", params: { id: "t01" },
+      titre: "Demande acceptée", texte: "Yahya_FF a rejoint Kenitra Kings après ta validation." },
+    { id: "n08", famille: "equipe", date: "2026-10-07T17:05", lue: true, ecran: "09", params: { id: "t12" },
+      titre: "Invitation d'équipe", texte: "Hassan.Pro t'invite à rejoindre Casa Drop Squad pour la PUBG Squad Casablanca." },
+    { id: "n09", famille: "tournoi", date: "2026-10-06T09:00", lue: true, ecran: "06", params: { id: "t06" },
+      titre: "Tournoi reporté", texte: "CODM Rabat Showdown est reporté au 30 oct. à 20:00." },
+    { id: "n10", famille: "tournoi", date: "2026-10-05T11:00", lue: true, ecran: "06", params: { id: "t12" },
+      titre: "Nouveau tournoi sur un jeu suivi", texte: "PUBG Squad Casablanca : les inscriptions sont ouvertes." },
+    { id: "n11", famille: "tournoi", date: "2026-10-04T16:30", lue: true, ecran: "04",
+      titre: "Tournoi annulé", texte: "Tanger Free Fire Cup est annulé faute de participants. Ton inscription est retirée." },
+    { id: "n12", famille: "inscription", date: "2026-10-04T08:45", lue: true, ecran: "08", params: { id: "t09" }, scenario: "refus-doublon",
+      titre: "Inscription refusée", texte: "MEA eFootball Cup : ton identifiant de jeu est déjà inscrit par un autre compte." },
+    { id: "n13", famille: "inscription", date: "2026-10-03T14:10", lue: true, ecran: "06", params: { id: "t05" },
+      titre: "Une place s'est libérée", texte: "Tu passes de la liste d'attente aux inscrits du Défi eFootball du vendredi." },
+    { id: "n14", famille: "dotation", date: "2026-10-03T10:00", lue: true, ecran: "05",
+      titre: "Dotation versée", texte: "500 Mo de data crédités sur ton numéro Max it (Défi eFootball du jeudi)." },
+    { id: "n15", famille: "match", date: "2026-10-02T22:40", lue: true, ecran: "05",
+      titre: "Victoire finale !", texte: "Tu remportes le Défi eFootball du jeudi. Bravo !" },
+    { id: "n16", famille: "match", date: "2026-09-20T22:15", lue: true, ecran: "12", params: { id: "t10" },
+      titre: "Éliminé", texte: "Free Fire Rentrée Cup : tu termines 117e sur 128." },
+    { id: "n17", famille: "exclusion", date: "2026-09-19T23:00", lue: true, ecran: "26", params: { id: "t10", decision: "exclusion" },
+      titre: "Exclusion d'un tournoi", texte: "Tu es exclu de la Free Fire Rentrée Cup. Motif : propos insultants. Tu peux contester." },
+    { id: "n18", famille: "abonnement", date: "2026-09-08T00:05", lue: true, ecran: "24",
+      titre: "Abonnement expiré", texte: "Ton abonnement mensuel a expiré. Tu es revenu au niveau gratuit, ton historique est conservé." },
+    { id: "n19", famille: "abonnement", date: "2026-09-07T08:00", lue: true, ecran: "24",
+      titre: "Échec de paiement", texte: "La reconduction de ton abonnement a échoué : solde Orange Money insuffisant." },
+    { id: "n20", famille: "abonnement", date: "2026-09-04T09:00", lue: true, ecran: "24",
+      titre: "Reconduction à venir", texte: "Ton abonnement mensuel sera reconduit le 7 sept. pour 49 MAD." },
+    { id: "n21", famille: "abonnement", date: "2026-08-08T19:30", lue: true, ecran: "21",
+      titre: "Abonnement activé", texte: "Bienvenue chez les abonnés : tous les tournois et contenus réservés sont ouverts." }
+  ],
+
+  /* Pseudonyme anonyme après suppression du compte (S01-04) */
+  pseudoAnonyme: "Joueur_anonyme_7F3A",
 
   /* Forfaits du joueur sur 30 jours (suspension après 3 forfaits, S06-03) */
   forfaits: ["2026-09-19", "2026-10-02", "2026-10-07"],

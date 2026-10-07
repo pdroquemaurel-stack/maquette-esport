@@ -71,10 +71,14 @@
   const ins = Esport.inscription(t.id);
   if (resultat === "acquise" && !(ins && ins.etat === "inscrit")) {
     Esport.changerInscription(t.id, { etat: "inscrit" });
+    Esport.notifier({ famille: "inscription", ecran: "06", params: { id: t.id }, titre: "Inscription acceptée",
+      texte: t.nom + " : ta place est acquise. Début le " + Esport.jourCourt(t.debut) + " à " + Esport.heure(t.debut) + "." });
   }
   if (resultat === "attente" && !(ins && ins.etat === "attente")) {
     // Inscrit après les joueurs déjà en attente : rang selon l'horodatage
     Esport.changerInscription(t.id, { etat: "attente", rang: 4 });
+    Esport.notifier({ famille: "inscription", ecran: "06", params: { id: t.id }, titre: "Liste d'attente : tu es 4e",
+      texte: t.nom + " est complet. Tu seras prévenu si une place se libère." });
   }
   if (resultat === "abonnement-expire") {
     Esport.changerInscription(t.id, null);

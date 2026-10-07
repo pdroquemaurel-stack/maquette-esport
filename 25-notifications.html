@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<!-- Écran 25 — Centre de notifications (cloche de l'en-tête).
+     US : S12-01 (événements notifiés par famille ; une famille désactivée n'est plus affichée,
+     sauf « match en cours » ; chaque notification ouvre l'écran concerné), S03-06 (dotation versée),
+     S08-04 (exclusion), S03-04 / S11-04 (abonnement). -->
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Notifications</title>
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .outils-notif { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); padding: 0 var(--page-gutter) var(--space-2); font-size: var(--font-size-sm); color: var(--color-text-secondary); }
+    .outils-notif .bouton-lien { font-size: var(--font-size-sm); }
+    .outils-notif .bouton-lien:disabled { color: var(--color-text-muted); cursor: default; }
+    .groupe-notif { margin: 0 var(--page-gutter); background: var(--color-surface); border-radius: var(--radius-md); box-shadow: var(--shadow-card); }
+    .notif { display: flex; gap: var(--space-3); align-items: flex-start; padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--color-border); width: 100%; text-align: left; }
+    .notif:last-child { border-bottom: 0; }
+    .notif .icone-notif { width: 36px; height: 36px; border-radius: var(--radius-round); background: var(--color-surface-warm); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .notif .icone-notif svg { width: 18px; height: 18px; }
+    .notif.non-lue .icone-notif { background: var(--color-primary-soft); }
+    .notif .corps-notif { flex: 1; min-width: 0; }
+    .notif .titre-notif { display: block; font-size: var(--font-size-sm); font-weight: var(--font-weight-medium); }
+    .notif.non-lue .titre-notif { font-weight: var(--font-weight-bold); }
+    .notif .texte-notif { display: block; font-size: var(--font-size-xs); color: var(--color-text-secondary); margin-top: 2px; }
+    .notif .heure { font-size: var(--font-size-xs); color: var(--color-text-muted); white-space: nowrap; display: flex; flex-direction: column; align-items: flex-end; gap: var(--space-1); }
+    .notif .point { width: 8px; height: 8px; border-radius: var(--radius-round); background: var(--color-primary); }
+    .desactivees { margin: var(--space-4) var(--page-gutter) 0; }
+  </style>
+</head>
+<body data-zone="esport">
+<div class="cadre">
+  <div class="telephone">
+    <div class="barre-etat" data-heure="21:10"></div>
+    <header class="entete-esport" data-titre="Notifications" data-repli="03"></header>
+    <main class="contenu" id="page"></main>
+    <nav class="nav-bas" data-onglet=""></nav>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/esport.js"></script>
+<script src="js/demo.js"></script>
+<script>
+  /* Pictogramme de chaque famille */
+  const ICONES_FAMILLES = {
+    "match-en-cours": "manette", match: "trophee", inscription: "article", tournoi: "calendrier",
+    equipe: "groupe", abonnement: "cadenas", dotation: "boutique", exclusion: "alerte"
+  };
+
+  /* « 21:10 » aujourd'hui, sinon « 8 oct. » */
+  function quand(iso) {
+    return iso.slice(0, 10) === DONNEES.maintenant.slice(0, 10) ? iso.slice(11, 16) : Esport.jourCourt(iso.slice(0, 10));
+  }
+
+  function rendre() {
+    const visibles = Esport.notificationsVisibles();
+    const nonLues = Esport.nonLues();
+    const desactivees = DONNEES.famillesNotif.filter((f) => !Esport.familleActive(f.id));
+    let html = '<div class="outils-notif"><span>' + (nonLues ? nonLues + (nonLues > 1 ? " non lues" : " non lue") : "Tout est lu") + "</span>" +
+      '<button class="bouton-lien" id="tout-lu"' + (nonLues ? "" : " disabled") + ">Tout marquer comme lu</button></div>";
+
+    // Liste groupée par famille, dans l'ordre des préférences
+    DONNEES.famillesNotif.forEach((f) => {
+      const liste = visibles.filter((n) => n.famille === f.id);
+      if (!liste.length) return;
+      html += '<h2 class="titre-section">' + f.libelle + "</h2><div class=\"groupe-notif\">" + liste.map((n) =>
+        '<button class="notif' + (n.lue ? "" : " non-lue") + '" data-notif="' + n.id + '">' +
+        '<span class="icone-notif">' + Esport.icone(ICONES_FAMILLES[n.famille], n.lue ? "f-text" : "f-primary") + "</span>" +
+        '<span class="corps-notif"><span class="titre-notif">' + n.titre + '</span><span class="texte-notif">' + n.texte + "</span></span>" +
+        '<span class="heure">' + quand(n.date) + (n.lue ? "" : '<span class="point" aria-label="non lue"></span>') + "</span></button>"
+      ).join("") + "</div>";
+    });
+    if (!visibles.length) html += '<div class="vide"><strong>Aucune notification</strong>Tu seras prévenu ici de tout ce qui te concerne.</div>';
+
+    html += '<a href="#" class="encart desactivees" data-ecran="27">' + Esport.icone("cloche", "f-primary") + "<div><strong>Préférences de notification</strong><p>" +
+      (desactivees.length ? desactivees.length + (desactivees.length > 1 ? " familles désactivées : " : " famille désactivée : ") + desactivees.map((f) => f.libelle.toLowerCase()).join(", ") + "."
+                          : "Choisis ce dont tu veux être averti.") + "</p></div></a>" +
+      '<div class="fin-contenu"></div>';
+    document.getElementById("page").innerHTML = html;
+  }
+
+  /* Ouvrir une notification : elle devient lue et mène à l'écran concerné */
+  document.getElementById("page").addEventListener("click", (e) => {
+    if (e.target.closest("#tout-lu")) { Esport.toutMarquerLu(); Nav.toast("Toutes les notifications sont lues"); return; }
+    const b = e.target.closest("[data-notif]");
+    if (!b) return;
+    const n = Esport.notifications().find((x) => x.id === b.dataset.notif);
+    Esport.marquerLue(n.id);
+    Nav.aller(n.ecran, n.scenario || null, n.params || null);
+  });
+
+  Esport.monter(rendre);
+</script>
+</body>
+</html>

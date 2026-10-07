@@ -3,7 +3,7 @@
      Elle charge chaque écran dans un cadre de 390 × 844, dans le mode choisi, et signale :
      - les débordements horizontaux, les textes coupés, le contenu sous la barre du bas ;
      - les liens cassés (écran inconnu, page absente du registre) et les écrans sans sortie (impasses).
-     Mode : controle.html#gratuit ou controle.html#abonne.
+     Mode : controle.html#gratuit ou controle.html#abonne ; « controle.html?unique#abonne » contrôle le fichier unique.
      Le navigateur doit autoriser l'accès entre fichiers locaux, par exemple :
      msedge --allow-file-access-from-files outils/controle.html#abonne
      Attention : la page remplace l'état de démonstration mémorisé (localStorage). -->
@@ -20,6 +20,8 @@
 <body>
 <h1>Contrôle de la maquette</h1>
 <pre id="sortie">Contrôle en cours…</pre>
+<iframe id="f"></iframe>
+<script src="banc.js"></script>
 <script>
   /* Écrans contrôlés, avec les variantes utiles (tournois dans différents états) */
   const PAGES = [
@@ -30,6 +32,7 @@
     "07-reglement.html?id=t01", "07-reglement.html?id=t02", "07-reglement.html?id=t12",
     "08-inscription-resultat.html?id=t09", "09-equipe-choix.html?id=t12", "10-equipe.html?id=t01",
     "11-match.html", "14-resultat.html", "15-litige.html",
+    "25-notifications.html", "27-preferences-notif.html", "28-mes-donnees.html",
     "26-contestation.html?decision=exclusion&id=t01", "26-contestation.html?decision=refus-identifiant&id=t09",
     "18-video.html?id=c01", "18-video.html?id=c02", "18-video.html?id=c09", "19-article.html?id=c03", "19-article.html?id=c04",
     "20-contenus.html", "21-offre.html", "22-paiement-maxit.html?offre=mensuelle", "23-profil.html", "24-abonnement.html",
@@ -111,19 +114,17 @@
   }
 
   async function lancer() {
-    let texte = "Mode " + (abonne ? "joueur abonné" : "joueur gratuit") + "\n\n";
+    let texte = "Mode " + (abonne ? "joueur abonné" : "joueur gratuit") + (Banc.unique ? " · fichier unique" : "") + "\n\n";
     let total = 0;
     for (const page of PAGES) {
       // Chaque écran part du même état de démonstration
       localStorage.setItem("maquette-esport-etat", JSON.stringify({ abonne }));
-      const cadre = document.createElement("iframe");
-      document.body.appendChild(cadre);
-      await new Promise((fini) => { cadre.onload = fini; cadre.src = "../" + page; });
+      await Banc.charger(page);
       await new Promise((fini) => setTimeout(fini, 700));
       let defauts, mode = "";
       try {
-        const doc = cadre.contentDocument;
-        defauts = defautsVisuels(doc).concat(defautsLiens(doc, cadre.contentWindow));
+        const doc = Banc.doc();
+        defauts = defautsVisuels(doc).concat(defautsLiens(doc, Banc.win()));
         mode = resumeMode(doc, page);
       } catch (erreur) {
         defauts = ["contrôle impossible (" + erreur.message + ") : autoriser l'accès entre fichiers locaux"];
@@ -132,7 +133,6 @@
       total += defauts.length;
       texte += (defauts.length ? "✗ " : "✓ ") + page + (mode ? "  [" + mode + "]" : "") + "\n" +
         defauts.slice(0, 8).map((d) => "    " + d + "\n").join("");
-      cadre.remove();
     }
     localStorage.removeItem("maquette-esport-etat");
     texte += "\n" + (total ? total + " défaut(s)" : "Aucun défaut") + "\nFIN";

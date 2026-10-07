@@ -1,18 +1,19 @@
 <!DOCTYPE html>
 <!-- Test du parcours de match (hors maquette) : 05 → 11 (présence) → 14 (déclarations divergentes)
      → 15 (capture, arbitrage) → 12 (arbre et classement recalculés) → 05.
-     À ouvrir avec l'accès entre fichiers locaux autorisé (voir controle.html). Remplace l'état de démonstration. -->
+     À ouvrir avec l'accès entre fichiers locaux autorisé (voir controle.html). Remplace l'état de démonstration.
+     « parcours-match.html?unique » : même test dans le fichier unique maquette-esport.html. -->
 <html lang="fr"><meta charset="utf-8"><title>Test du parcours de match</title>
 <body><pre id="s"></pre><iframe id="f" style="width:390px;height:844px"></iframe>
+<script src="banc.js"></script>
 <script>
 // Parcours : 05 → 11 (présence) → 14 (déclaration divergente) → 15 (capture, arbitrage) → 12 → 05
 const R="../", f=document.getElementById("f"), s=document.getElementById("s");
 const log=(ok,m)=>{s.textContent+=(ok?"✓ ":"✗ ")+m+"\n";};
 const pause=ms=>new Promise(r=>setTimeout(r,ms));
-const doc=()=>f.contentDocument, win=()=>f.contentWindow;
+const doc=Banc.doc, win=Banc.win;
 const texte=()=>doc().body.innerText.replace(/\s+/g," ");
-function charger(url){return new Promise(r=>{f.onload=()=>r(); f.src=R+url;});}
-function attendreNav(){return new Promise(r=>{f.onload=()=>r();});}
+const charger=Banc.charger, attendreNav=Banc.navigation;
 async function attendre(cond,ms,quoi){const fin=Date.now()+ms;while(Date.now()<fin){try{if(cond())return true;}catch(e){}await pause(250);}log(false,"délai dépassé : "+quoi);return false;}
 function cliquer(sel){const e=doc().querySelector(sel); if(!e) throw new Error("introuvable "+sel); e.click();}
 function cliquerTexte(t){const e=[...doc().querySelectorAll("a,button")].find(x=>x.textContent.trim().startsWith(t)); if(!e) throw new Error("bouton introuvable : "+t); e.click();}

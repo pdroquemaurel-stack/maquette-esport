@@ -203,7 +203,9 @@ Icône discrète en haut à droite, présente sur tous les écrans. Ce n'est pas
   - équipe incomplète à la clôture (10) ;
   - paiement refusé, paiement abandonné (22, retour sur l'écran affiché) ;
   - abonnement résilié, abonnement expiré (24) ;
-  - pseudo jugé offensant (23).
+  - pseudo jugé offensant (23) ;
+  - compte supprimé, 30 jours après la demande (28 ; pseudonyme anonyme dans 12 et 17) ;
+  - nouvelle notification, reçue en moins de 5 s sur l'écran affiché (sans changer d'écran).
 
 ---
 
@@ -255,43 +257,70 @@ En-tête      : 🔔 25 Notifications        Menu démo : icône en haut à droi
 | 3 | 05, 07, 08, 09, 10 et page de contrôle `outils/controle.html` | terminé |
 | 4 | 11, 14, 15, 26 et test de parcours `outils/parcours-match.html` | terminé |
 | 5 | 18, 19, 20, 21, 22, 23, 24 et test de parcours `outils/parcours-abonnement.html` | terminé |
+| 6 | 25, 27, 28, fichier unique `maquette-esport.html`, tests `outils/parcours-notifications.html` et `outils/test-fichier-unique.html` | terminé |
+
+**Tests** (dossier `outils/`, à ouvrir avec l'accès entre fichiers locaux autorisé, par exemple `msedge --allow-file-access-from-files`) : `controle.html#gratuit` et `#abonne` (débordements, textes coupés, barre du bas, liens, impasses), `parcours-match.html`, `parcours-abonnement.html`, `parcours-notifications.html`, `test-fichier-unique.html`. Ajouter `?unique` pour les rejouer dans le fichier unique.
+**Fichier unique** : `maquette-esport.html`, reconstruit par `node outils/construire-fichier-unique.js` après chaque modification.
 
 Démo des matchs (lot 4) : dans 11, 14 et 15, le temps défile 30 fois plus vite (1 s = 30 s) ; les raccourcis du menu de démo mènent à chaque état.
 
 ## Couverture
 
-### US MVP joueur couvertes en partie
-| US | Limite dans la maquette |
-|---|---|
-| S01-01 | Compte suspendu et session expirée simulés via le menu de démo. |
-| S01-05 | La reprise elle-même est côté serveur ; seul son résultat est visible (02, 23, 28). |
-| S06-01, S06-04 | Automatismes sans écran propre ; leurs effets sont visibles dans 11 et 12 (vainqueur au tour suivant, qualification d'office après double absence). |
-| S06-02 | Compte à rebours, présence de -10 min au début, rappel à -5 min, démarrage dès que les deux sont présents (11). La convocation reçue 15 min avant arrive par notification (25). |
-| S06-03 | Forfait (motif, heure), victoire par forfait, double absence (11, 12). Le compteur de forfaits est fixe (1 sur 30 jours) ; la suspension après 3 forfaits est montrée en 08. Le forfait en poule (défaite au score de la fiche jeu) n'est pas maquetté. |
-| S07-01 | Saisie, correction tant que l'adversaire n'a pas déclaré, match clos par concordance, refus après le délai (14). Ouverture de la déclaration : voir « Décisions ». |
-| S07-02 | Déclaration adverse retenue, contestation pendant 30 min, résultat définitif sans contestation (14). Les avis à l'adversaire passent par les notifications (25). Aucune déclaration dans le délai : voir « Décisions ». |
-| S07-03 | Litige automatique, 3 captures au plus, délai de 30 min, arbitrage puis décision avec motif (15). Les captures restent sur l'appareil ; la conservation 90 jours est seulement mentionnée. La décision est simulée : avec au moins une capture, la déclaration du joueur l'emporte. |
-| S01-02 | Pseudo unique modifiable une fois tous les 30 jours, identifiant de jeu refusé s'il est déjà rattaché, pseudo offensant remplacé (02, 23, raccourci « Pseudo jugé offensant »). Les badges ne sont pas maquettés (fonction non activée). |
-| S09-02 | Côté joueur seulement : bouton « Signaler » avec motif, une fois par article (19). Le retrait après 3 signalements, la publication et la règle d'accès par pays relèvent du back-office ; seul leur effet (verrou) est visible. |
-| S10-01 | Lecteur simulé sans fichier vidéo : lecture dans l'application, sous-titres, mode « économie de données » (240p), reprise à la seconde près (18). Non maquettés : démarrage en moins de 5 s, fluidité et reprise après une coupure réseau. |
-| S10-02 | Vidéo réservée verrouillée avec condition d'accès et offre ; ni téléchargement ni lien externe (18, 20). Le blocage d'une adresse de lecture ouverte hors plateforme est côté serveur. |
-| S11-01 | Contenus et tournois réservés visibles avec leur condition d'accès, bandes-annonces libres, page d'offre ouverte seulement par un geste du joueur (03, 06, 18, 19, 20, 21, 23). Le corps d'un article réservé n'est pas inséré dans la page, mais il reste présent dans `js/data.js` (dans le produit, le serveur ne l'enverrait pas). |
-| S11-02 | Offres et essai du pays (21), brique de paiement simulée avec offre et montant renseignés, issues confirmé / refusé / abandonné (22). Moyens de paiement et reçus : ceux de Max it, seulement évoqués. |
-| S11-03 | Retour exact sur l'écran d'origine (06, 18, 19, 23, 24, 03, 08), déverrouillé après confirmation et bascule en mode abonné ; toujours verrouillé après refus ou abandon (`outils/parcours-abonnement.html`). |
-| S11-04 | Offre, échéance, avis de reconduction selon la périodicité, « Mettre fin », états actif / résilié / expiré (24, 23, 03). L'avis lui-même arrive par notification (25) ; l'échec de reconduction est figuré par l'état « expiré ». |
-| S08-04 | Côté joueur seulement : décision d'exclusion (motif, durée, conséquences) et contestation transmise au responsable local (26). L'exclusion elle-même relève du back-office. |
-| S08-02 | Activation par pays simulée par un indicateur dans `data.js` (ex. masquer les vidéos). |
-| S12-02 | Courriels et SMS reçus hors de l'application ; seules les préférences (27) sont maquettées. |
-| S03-06 | Le versement sur le numéro Max it n'apparaît que par la notification (25). |
-| S03-03 | Acceptation obligatoire et réacceptation d'un règlement modifié maquettées (07). Seule la version acceptée est mémorisée, pas la date. L'avis « désinscrit après refus » arrive par notification (25). |
-| S04-01 | Place acquise, liste d'attente avec rang, refus pour pays (08), désinscription avant le début (06). Le passage du premier de la liste d'attente en cas de désistement est côté serveur ; il n'est visible que par notification (25). Pas de refus pour l'âge (S01-03 en suspens). |
-| S04-02 | Comme S04-01 ; la réponse en moins de 5 s est figurée par l'affichage immédiat de 08. Le joueur abonné s'inscrit aux tournois réservés comme aux autres. |
-| S04-03 | Création, nom unique, ouverte / fermée, demandes, invitation par pseudo, lien, transmission du rôle, départ du capitaine, inscription automatique, équipe incomplète à la clôture (09, 10). Les réponses des autres joueurs sont simulées par des délais ; la réception d'une invitation côté invité et les avis aux membres passent par les notifications (25). |
-| S04-04 | Liste des équipes ouvertes, demande acceptée par le capitaine (simulée), une seule équipe par tournoi (09). Non maquettés : le refus d'une demande pour critère non rempli et l'arrivée par le lien d'une équipe fermée. |
-| S04-05 | Refus pour compte ou identifiant de jeu déjà inscrit, avec motif et « Contester » vers 26 (08). La consignation du refus et sa consultation par le responsable local relèvent du back-office. |
+### Couverture finale des US MVP
 
-### US MVP joueur entièrement couvertes, à noter
-- S05-04 Classement d'un tournoi (backlog 15 Epics / 71 US) : couverte par l'onglet « Classement » de 12. La correction des E-Sport Orange Points citée dans un critère d'acceptation relève de l'Epic E15 (V2) et n'est pas maquettée.
+48 US MVP dans le backlog (15 Epics, 71 US) : 14 couvertes, 24 en partie, 9 hors périmètre (back-office), 1 en suspens.
+« En partie » : le parcours joueur est maquetté, mais une part de la règle est côté serveur, dans le back-office ou hors de l'application.
+
+| US | Titre | Couverture | Écrans | Limites et remarques |
+|---|---|---|---|---|
+| S01-01 | Authentification déléguée à Max it | En partie | 00c, 02, 03 | Entrée depuis Max it ; compte suspendu et session expirée simulés par le menu de démo. L'authentification elle-même est celle de Max it. |
+| S01-02 | Profil de joueur esport | En partie | 02, 17, 23 | Pseudo unique modifiable une fois tous les 30 jours, identifiant de jeu refusé s'il est déjà rattaché, pseudo offensant remplacé (02, 23, raccourci « Pseudo jugé offensant »). Les badges ne sont pas maquettés (fonction non activée). |
+| S01-03 | Âge du joueur et accès des mineurs | En suspens | — | Ni refus pour âge, ni consentement parental. |
+| S01-04 | Droits du joueur sur ses données | Couverte | 28, 12, 17 | Téléchargement : confirmation simulée, aucun fichier produit. Suppression sous 30 jours puis pseudonyme anonyme (raccourci « Compte supprimé »). |
+| S01-05 | Reprise des données de l'ancienne plateforme | En partie | 02, 05, 17, 23, 28 | La reprise elle-même est côté serveur ; seul son résultat est visible (02, 23, 28). |
+| S02-01 | Ajouter un nouveau jeu sans développement | Hors périmètre | — | Back-office. |
+| S02-02 | Format à élimination | En partie | 12 | Arbre à 16 joueurs. Exemptés et double élimination non maquettés ; génération de l'arbre côté serveur. |
+| S02-03 | Format en poules et championnat | En partie | 12 | Poules, barème, qualifiés, critère de départage. Répartition et barème définis dans le back-office. |
+| S03-01 | Création et configuration d'un tournoi | Hors périmètre | — | Back-office. |
+| S03-02 | Modifier, reporter, annuler ou dupliquer un tournoi | Hors périmètre | 25 | Back-office ; le joueur voit seulement les notifications de report et d'annulation. |
+| S03-03 | Règlement du tournoi et son acceptation | En partie | 07, 06, 03 | Acceptation obligatoire et réacceptation d'un règlement modifié maquettées (07). Seule la version acceptée est mémorisée, pas la date. L'avis « désinscrit après refus » arrive par notification (25). |
+| S03-04 | Tournois ouverts ou réservés aux abonnés | Couverte | 04, 06, 07, 08, 21 | Le changement de règle et son journal relèvent du back-office. |
+| S03-06 | Remise des dotations | En partie | 06, 25 | Le versement sur le numéro Max it n'apparaît que par la notification (25). |
+| S03-07 | Créer un tournoi MEA ouvert à plusieurs pays | Couverte (côté joueur) | 04, 06 | Seuls les tournois ouverts dans le pays du joueur sont visibles. Création et ouverture par pays : back-office. |
+| S04-01 | Inscription d'un joueur gratuit | En partie | 06, 07, 08 | Place acquise, liste d'attente avec rang, refus pour pays (08), désinscription avant le début (06). Le passage du premier de la liste d'attente en cas de désistement est côté serveur ; il n'est visible que par notification (25). Pas de refus pour l'âge (S01-03 en suspens). |
+| S04-02 | Inscription d'un joueur abonné | En partie | 06, 07, 08 | Comme S04-01 ; la réponse en moins de 5 s est figurée par l'affichage immédiat de 08. Le joueur abonné s'inscrit aux tournois réservés comme aux autres. |
+| S04-03 | Créer une équipe pour un tournoi | En partie | 09, 10 | Création, nom unique, ouverte / fermée, demandes, invitation par pseudo, lien, transmission du rôle, départ du capitaine, inscription automatique, équipe incomplète à la clôture (09, 10). Les réponses des autres joueurs sont simulées par des délais ; la réception d'une invitation côté invité et les avis aux membres passent par les notifications (25). |
+| S04-04 | Rejoindre une équipe | En partie | 09, 10 | Liste des équipes ouvertes, demande acceptée par le capitaine (simulée), une seule équipe par tournoi (09). Non maquettés : le refus d'une demande pour critère non rempli et l'arrivée par le lien d'une équipe fermée. |
+| S04-05 | Un seul compte par joueur et par tournoi | En partie | 08, 26 | Refus pour compte ou identifiant de jeu déjà inscrit, avec motif et « Contester » vers 26 (08). La consignation du refus et sa consultation par le responsable local relèvent du back-office. |
+| S05-01 | Calendrier, recherche et filtres (abonné) | Couverte | 04, 05, 03 | — |
+| S05-02 | Calendrier, recherche et filtres (gratuit) | Couverte | 04, 06, 21, 22 | — |
+| S05-03 | Page d'un tournoi et arbre consultables par tous | Couverte | 06, 12, 17 | Mise à jour sans rechargement simulée (résultat en direct après 4 s). |
+| S05-04 | Classement d'un tournoi | Couverte | 12 | La correction des E-Sport Orange Points (E15, V2) n'est pas maquettée. |
+| S05-05 | Page d'un jeu et lien vers la boutique | Couverte | 13 | La boutique Max it est hors maquette (message) ; l'attribution des achats relève des rapports. |
+| S06-01 | Progression du tournoi sans intervention | En partie | 11, 12 | Automatismes sans écran propre ; leurs effets sont visibles dans 11 et 12 (vainqueur au tour suivant, qualification d'office après double absence). |
+| S06-02 | Convocation et confirmation de présence | En partie | 11, 25 | Compte à rebours, présence de -10 min au début, rappel à -5 min, démarrage dès que les deux sont présents (11). La convocation reçue 15 min avant arrive par notification (25). |
+| S06-03 | Absence d'un joueur au début du match | En partie | 11, 12, 08 | Forfait (motif, heure), victoire par forfait, double absence (11, 12). Le compteur de forfaits est fixe (1 sur 30 jours) ; la suspension après 3 forfaits est montrée en 08. Le forfait en poule (défaite au score de la fiche jeu) n'est pas maquetté. |
+| S06-04 | Départage des égalités | En partie | 12 | Automatismes sans écran propre ; leurs effets sont visibles dans 11 et 12 (vainqueur au tour suivant, qualification d'office après double absence). |
+| S07-01 | Résultat déclaré par les deux joueurs | En partie | 14 | Saisie, correction tant que l'adversaire n'a pas déclaré, match clos par concordance, refus après le délai (14). Ouverture de la déclaration : voir « Décisions ». |
+| S07-02 | Résultat déclaré par un seul joueur | En partie | 14, 15 | Déclaration adverse retenue, contestation pendant 30 min, résultat définitif sans contestation (14). Les avis à l'adversaire passent par les notifications (25). Aucune déclaration dans le délai : voir « Décisions ». |
+| S07-03 | Déclarations divergentes et preuve | En partie | 15 | Litige automatique, 3 captures au plus, délai de 30 min, arbitrage puis décision avec motif (15). Les captures restent sur l'appareil ; la conservation 90 jours est seulement mentionnée. La décision est simulée : avec au moins une capture, la déclaration du joueur l'emporte. |
+| S07-04 | File d'arbitrage outillée | Hors périmètre | — | Back-office ; le joueur voit l'attente et la décision (15). |
+| S08-01 | Rôles et périmètres | Hors périmètre | — | Back-office. |
+| S08-02 | Activation des fonctionnalités par pays | En partie | 03, 18, 20, 27 | Activation par pays simulée par un indicateur dans `data.js` (ex. masquer les vidéos). |
+| S08-03 | Journal d'audit | Hors périmètre | — | Back-office. |
+| S08-04 | Exclusion d'un joueur | En partie | 26, 25 | Côté joueur seulement : décision d'exclusion (motif, durée, conséquences) et contestation transmise au responsable local (26). L'exclusion elle-même relève du back-office. |
+| S08-05 | Statistiques et exports | Hors périmètre | — | Back-office. |
+| S09-01 | Définir les types de contenus | Hors périmètre | — | Back-office. |
+| S09-02 | Gérer et publier les contenus de mon pays | En partie (côté joueur) | 19, 20 | Côté joueur seulement : bouton « Signaler » avec motif, une fois par article (19). Le retrait après 3 signalements, la publication et la règle d'accès par pays relèvent du back-office ; seul leur effet (verrou) est visible. |
+| S09-03 | Déposer un contenu | Hors périmètre | — | Back-office. |
+| S10-01 | Lire une vidéo sans quitter l'application | En partie | 18 | Lecteur simulé sans fichier vidéo : lecture dans l'application, sous-titres, mode « économie de données » (240p), reprise à la seconde près (18). Non maquettés : démarrage en moins de 5 s, fluidité et reprise après une coupure réseau. |
+| S10-02 | Vidéos réservées pour un joueur gratuit | Couverte | 18, 20 | Vidéo réservée verrouillée avec condition d'accès et offre ; ni téléchargement ni lien externe (18, 20). Le blocage d'une adresse de lecture ouverte hors plateforme est côté serveur. |
+| S11-01 | Être invité à s'abonner au bon moment | Couverte | 03, 06, 18, 19, 20, 21, 23 | Contenus et tournois réservés visibles avec leur condition d'accès, bandes-annonces libres, page d'offre ouverte seulement par un geste du joueur (03, 06, 18, 19, 20, 21, 23). Le corps d'un article réservé n'est pas inséré dans la page, mais il reste présent dans `js/data.js` (dans le produit, le serveur ne l'enverrait pas). |
+| S11-02 | Choisir une offre et payer avec Max it | Couverte | 21, 22 | Offres et essai du pays (21), brique de paiement simulée avec offre et montant renseignés, issues confirmé / refusé / abandonné (22). Moyens de paiement et reçus : ceux de Max it, seulement évoqués. |
+| S11-03 | Revenir au contenu après le paiement | Couverte | 22 et écran d'origine | Retour exact sur l'écran d'origine (06, 18, 19, 23, 24, 03, 08), déverrouillé après confirmation et bascule en mode abonné ; toujours verrouillé après refus ou abandon (`outils/parcours-abonnement.html`). |
+| S11-04 | Suivre et gérer mon abonnement | Couverte | 24, 23, 03 | Offre, échéance, avis de reconduction selon la périodicité, « Mettre fin », états actif / résilié / expiré (24, 23, 03). L'avis lui-même arrive par notification (25) ; l'échec de reconduction est figuré par l'état « expiré ». |
+| S12-01 | Être averti de ce qui me concerne | Couverte | 25, 27, cloche de chaque écran | Toutes les familles, dont « nouveau tournoi sur un jeu suivi ». Hors maquette : consentement parental (S01-03 en suspens) et début d'un direct (V2). Le délai de moins de 5 s est figuré par le raccourci « Nouvelle notification ». |
+| S12-02 | Avertir par courriel et par SMS | En partie | 27 | Refus des SMS (si le pays les a activés) et consentement promotionnel. Les envois eux-mêmes et le choix des canaux par le responsable local sont hors application. |
 
 ### US V2 liées, non maquettées
 - E15 Leaderboard mensuel (S15-01 à S15-05) : points, leaderboards mensuels ouvert à tous et réservé aux joueurs gratuits.

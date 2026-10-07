@@ -107,11 +107,13 @@
         // Déclarations divergentes : litige ouvert automatiquement (S07-03)
         const divergente = mm.declMoi.moi > mm.declMoi.adv ? { moi: mm.declMoi.adv, adv: mm.declMoi.moi } : { moi: mm.declMoi.moi, adv: mm.declMoi.adv + 1 };
         Esport.majMonMatch({ declAdv: divergente, statut: "litige", correction: false, litige: { ouverture: maintenant.toISOString(), pieces: 0 } });
+        Esport.notifier({ famille: "match", ecran: "15", titre: "Litige ouvert", texte: "Vos déclarations divergent : joins tes captures dans les 30 minutes." });
         Nav.toast("Déclarations divergentes : un litige est ouvert");
       } else {
         // Déclarations identiques : match clos, le vainqueur progresse (S07-01)
         Esport.majMonMatch({ declAdv: { moi: mm.declMoi.moi, adv: mm.declMoi.adv }, statut: "clos", correction: false });
         Esport.enregistrerMonResultat(mm.declMoi.moi, mm.declMoi.adv);
+        notifierResultat(mm.declMoi, "Résultat enregistré");
         Nav.toast(c.adversaire + " a confirmé le score : match clos");
       }
       return;
@@ -120,6 +122,7 @@
     if (mm.statut === "retenu-adverse" && maintenant >= limiteContestation()) {
       Esport.majMonMatch({ statut: "definitif" });
       Esport.enregistrerMonResultat(mm.declAdv.moi, mm.declAdv.adv);
+      notifierResultat(mm.declAdv, "Résultat définitif");
     }
   }
 
@@ -127,6 +130,16 @@
   function eliminerSansDeclaration(refusMoi) {
     Esport.majMonMatch({ statut: "sans-declaration", correction: false, refusMoi: refusMoi || null });
     Esport.enregistrerResultat(Esport.cleMonMatch(), { a: null, b: null, vainqueur: null, mention: "Aucune déclaration" });
+    Esport.notifier({ famille: "match", ecran: "12", params: { id: t.id }, titre: "Éliminé : aucun résultat déclaré",
+      texte: "Ni toi ni " + c.adversaire + " n'avez déclaré de score dans le délai." });
+  }
+
+  /* Notification de résultat : qualification ou élimination */
+  function notifierResultat(d, titre) {
+    const gagne = d.moi > d.adv;
+    Esport.notifier({ famille: "match", ecran: "12", params: { id: t.id },
+      titre: titre + " : " + (gagne ? "qualifié" : "éliminé"),
+      texte: Esport.pseudo() + " " + d.moi + "–" + d.adv + " " + c.adversaire + (gagne ? ". Tu passes au tour suivant." : ". Fin du tournoi pour toi.") });
   }
 
   function rendre() {

@@ -99,6 +99,8 @@
     const d = gagnant === "moi" ? (mm.declMoi || { moi: 2, adv: 1 }) : mm.declAdv;
     Esport.majMonMatch({ statut: "arbitre", litige: Object.assign({}, mm.litige, { decision: gagnant, heureDecision: Esport.hhmm(Esport.horloge()) }) });
     Esport.enregistrerMonResultat(d.moi, d.adv, "Arbitrage");
+    Esport.notifier({ famille: "match", ecran: "15", titre: "Décision d'arbitrage",
+      texte: "Litige tranché : " + (gagnant === "moi" ? "victoire de " + Esport.pseudo() : "victoire de " + c.adversaire) + " " + d.moi + "–" + d.adv + "." });
     Nav.toast("Décision d'arbitrage rendue");
   }
 

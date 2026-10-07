@@ -30,11 +30,46 @@ const ECRANS = {
   "22": { fichier: "22-paiement-maxit.html", titre: "Paiement Max it", pret: true },
   "23": { fichier: "23-profil.html", titre: "Mon profil", pret: true },
   "24": { fichier: "24-abonnement.html", titre: "Mon abonnement", pret: true },
-  "25": { fichier: "25-notifications.html", titre: "Notifications", pret: false },
+  "25": { fichier: "25-notifications.html", titre: "Notifications", pret: true },
   "26": { fichier: "26-contestation.html", titre: "Contestation", pret: true },
-  "27": { fichier: "27-preferences-notif.html", titre: "Préférences", pret: false },
-  "28": { fichier: "28-mes-donnees.html", titre: "Mes données", pret: false }
+  "27": { fichier: "27-preferences-notif.html", titre: "Préférences", pret: true },
+  "28": { fichier: "28-mes-donnees.html", titre: "Mes données", pret: true }
 };
+
+/* ---- Fichier unique (maquette-esport.html) ----
+   Chaque écran y est affiché dans un cadre ; le routeur du fichier parent gère la navigation,
+   l'historique et le stockage. Hors fichier unique, ROUTEUR vaut null. */
+const ROUTEUR = (function () {
+  try { return window.parent !== window && window.parent.MaquetteRouteur ? window.parent.MaquetteRouteur : null; }
+  catch (e) { return null; }
+})();
+
+/* Écran courant et paramètres d'URL, dans les deux modes */
+function pageCourante() {
+  return ROUTEUR ? window.__PAGE : window.location.pathname.split("/").pop();
+}
+function rechercheCourante() {
+  return ROUTEUR ? window.__RECHERCHE || "" : window.location.search;
+}
+/* Ouvre une page : « 06-tournoi.html?id=t01 » */
+function ouvrirPage(url) {
+  if (ROUTEUR) ROUTEUR.aller(url);
+  else window.location.href = url;
+}
+
+/* Stockage : localStorage, sinon mémoire (fichier ouvert directement sur un téléphone).
+   Dans le fichier unique, la mémoire est celle du parent : elle survit d'un écran à l'autre. */
+const Stockage = (function () {
+  const memoire = ROUTEUR ? ROUTEUR.memoire : {};
+  return {
+    lire(cle) {
+      try { return localStorage.getItem(cle); } catch (e) { return memoire[cle] || null; }
+    },
+    ecrire(cle, valeur) {
+      try { localStorage.setItem(cle, valeur); } catch (e) { memoire[cle] = valeur; }
+    }
+  };
+})();
 
 /* ---- État de démonstration, mémorisé entre les pages ---- */
 const Etat = (function () {
@@ -62,13 +97,21 @@ const Etat = (function () {
     pseudoModifieLe: null,  // date du dernier changement de pseudo (23)
     pseudoOffensant: null,  // ancien pseudo remplacé car jugé offensant (23)
     toastSuivant: null,     // message à afficher sur la page suivante (retour après paiement)
+    notifsAjoutees: null,   // notifications créées pendant la démo (lot 6)
+    notifsLues: null,       // notifications lues, par identifiant
+    prefsNotif: null,       // familles de notifications désactivées (27)
+    refusSms: false,        // refus des SMS (27, S12-02)
+    promo: false,           // consentement aux messages promotionnels (27)
+    telechargement: null,   // demande de téléchargement des données (28)
+    suppression: null,      // date de la demande de suppression du compte (28)
+    compteSupprime: false,  // démo : suppression effective, résultats sous un pseudonyme anonyme
     scenario: null,         // état alternatif forcé pour l'écran visé
     origine: null           // écran à retrouver après le paiement (S11-03)
   };
 
   function lire() {
     try {
-      const brut = localStorage.getItem(CLE);
+      const brut = Stockage.lire(CLE);
       return Object.assign({}, DEFAUT, brut ? JSON.parse(brut) : {});
     } catch (e) {
       return Object.assign({}, DEFAUT);
@@ -76,7 +119,7 @@ const Etat = (function () {
   }
 
   function ecrire(etat) {
-    try { localStorage.setItem(CLE, JSON.stringify(etat)); } catch (e) { /* stockage indisponible */ }
+    Stockage.ecrire(CLE, JSON.stringify(etat));
   }
 
   return {
@@ -106,12 +149,12 @@ const Nav = {
     }
     if (scenario !== undefined && scenario !== null) Etat.set("scenario", scenario);
     const requete = params ? "?" + new URLSearchParams(params).toString() : "";
-    window.location.href = ecran.fichier + requete;
+    ouvrirPage(ecran.fichier + requete);
   },
 
   /* Lit un paramètre de l'URL de la page courante */
   param(nom) {
-    return new URLSearchParams(window.location.search).get(nom);
+    return new URLSearchParams(rechercheCourante()).get(nom);
   },
 
   /* Bouton « E-sport » de l'univers Gaming : entrée dans la plateforme (S01-01) */
@@ -135,9 +178,9 @@ const Nav = {
   /* Mémorise l'écran courant avant de partir vers l'offre (S11-03).
      L'offre (21) et le paiement (22) ne sont jamais des écrans d'origine. */
   memoriserOrigine() {
-    const page = window.location.pathname.split("/").pop();
+    const page = pageCourante();
     if (page === ECRANS["21"].fichier || page === ECRANS["22"].fichier) return;
-    Etat.set("origine", page + window.location.search);
+    Etat.set("origine", page + rechercheCourante());
   },
 
   /* Retour exact sur l'écran d'origine, avec un message affiché à l'arrivée */
@@ -145,7 +188,7 @@ const Nav = {
     const origine = Etat.get("origine");
     Etat.set("origine", null);
     if (message) Etat.set("toastSuivant", message);
-    window.location.href = origine || ECRANS["03"].fichier;
+    ouvrirPage(origine || ECRANS["03"].fichier);
   },
 
   /* Message éphémère en bas de l'écran */
@@ -218,6 +261,17 @@ function remplirBarreEtat() {
    data-action="esport"       : entrée dans la plateforme
    data-action="retour"       : page précédente (data-repli="03" : écran si pas d'historique)
    data-hors="Envoyer de l'argent" : élément hors périmètre de la maquette */
+/* Fichier unique : les liens classiques vers une page (href="00b-….html") passent par le routeur */
+document.addEventListener("click", (evenement) => {
+  if (!ROUTEUR) return;
+  const lien = evenement.target.closest("a[href]");
+  const cible = lien && lien.getAttribute("href");
+  if (cible && /^[\w-]+\.html/.test(cible)) {
+    evenement.preventDefault();
+    ROUTEUR.aller(cible);
+  }
+});
+
 document.addEventListener("click", (evenement) => {
   const cible = evenement.target.closest("[data-ecran], [data-action], [data-hors]");
   if (!cible) return;
@@ -235,7 +289,8 @@ document.addEventListener("click", (evenement) => {
     Nav.entrerEsport();
   } else if (cible.dataset.action === "retour") {
     // Page précédente si elle existe, sinon l'écran de repli (jamais d'impasse)
-    if (history.length > 1) history.back();
+    if (ROUTEUR) ROUTEUR.retour(ECRANS[cible.dataset.repli || "03"].fichier);
+    else if (history.length > 1) history.back();
     else Nav.aller(cible.dataset.repli || "03");
   } else if (cible.dataset.hors !== undefined) {
     Nav.toast((cible.dataset.hors || "Cette fonction") + " : hors périmètre de la maquette");

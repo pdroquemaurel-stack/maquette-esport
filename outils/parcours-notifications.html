@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<!-- Test des notifications et des données (hors maquette), lot 6 :
+     compteur de la cloche, notification qui ouvre l'écran concerné, « Tout marquer comme lu »,
+     famille désactivée, « Match en cours » non désactivable, notification née d'une action,
+     notification de démo en moins de 5 s, téléchargement, historique, suppression du compte et anonymisation.
+     À ouvrir avec l'accès entre fichiers locaux autorisé (voir controle.html). Remplace l'état de démonstration.
+     « parcours-notifications.html?unique » : même test dans le fichier unique maquette-esport.html. -->
+<html lang="fr"><meta charset="utf-8"><title>Test des notifications et des données</title>
+<body><pre id="s"></pre><iframe id="f" style="width:390px;height:844px"></iframe>
+<script src="banc.js"></script>
+<script>
+  const s = document.getElementById("s");
+  const log = (ok, m) => { s.textContent += (ok ? "✓ " : "✗ ") + m + "\n"; };
+  const pause = (ms) => new Promise((r) => setTimeout(r, ms));
+  const doc = Banc.doc;
+  const texte = () => doc().body.innerText.replace(/\s+/g, " ");
+  /* Nombre affiché sur la cloche (0 si la pastille est masquée) */
+  const compteur = () => { const p = doc().querySelector('[data-ecran="25"] .pastille'); return !p || p.hidden ? 0 : Number(p.textContent); };
+  function cliquer(sel) { const e = doc().querySelector(sel); if (!e) throw new Error("introuvable : " + sel); e.click(); }
+  function cliquerTexte(t) {
+    const e = [...doc().querySelectorAll("a,button")].find((x) => x.textContent.trim().startsWith(t));
+    if (!e) throw new Error("bouton introuvable : " + t); e.click();
+  }
+  async function ouvrir(url) { await Banc.charger(url); await pause(400); }
+
+  (async () => { try {
+    localStorage.clear(); localStorage.setItem("maquette-esport-etat", JSON.stringify({ abonne: false }));
+
+    await ouvrir("03-accueil.html");
+    log(compteur() === 3, "03 : 3 notifications non lues sur la cloche (" + compteur() + ")");
+    let n = Banc.navigation(); cliquer('[data-ecran="25"]'); await n; await pause(400);
+    log(/Match en cours/.test(texte()) && /Vie des tournois/.test(texte()) && /Abonnement/.test(texte()) && /Décisions/.test(texte()), "25 : liste groupée par famille");
+    n = Banc.navigation(); cliquer('[data-notif="n03"]'); await n; await pause(400);
+    log(Banc.page() === "07-reglement.html?id=t01", "25 : « Règlement modifié » ouvre 07 t01 (" + Banc.page() + ")");
+    log(compteur() === 2, "07 : la cloche passe à 2");
+
+    await ouvrir("25-notifications.html");
+    n = Banc.navigation(); cliquer('[data-notif="n12"]'); await n; await pause(400);
+    log(/Inscription refusée/.test(texte()) && /identifiant de jeu déjà inscrit/i.test(texte()), "25 : « Inscription refusée » ouvre 08 avec le motif");
+
+    await ouvrir("25-notifications.html");
+    cliquer("#tout-lu"); await pause(300);
+    log(compteur() === 0 && /Tout est lu/.test(texte()), "25 : « Tout marquer comme lu » remet la cloche à zéro");
+
+    await ouvrir("27-preferences-notif.html");
+    log(doc().querySelector('[data-famille="match-en-cours"]').disabled && /Toujours actif/.test(texte()), "27 : « Match en cours » grisé, toujours actif");
+    cliquer('[data-famille="abonnement"]'); await pause(200);
+    cliquer("[data-sms]"); await pause(200);
+    const promo = doc().getElementById("promo"); promo.checked = true; promo.dispatchEvent(new Event("change", { bubbles: true })); await pause(200);
+    const etat = JSON.parse(localStorage.getItem("maquette-esport-etat"));
+    log(etat.refusSms === true && etat.promo === true, "27 : refus des SMS et consentement promotionnel enregistrés");
+    await ouvrir("25-notifications.html");
+    log(!/Échec de paiement/.test(texte()) && /1 famille désactivée/.test(texte()), "25 : famille « Abonnement » désactivée, masquée et signalée");
+
+    await ouvrir("08-inscription-resultat.html?id=t09");
+    await ouvrir("25-notifications.html");
+    log(/Inscription acceptée/.test(texte()) && compteur() === 1, "08 → 25 : « Inscription acceptée » ajoutée, non lue");
+
+    cliquer(".demo-bouton"); await pause(200);
+    cliquerTexte("Nouvelle notification"); await pause(3500);
+    log(compteur() === 2 && /Nouveau tournoi sur un jeu suivi/.test(texte()), "Démo : nouvelle notification reçue en moins de 5 s, cloche à 2");
+
+    await ouvrir("28-mes-donnees.html");
+    cliquer("#telecharger"); await pause(200); cliquer(".dialogue .bouton-primaire"); await pause(300);
+    log(/Demande enregistrée/.test(texte()), "28 : téléchargement des données, confirmation simulée");
+    cliquer("#historique"); await pause(300);
+    await ouvrir("23-profil.html");
+    log(!/repris de l'ancienne plateforme/.test(texte()), "28 → 23 : historique de l'ancienne plateforme retiré");
+    await ouvrir("28-mes-donnees.html");
+    cliquer("#supprimer"); await pause(200); cliquer(".dialogue .bouton-primaire"); await pause(300);
+    log(/Suppression demandée/.test(texte()) && /sera effacé le/.test(texte()), "28 : suppression demandée, effacement sous 30 jours");
+    cliquer("#annuler-suppression"); await pause(300);
+    log(/Supprimer mon compte/.test(texte()), "28 : demande annulée");
+
+    Banc.win().eval('Etat.set("scenario", "compte-supprime")');
+    await ouvrir("28-mes-donnees.html");
+    log(/Profil effacé/.test(texte()) && /Joueur_anonyme_7F3A/.test(texte()), "28 : compte supprimé, pseudonyme anonyme");
+    await ouvrir("12-arbre.html?id=t05");
+    log(/Joueur_anonyme_7F3A/.test(texte()) && !/Youss_KZ/.test(texte()), "12 : résultats affichés sous le pseudonyme anonyme");
+  } catch (e) { log(false, "erreur : " + e.message); }
+  s.textContent += "FIN"; })();
+</script>

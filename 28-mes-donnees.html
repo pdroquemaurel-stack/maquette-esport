@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<!-- Écran 28 — Mes données.
+     US : S01-04 (téléchargement des données dans un format lisible ; suppression du profil e-sport sous
+     30 jours, résultats passés conservés sous un pseudonyme anonyme), S01-05 (ne pas reprendre l'historique
+     de l'ancienne plateforme). Pas de consentement parental : S01-03 est en suspens. -->
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mes données</title>
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .carte { margin: 0 var(--page-gutter); background: var(--color-surface); border-radius: var(--radius-md); box-shadow: var(--shadow-card); padding: var(--space-4); }
+    .carte h3 { font-size: var(--font-size-md); margin-bottom: var(--space-1); }
+    .carte p { font-size: var(--font-size-sm); color: var(--color-text-secondary); margin-bottom: var(--space-3); }
+    .carte .demo-ligne { border-bottom: 0; padding: 0; }
+    .carte .etat { display: flex; gap: var(--space-2); align-items: flex-start; font-size: var(--font-size-sm); background: var(--color-surface-warm); border-radius: var(--radius-sm); padding: var(--space-3); margin-bottom: var(--space-3); }
+    .carte .etat svg { width: 18px; height: 18px; margin-top: 1px; }
+    .bouton-danger { color: var(--color-alert); border-color: var(--color-alert); }
+    .note { font-size: var(--font-size-xs); color: var(--color-text-muted); padding: var(--space-4) var(--page-gutter) 0; }
+  </style>
+</head>
+<body data-zone="esport">
+<div class="cadre">
+  <div class="telephone">
+    <div class="barre-etat" data-heure="21:10"></div>
+    <header class="entete-esport" data-titre="Mes données" data-repli="23"></header>
+    <main class="contenu" id="page"></main>
+    <nav class="nav-bas" data-onglet="23"></nav>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/esport.js"></script>
+<script src="js/demo.js"></script>
+<script>
+  /* ---- État de démo : suppression effective, 30 jours après la demande ---- */
+  if (Esport.lireScenario() === "compte-supprime") {
+    Etat.set("suppression", Etat.get("suppression") || DONNEES.maintenant.slice(0, 10));
+    Etat.set("compteSupprime", true);
+  }
+
+  const aujourdhui = DONNEES.maintenant.slice(0, 10);
+  function plusJours(iso, n) { return new Date(new Date(iso + "T12:00").getTime() + n * 86400000).toISOString().slice(0, 10); }
+
+  function rendre() {
+    const repris = DONNEES.joueur.historiqueRepris;
+    const telechargement = Etat.get("telechargement");
+    const suppression = Etat.get("suppression");
+    let html = "";
+
+    // Télécharger mes données (S01-04)
+    html += '<h2 class="titre-section">Télécharger mes données</h2><div class="carte">' +
+      "<p>Profil, identifiants de jeu, tournois, résultats et abonnement, dans un fichier lisible.</p>" +
+      (telechargement
+        ? '<div class="etat">' + Esport.icone("coche", "f-success-dark") + "<span>Demande enregistrée le " + Esport.jourCourt(telechargement) +
+          ". Un lien vers ton fichier t'est envoyé par SMS sous 48 heures.</span></div>"
+        : '<button class="bouton bouton-secondaire bouton-pleine-largeur" id="telecharger">Télécharger mes données</button>') + "</div>";
+
+    // Historique de l'ancienne plateforme (S01-05)
+    html += '<h2 class="titre-section">Ancienne plateforme</h2><div class="carte">' +
+      "<p>" + repris.tournois + " tournois et " + repris.victoires + " victoires ont été repris de l'ancienne plateforme.</p>" +
+      '<button class="demo-ligne" role="switch" id="historique" aria-checked="' + !!Etat.get("historiqueNonRepris") + '">' +
+      "<span>Ne pas reprendre mon historique<small>Il disparaît de ton profil et de tes statistiques.</small></span>" +
+      '<span class="inter' + (Etat.get("historiqueNonRepris") ? " on" : "") + '"></span></button></div>';
+
+    // Supprimer mon compte (S01-04)
+    html += '<h2 class="titre-section">Supprimer mon compte</h2><div class="carte">';
+    if (Etat.get("compteSupprime")) {
+      html += '<div class="etat">' + Esport.icone("alerte", "f-primary") + "<span>Profil effacé. Tes résultats passés restent affichés sous le pseudonyme « " +
+        DONNEES.pseudoAnonyme + " ». (Démo : utilise « Réinitialiser la démo » pour revenir en arrière.)</span></div>";
+    } else if (suppression) {
+      html += '<div class="etat">' + Esport.icone("calendrier", "f-primary") + "<span>Suppression demandée le " + Esport.jourCourt(suppression) +
+        ". Ton profil e-sport sera effacé le " + Esport.jourCourt(plusJours(suppression, 30)) + ".</span></div>" +
+        '<button class="bouton bouton-secondaire bouton-pleine-largeur" id="annuler-suppression">Annuler la demande</button>';
+    } else {
+      html += "<p>Ton profil e-sport est effacé sous 30 jours. Tes résultats passés restent visibles sous un pseudonyme anonyme. Ton compte Max it n'est pas supprimé.</p>" +
+        '<button class="bouton bouton-secondaire bouton-danger bouton-pleine-largeur" id="supprimer">Supprimer mon compte</button>';
+    }
+    html += "</div>" +
+      '<p class="note">Les règles locales plus strictes de ton pays s\'appliquent en plus de celles-ci.</p><div class="fin-contenu"></div>';
+    document.getElementById("page").innerHTML = html;
+  }
+
+  document.getElementById("page").addEventListener("click", (e) => {
+    if (e.target.closest("#telecharger")) {
+      Nav.dialogue({
+        titre: "Télécharger tes données ?",
+        texte: "Tu recevras par SMS un lien vers un fichier lisible avec toutes tes données e-sport.",
+        boutons: [
+          { libelle: "Confirmer", primaire: true, action: () => { Etat.set("telechargement", aujourdhui); Nav.toast("Demande enregistrée"); } },
+          { libelle: "Annuler" }
+        ]
+      });
+    }
+    if (e.target.closest("#historique")) {
+      Etat.set("historiqueNonRepris", !Etat.get("historiqueNonRepris"));
+      Nav.toast(Etat.get("historiqueNonRepris") ? "Historique retiré de ton profil" : "Historique repris");
+    }
+    if (e.target.closest("#supprimer")) {
+      Nav.dialogue({
+        titre: "Supprimer ton compte e-sport ?",
+        texte: "Ton profil sera effacé sous 30 jours ; tes résultats resteront visibles sous un pseudonyme anonyme. Tu peux annuler d'ici là.",
+        boutons: [
+          { libelle: "Supprimer mon compte", primaire: true, action: () => { Etat.set("suppression", aujourdhui); Nav.toast("Suppression demandée"); } },
+          { libelle: "Annuler" }
+        ]
+      });
+    }
+    if (e.target.closest("#annuler-suppression")) { Etat.set("suppression", null); Nav.toast("Demande de suppression annulée"); }
+  });
+
+  Esport.monter(rendre);
+</script>
+</body>
+</html>

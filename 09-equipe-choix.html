@@ -176,7 +176,11 @@
       demandes: [], invitations: [], lien: "maxit.ma/e/" + equipe.nom.replace(/\W/g, "").slice(0, 4).toUpperCase() + "2210"
     });
     // Effectif atteint : l'équipe est inscrite automatiquement (S04-03)
-    if (complete) Esport.changerInscription(t.id, { etat: "inscrit" });
+    if (complete) {
+      Esport.changerInscription(t.id, { etat: "inscrit" });
+      Esport.notifier({ famille: "equipe", ecran: "10", params: { id: t.id }, titre: "Équipe inscrite",
+        texte: equipe.nom + " est complète : elle est inscrite à " + t.nom + "." });
+    }
     Nav.dialogue({
       icone: Esport.icone("coche", "f-primary"),
       titre: equipe.capitaine + " a accepté ta demande",

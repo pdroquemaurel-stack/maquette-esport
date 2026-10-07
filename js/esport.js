@@ -57,7 +57,11 @@ const Esport = (function () {
   function tournoi(id) { return DONNEES.tournois.find((t) => t.id === id); }
   function maintenant() { return new Date(DONNEES.maintenant); }
   function abonne() { return !!Etat.get("abonne"); }
-  function pseudo() { return Etat.get("pseudo") || DONNEES.joueur.pseudo; }
+  function pseudo() {
+    // Compte supprimé (démo, 30 jours après la demande) : résultats sous un pseudonyme anonyme (S01-04)
+    if (Etat.get("compteSupprime")) return DONNEES.pseudoAnonyme;
+    return Etat.get("pseudo") || DONNEES.joueur.pseudo;
+  }
   function pays() { return DONNEES.pays[DONNEES.joueur.pays]; }
   function fonction(nom) { return DONNEES.fonctions[DONNEES.joueur.pays][nom]; }
 
@@ -273,15 +277,72 @@ const Esport = (function () {
     const echeance = new Date(maintenant().getTime() + jours * 86400000).toISOString().slice(0, 10);
     Etat.set("abonnement", { offre: idOffre, echeance, statut: "actif" });
     Etat.set("abonne", true);
+    notifier({ famille: "abonnement", ecran: "24", titre: "Abonnement activé",
+      texte: "Ton " + nomOffre(idOffre) + " est actif jusqu'au " + jourCourt(echeance) + ". Tous les contenus réservés sont ouverts." });
   }
   /* Mettre fin : l'accès reste ouvert jusqu'à l'échéance (S11-04) */
   function resilier() {
-    Etat.set("abonnement", Object.assign({}, etatAbonnement(), { statut: "resilie" }));
+    const a = etatAbonnement();
+    Etat.set("abonnement", Object.assign({}, a, { statut: "resilie" }));
+    notifier({ famille: "abonnement", ecran: "24", titre: "Abonnement résilié",
+      texte: "Il ne sera pas reconduit. Ton accès reste ouvert jusqu'au " + jourCourt(a.echeance) + "." });
   }
   /* Expiration (fin de période ou échec de reconduction) : retour au niveau gratuit, historique conservé */
   function expirer() {
     Etat.set("abonnement", Object.assign({}, etatAbonnement(), { statut: "expire", echeance: "2026-10-08" }));
     Etat.set("abonne", false);
+  }
+
+  /* ---------- Notifications (S12-01) ---------- */
+
+  /* Famille désactivée par le joueur ? (« match-en-cours » ne l'est jamais) */
+  function familleActive(id) {
+    const famille = DONNEES.famillesNotif.find((f) => f.id === id);
+    if (famille && famille.verrouillee) return true;
+    return !(Etat.get("prefsNotif") || {})[id];
+  }
+  /* Toutes les notifications (départ + démo), de la plus récente à la plus ancienne */
+  function notifications() {
+    const lues = Etat.get("notifsLues") || {};
+    return DONNEES.notifications.concat(Etat.get("notifsAjoutees") || [])
+      .map((n) => Object.assign({}, n, { lue: n.lue || !!lues[n.id] }))
+      .sort((a, b) => b.date.localeCompare(a.date));
+  }
+  function notificationsVisibles() { return notifications().filter((n) => familleActive(n.famille)); }
+  function nonLues() { return notificationsVisibles().filter((n) => !n.lue).length; }
+  function marquerLue(id) {
+    const lues = Object.assign({}, Etat.get("notifsLues") || {});
+    lues[id] = true;
+    Etat.set("notifsLues", lues);
+  }
+  function toutMarquerLu() {
+    const lues = Object.assign({}, Etat.get("notifsLues") || {});
+    notifications().forEach((n) => { lues[n.id] = true; });
+    Etat.set("notifsLues", lues);
+  }
+  /* Nouvelle notification née d'une action de la démo (inscription, paiement, résultat…) */
+  function notifier(n) {
+    const liste = (Etat.get("notifsAjoutees") || []).slice();
+    const h = horloge();
+    const date = h.getFullYear() + "-" + String(h.getMonth() + 1).padStart(2, "0") + "-" + String(h.getDate()).padStart(2, "0") + "T" + hhmm(h) + ":" + String(h.getSeconds()).padStart(2, "0");
+    liste.push(Object.assign({ id: "d" + Date.now() + liste.length, date, lue: false }, n));
+    Etat.set("notifsAjoutees", liste);
+  }
+
+  /* Compteur de non-lues sur toutes les cloches de l'écran (data-ecran="25") */
+  function majCloches() {
+    const n = nonLues();
+    document.querySelectorAll('[data-ecran="25"]').forEach((cloche) => {
+      let pastille = cloche.querySelector(".pastille");
+      if (!pastille) {
+        pastille = document.createElement("span");
+        pastille.className = "pastille";
+        cloche.appendChild(pastille);
+      }
+      pastille.textContent = n > 9 ? "9+" : n;
+      pastille.hidden = n === 0;
+      cloche.setAttribute("aria-label", "Notifications" + (n ? ", " + n + " non lues" : ""));
+    });
   }
 
   /* ---------- Identifiants de jeu du joueur (modifiables dans 23) ---------- */
@@ -478,8 +539,7 @@ const Esport = (function () {
           ? '<button class="bouton-icone" data-action="retour" data-repli="' + repli + '" aria-label="Retour">' + icone("retour") + "</button>"
           : '<span class="entete-espace"></span>') +
         '<h1 class="entete-titre">' + entete.dataset.titre + "</h1>" +
-        '<button class="bouton-icone" data-ecran="25" aria-label="Notifications, 3 nouvelles">' + icone("cloche") +
-        '<span class="pastille">3</span></button>';
+        '<button class="bouton-icone" data-ecran="25" aria-label="Notifications">' + icone("cloche") + "</button>";
     });
   }
 
@@ -519,7 +579,10 @@ const Esport = (function () {
   document.addEventListener("DOMContentLoaded", () => {
     remplirEntete();
     remplirNavBas();
+    // Après les rendus des pages (qui créent parfois leur cloche)
+    setTimeout(majCloches, 0);
   });
+  document.addEventListener("etat-change", () => setTimeout(majCloches, 0));
 
   return {
     icone, visuelJeu, jeu, tournoi, maintenant, abonne, pseudo, pays, fonction, tournoisDuPays,
@@ -527,7 +590,8 @@ const Esport = (function () {
     equipe, changerEquipe, tailleEquipe, reglementAAccepter, accepterReglement, lireScenario,
     jourLong, jourCourt, heure, blocDate, prix,
     badges, libelleFormat, libelleMode, carteTournoi, carteUne, contenusVisibles, ligneContenu, monter,
-    duree, contenu, contenuAccessible, offre, nomOffre, etatAbonnement, souscrire, resilier, expirer, gamertags,
+    duree, contenu, contenuAccessible, offre, nomOffre, etatAbonnement,
+    familleActive, notifications, notificationsVisibles, nonLues, marquerLue, toutMarquerLu, notifier, majCloches, souscrire, resilier, expirer, gamertags,
     horloge, regleHorloge, demarrerHorloge, plus, hhmm, rebours,
     monMatch, majMonMatch, cleMonMatch, preparerMatchDemo, finPrevue, limiteDeclaration, resultatsMatchs, enregistrerResultat, enregistrerMonResultat,
     vainqueur, doubleElimination, propager, arbre, recalculeApresArbitrage, prochainMatch, carteProchainMatch
