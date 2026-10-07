@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<!-- Écran 26 — Contester une décision (26-contestation.html?decision=exclusion&id=t01).
+     US : S08-04 (exclusion d'un tournoi : motif et durée ; contestation transmise avec le dossier complet
+     au responsable local du pays du joueur), S04-05 (refus pour doublon contestable).
+     Décisions possibles : voir DONNEES.decisions. -->
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Contester une décision</title>
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .tete { padding: 0 var(--page-gutter) var(--space-4); }
+    .tete h1 { font-size: var(--font-size-xxl); line-height: var(--line-height-tight); }
+    .tete p { color: var(--color-text-secondary); font-size: var(--font-size-sm); margin-top: var(--space-1); }
+
+    .fiche { margin: 0 var(--page-gutter); background: var(--color-surface); border-radius: var(--radius-md); box-shadow: var(--shadow-card); padding: var(--space-4); }
+    .fiche h2 { font-size: var(--font-size-lg); line-height: var(--line-height-tight); margin-bottom: var(--space-3); }
+    .fiche dl { display: grid; grid-template-columns: auto 1fr; gap: var(--space-2) var(--space-3); font-size: var(--font-size-sm); }
+    .fiche dt { color: var(--color-text-secondary); }
+    .fiche dd { font-weight: var(--font-weight-medium); }
+    .fiche .consequence { margin-top: var(--space-3); font-size: var(--font-size-sm); color: var(--color-text-secondary); }
+
+    .formulaire { padding: 0 var(--page-gutter); }
+    .formulaire label { display: block; font-weight: var(--font-weight-bold); font-size: var(--font-size-sm); margin-bottom: var(--space-2); }
+    .formulaire textarea {
+      width: 100%;
+      min-height: 140px;
+      resize: vertical;
+      padding: var(--space-3) var(--space-4);
+      border: 1px solid var(--color-border-strong);
+      border-radius: var(--radius-md);
+      font: inherit;
+      color: var(--color-text);
+      background: var(--color-surface);
+    }
+    .formulaire textarea:focus { outline: 0; border-color: var(--color-primary); }
+    .compteur { display: flex; justify-content: space-between; font-size: var(--font-size-xs); color: var(--color-text-muted); margin-top: var(--space-1); }
+    .compteur .erreur { color: var(--color-alert); }
+    .note { font-size: var(--font-size-xs); color: var(--color-text-secondary); padding: var(--space-3) var(--page-gutter) 0; }
+
+    .envoyee { display: flex; flex-direction: column; align-items: center; text-align: center; padding: var(--space-6) var(--page-gutter) var(--space-4); }
+    .envoyee .pictogramme { width: 72px; height: 72px; border-radius: var(--radius-round); background: var(--color-success-dark); display: flex; align-items: center; justify-content: center; margin-bottom: var(--space-4); }
+    .envoyee .pictogramme svg { width: 36px; height: 36px; }
+    .envoyee h2 { font-size: var(--font-size-xl); margin-bottom: var(--space-2); }
+    .envoyee p { color: var(--color-text-secondary); }
+    .citation { margin: 0 var(--page-gutter); padding: var(--space-3) var(--space-4); border-left: 3px solid var(--color-primary); background: var(--color-surface-warm); border-radius: var(--radius-xs); font-size: var(--font-size-sm); white-space: pre-wrap; overflow-wrap: anywhere; }
+    .barre-action .bouton + .bouton { margin-top: var(--space-2); }
+  </style>
+</head>
+<body data-zone="esport">
+<div class="cadre">
+  <div class="telephone">
+    <div class="barre-etat" data-heure="21:10"></div>
+    <header class="entete-esport" data-titre="Contestation" data-repli="03"></header>
+    <main class="contenu" id="page"></main>
+    <div class="barre-action" id="action"></div>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/esport.js"></script>
+<script src="js/demo.js"></script>
+<script>
+  const MIN = 20, MAX = 500;
+  const scenario = Esport.lireScenario();
+  // Décision contestée : paramètre d'URL, ou exclusion pour le raccourci de démo
+  const cle = DONNEES.decisions[Nav.param("decision")] ? Nav.param("decision") : "exclusion";
+  const decision = DONNEES.decisions[cle];
+  const t = Esport.tournoi(Nav.param("id") || decision.tournoi || "t09");
+  const cleContestation = cle + "-" + t.id;
+  let texte = "";
+
+  function contestation() { return (Etat.get("contestations") || {})[cleContestation]; }
+
+  function fiche() {
+    return '<section class="fiche"><h2>' + decision.titre + "</h2><dl>" +
+      "<dt>Tournoi</dt><dd>" + t.nom + "</dd>" +
+      "<dt>Motif</dt><dd>" + decision.motif + "</dd>" +
+      "<dt>Durée</dt><dd>" + decision.duree + "</dd>" +
+      "</dl>" + (decision.consequence ? '<p class="consequence">' + decision.consequence + "</p>" : "") + "</section>";
+  }
+
+  function rendre() {
+    const page = document.getElementById("page");
+    const zone = document.getElementById("action");
+    const deja = contestation();
+    const pays = Esport.pays().nom;
+
+    if (deja) {
+      // Contestation envoyée
+      page.innerHTML = '<div class="envoyee"><span class="pictogramme">' + Esport.icone("coche", "f-white") + "</span>" +
+        "<h2>Contestation envoyée</h2><p>Le " + deja.date + ", ta contestation et le dossier complet ont été transmis au responsable local du " + pays +
+        ". Tu recevras sa réponse par notification.</p></div>" +
+        '<div class="citation">' + deja.texte.replace(/</g, "&lt;") + "</div>" +
+        '<h2 class="titre-section">Décision contestée</h2>' + fiche() + '<div class="fin-contenu"></div>';
+      zone.innerHTML = '<a href="#" class="bouton bouton-primaire bouton-pleine-largeur" data-ecran="03">Retour à l\'accueil</a>' +
+        '<a href="#" class="bouton bouton-secondaire bouton-pleine-largeur" data-ecran="06" data-id="' + t.id + '">Voir le tournoi</a>';
+      return;
+    }
+
+    page.innerHTML = '<div class="tete"><h1>Contester une décision</h1><p>Ta contestation sera examinée par le responsable local du ' + pays + ".</p></div>" +
+      fiche() +
+      '<h2 class="titre-section">Ta contestation</h2>' +
+      '<div class="formulaire"><label for="texte">Explique pourquoi cette décision te semble injustifiée</label>' +
+      '<textarea id="texte" maxlength="' + MAX + '" placeholder="Ex. : je n\'ai jamais utilisé cet identifiant sur un autre compte…"></textarea>' +
+      '<div class="compteur"><span id="aide-texte">' + MIN + " caractères au minimum</span><span id=\"nb\">0 / " + MAX + "</span></div></div>" +
+      '<p class="note">Le dossier complet (décision, motif, historique de tes matchs) est joint automatiquement.</p>' +
+      '<div class="fin-contenu"></div>';
+    zone.innerHTML = '<button class="bouton bouton-primaire bouton-pleine-largeur" id="envoyer" disabled>Envoyer au responsable local</button>';
+
+    const champ = document.getElementById("texte");
+    champ.value = texte;
+    const maj = () => {
+      texte = champ.value;
+      const n = texte.trim().length;
+      document.getElementById("nb").textContent = texte.length + " / " + MAX;
+      document.getElementById("envoyer").disabled = n < MIN;
+    };
+    champ.addEventListener("input", maj);
+    maj();
+  }
+
+  document.getElementById("action").addEventListener("click", (e) => {
+    if (!e.target.closest("#envoyer") || texte.trim().length < MIN) return;
+    const liste = Object.assign({}, Etat.get("contestations") || {});
+    liste[cleContestation] = { texte: texte.trim(), date: "9 oct. à " + Esport.hhmm(Esport.horloge()) };
+    Etat.set("contestations", liste);
+    Nav.toast("Contestation envoyée");
+  });
+
+  Esport.monter(rendre);
+</script>
+</body>
+</html>

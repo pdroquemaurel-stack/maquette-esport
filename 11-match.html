@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<!-- Écran 11 — Salle de match (quart de finale du Défi eFootball, t05).
+     US : S06-02 (convocation, compte à rebours, « Je suis présent » de -10 min au début, rappel à -5 min,
+     le match démarre dès que les deux joueurs sont présents), S06-03 (forfait : motif et heure ;
+     double absence : les deux éliminés, adversaire suivant qualifié d'office), S06-01 (progression automatique).
+     Démo : le temps défile 30 fois plus vite (voir Esport.horloge). -->
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Salle de match</title>
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .salle { margin-top: 0; }
+    .salle h2 { margin-bottom: var(--space-4); }
+    .presence { display: block; margin-top: var(--space-1); font-size: var(--font-size-xs); font-weight: var(--font-weight-medium); color: var(--color-text-muted); }
+    .presence.ok { color: var(--color-success); font-weight: var(--font-weight-bold); }
+    .bloc-rebours { text-align: center; padding: var(--space-6) var(--page-gutter) var(--space-4); }
+    .horloge-demo { font-size: var(--font-size-xs); color: var(--color-text-muted); text-align: center; padding: 0 var(--page-gutter); }
+    .issue { display: flex; flex-direction: column; align-items: center; text-align: center; padding: var(--space-6) var(--page-gutter) var(--space-4); }
+    .issue .pictogramme { width: 72px; height: 72px; border-radius: var(--radius-round); display: flex; align-items: center; justify-content: center; background: var(--color-primary-soft); margin-bottom: var(--space-4); }
+    .issue .pictogramme svg { width: 36px; height: 36px; }
+    .issue .pictogramme.succes { background: var(--color-success-dark); }
+    .issue h3 { font-size: var(--font-size-xl); margin-bottom: var(--space-2); }
+    .issue p { color: var(--color-text-secondary); }
+    .details { margin: 0 var(--page-gutter) var(--space-4); }
+    .barre-action .bouton + .bouton { margin-top: var(--space-2); }
+  </style>
+</head>
+<body data-zone="esport">
+<div class="cadre">
+  <div class="telephone">
+    <div class="barre-etat" data-heure="21:10"></div>
+    <header class="entete-esport" data-titre="Salle de match" data-repli="05"></header>
+    <main class="contenu" id="page"></main>
+    <div class="barre-action" id="action"></div>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/esport.js"></script>
+<script src="js/demo.js"></script>
+<script>
+  const c = DONNEES.monMatch;
+  const t = Esport.tournoi(c.tournoi);
+  const moi = DONNEES.joueur.pseudo;
+  const tour = DONNEES.arbres[c.tournoi].tours[c.tour];
+  const debut = new Date(c.debut);
+  const convocation = Esport.plus(c.debut, -c.convocation);
+  const ouverture = Esport.plus(c.debut, -c.ouverturePresence);
+  const rappel = Esport.plus(c.debut, -c.rappel);
+  const presenceAdversaire = new Date(c.presenceAdversaire);
+
+  /* ---- États de démo : on repart d'un match neuf puis on force l'issue ---- */
+  function matchNeuf() {
+    Etat.set("monMatch", {});
+    const resultats = Object.assign({}, Esport.resultatsMatchs());
+    delete resultats[Esport.cleMonMatch()];
+    Etat.set("matchs", resultats);
+  }
+  const scenario = Esport.lireScenario();
+  if (["forfait-adverse", "mon-forfait", "double-absence"].includes(scenario)) {
+    matchNeuf();
+    Esport.regleHorloge("2026-10-09T21:25");
+    // Présences de la démo : l'issue tombe à 21:30, dans une dizaine de secondes
+    Esport.majMonMatch({
+      presenceMoi: scenario === "forfait-adverse" ? "21:21" : null,
+      adversaireAbsent: scenario !== "mon-forfait",
+      adversaireVu: true,
+      rappelVu: true
+    });
+  } else {
+    Esport.demarrerHorloge();
+  }
+
+  /* L'adversaire a-t-il confirmé ? (par défaut à 21:23) */
+  function adversairePresent(mm, maintenant) {
+    return !mm.adversaireAbsent && maintenant >= presenceAdversaire;
+  }
+
+  /* ---- Évolution du match avec l'heure (appelée chaque seconde) ---- */
+  function evaluer() {
+    const mm = Esport.monMatch();
+    const maintenant = Esport.horloge();
+    if (mm.issue) return;
+
+    // L'adversaire confirme : on le signale une fois
+    if (adversairePresent(mm, maintenant) && !mm.adversaireVu) {
+      Esport.majMonMatch({ adversaireVu: true });
+      Nav.toast(c.adversaire + " a confirmé sa présence");
+      return;
+    }
+    // Les deux sont présents : le match démarre sans attendre l'heure (S06-02)
+    if (mm.presenceMoi && adversairePresent(mm, maintenant)) {
+      Esport.majMonMatch({ issue: "demarre", demarrage: Esport.hhmm(maintenant), demarrageIso: maintenant.toISOString() });
+      Nav.toast("Le match démarre !");
+      return;
+    }
+    // Rappel 5 minutes avant le début si je n'ai pas confirmé
+    if (!mm.presenceMoi && maintenant >= rappel && maintenant < debut && !mm.rappelVu) {
+      Esport.majMonMatch({ rappelVu: true });
+      Nav.toast("Rappel : confirme ta présence, le match commence dans 5 min");
+      return;
+    }
+    // Heure du début : forfait ou double absence (S06-03)
+    if (maintenant >= debut) {
+      const moiPresent = !!mm.presenceMoi;
+      const advPresent = adversairePresent(mm, maintenant);
+      const issue = moiPresent && !advPresent ? "forfait-adverse" : !moiPresent && advPresent ? "mon-forfait" : "double-absence";
+      // L'issue d'abord (chaque enregistrement relance l'affichage), puis le résultat dans l'arbre
+      Esport.majMonMatch({ issue });
+      if (issue === "forfait-adverse") Esport.enregistrerMonResultat(null, null, "Forfait", moi);
+      else if (issue === "mon-forfait") Esport.enregistrerMonResultat(null, null, "Forfait", c.adversaire);
+      else Esport.enregistrerResultat(Esport.cleMonMatch(), { a: null, b: null, vainqueur: null, mention: "Double absence" });
+    }
+  }
+
+  /* ---- Affichage ---- */
+  function duel(mm, maintenant) {
+    const moiAffiche = Esport.pseudo();
+    const statut = (ok, texte) => '<span class="presence' + (ok ? " ok" : "") + '">' + texte + "</span>";
+    return '<div class="carte-match salle"><span class="flamme"></span>' +
+      '<p class="surtitre">' + tour + " · aujourd'hui à " + Esport.hhmm(debut) + "</p><h2>" + t.nom + "</h2>" +
+      '<div class="duel">' +
+      '<span class="joueur"><span class="avatar avatar-moi">' + moiAffiche[0] + "</span>" + moiAffiche +
+      statut(!!mm.presenceMoi, mm.presenceMoi ? "Présent à " + mm.presenceMoi : "Pas encore confirmé") + "</span>" +
+      '<span class="vs">VS</span>' +
+      '<a href="#" class="joueur" data-ecran="17" data-pseudo="' + c.adversaire + '"><span class="avatar">' + c.adversaire[0] + "</span>" + c.adversaire +
+      statut(adversairePresent(mm, maintenant), adversairePresent(mm, maintenant) ? "Présent à " + Esport.hhmm(presenceAdversaire) : "Pas encore confirmé") + "</a>" +
+      "</div></div>";
+  }
+
+  function issueHtml(picto, succes, titre, texte) {
+    return '<div class="issue"><span class="pictogramme' + (succes ? " succes" : "") + '">' + picto + "</span><h3>" + titre + "</h3><p>" + texte + "</p></div>";
+  }
+
+  function rendre() {
+    evaluer();
+    const mm = Esport.monMatch();
+    const maintenant = Esport.horloge();
+    const zone = document.getElementById("action");
+    const voirArbre = '<a href="#" class="bouton bouton-secondaire bouton-pleine-largeur" data-ecran="12" data-id="' + t.id + '">Voir l\'arbre</a>';
+    let html = duel(mm, maintenant);
+    let action = "";
+
+    switch (mm.issue) {
+      case "demarre": {
+        const fin = Esport.plus(mm.demarrageIso, c.duree);
+        html += issueHtml(Esport.icone("manette", "f-white"), true, "Le match a démarré à " + mm.demarrage,
+          "Lance la partie dans eFootball avec " + c.adversaire + ". À la fin, déclarez tous les deux le score.");
+        html += '<div class="bloc-rebours"><div class="rebours" data-rebours="' + fin.toISOString() + '">' + Esport.rebours(fin) + "</div>" +
+          '<p class="rebours-legende">avant la fin prévue (' + Esport.hhmm(fin) + ")</p></div>";
+        if (mm.statut === "litige") action = '<a href="#" class="bouton bouton-primaire bouton-pleine-largeur" data-ecran="15">Voir le litige</a>';
+        else if (mm.statut) action = '<a href="#" class="bouton bouton-primaire bouton-pleine-largeur" data-ecran="14">Voir le résultat</a>';
+        else action = '<a href="#" class="bouton bouton-primaire bouton-pleine-largeur" data-ecran="14">Déclarer le résultat</a>';
+        action += voirArbre;
+        break;
+      }
+      case "forfait-adverse":
+        html += issueHtml(Esport.icone("coche", "f-white"), true, "Victoire par forfait",
+          c.adversaire + " n'a pas confirmé sa présence avant " + Esport.hhmm(debut) + ". Tu passes au tour suivant.");
+        action = '<a href="#" class="bouton bouton-primaire bouton-pleine-largeur" data-ecran="12" data-id="' + t.id + '">Voir l\'arbre</a>' +
+          '<a href="#" class="bouton bouton-secondaire bouton-pleine-largeur" data-ecran="05">Mes matchs</a>';
+        break;
+      case "mon-forfait":
+        html += issueHtml(Esport.icone("alerte", "f-primary"), false, "Tu es déclaré forfait",
+          "Motif : présence non confirmée avant le début du match. Heure : " + Esport.hhmm(debut) + ". " + c.adversaire + " passe au tour suivant.");
+        html += '<div class="encart details">' + Esport.icone("calendrier", "f-text") +
+          "<div><strong>1 forfait sur les 30 derniers jours</strong><p>Au 3e forfait en 30 jours, tes inscriptions seront bloquées pendant 7 jours.</p></div></div>";
+        action = '<a href="#" class="bouton bouton-primaire bouton-pleine-largeur" data-ecran="04">Trouver un autre tournoi</a>' + voirArbre;
+        break;
+      case "double-absence":
+        html += issueHtml(Esport.icone("alerte", "f-primary"), false, "Match annulé : double absence",
+          "Ni toi ni " + c.adversaire + " n'avez confirmé votre présence avant " + Esport.hhmm(debut) +
+          ". Vous êtes tous les deux éliminés ; ton adversaire prévu au tour suivant est qualifié d'office.");
+        action = '<a href="#" class="bouton bouton-primaire bouton-pleine-largeur" data-ecran="04">Trouver un autre tournoi</a>' + voirArbre;
+        break;
+      default: {
+        // Avant le début : compte à rebours et confirmation de présence
+        const ouverte = maintenant >= ouverture;
+        html += '<div class="bloc-rebours"><div class="rebours" data-rebours="' + debut.toISOString() + '">' + Esport.rebours(debut) + "</div>" +
+          '<p class="rebours-legende">avant le début du match · convoqué à ' + Esport.hhmm(convocation) + "</p></div>";
+        if (!mm.presenceMoi && maintenant >= rappel) {
+          html += '<div class="encart encart-alerte details" role="alert">' + Esport.icone("alerte", "f-primary") +
+            "<div><strong>Confirme ta présence</strong><p>Sans confirmation avant " + Esport.hhmm(debut) + ", tu seras déclaré forfait.</p></div></div>";
+        }
+        if (mm.presenceMoi) {
+          html += '<div class="encart details">' + Esport.icone("coche", "f-success-dark") +
+            "<div><strong>Présence confirmée à " + mm.presenceMoi + "</strong><p>Le match démarre dès que " + c.adversaire + " confirme à son tour.</p></div></div>";
+          action = voirArbre;
+        } else {
+          action = '<button class="bouton bouton-primaire bouton-pleine-largeur" id="present"' + (ouverte ? "" : " disabled") + ">Je suis présent</button>" +
+            '<p class="aide-action">' + (ouverte ? "Ouvert jusqu'à " + Esport.hhmm(debut) : "Disponible de " + Esport.hhmm(ouverture) + " à " + Esport.hhmm(debut)) + "</p>";
+        }
+      }
+    }
+    html += '<p class="horloge-demo">Démo : il est ' + Esport.hhmm(maintenant) + ", le temps défile 30 fois plus vite.</p>" +
+      '<div class="fin-contenu"></div>';
+    document.getElementById("page").innerHTML = html;
+    if (zone.innerHTML !== action) zone.innerHTML = action;
+  }
+
+  /* « Je suis présent » : actif de -10 min au début */
+  document.getElementById("action").addEventListener("click", (e) => {
+    if (!e.target.closest("#present")) return;
+    const maintenant = Esport.horloge();
+    if (maintenant < ouverture || maintenant >= debut) return;
+    Esport.majMonMatch({ presenceMoi: Esport.hhmm(maintenant) });
+    Nav.toast("Présence confirmée");
+  });
+
+  Esport.monter(rendre);
+  setInterval(rendre, 1000);
+</script>
+</body>
+</html>

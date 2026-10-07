@@ -67,6 +67,58 @@ const DONNEES = {
   /* Joueurs qui demandent à rejoindre une équipe ouverte que le joueur vient de créer */
   demandesSimulees: ["Houda_FF", "Omar_Sniper"],
 
+  /* ---- Mon prochain match : quart de finale du Défi eFootball (t05), lot 4 ----
+     Heures « simulées » : dans les écrans 11, 14 et 15, le temps défile 30 fois plus vite.
+     tour / match : position dans DONNEES.arbres.t05.matchs. */
+  monMatch: {
+    tournoi: "t05", tour: 1, match: 0, adversaire: "Rachid_GOAT",
+    debut: "2026-10-09T21:30",
+    convocation: 15,          // convocation 15 min avant le début (S06-02)
+    ouverturePresence: 10,    // « Je suis présent » de -10 min au début
+    rappel: 5,                // rappel 5 min avant si pas de confirmation
+    duree: 15,                // fin prévue du match 15 min après le début
+    delaiDeclaration: 30,     // déclaration ouverte 30 min après la fin prévue (S07-01)
+    delaiContestation: 30,    // contestation d'une déclaration retenue (S07-02)
+    delaiPieces: 30,          // pièces jointes au litige (S07-03)
+    presenceAdversaire: "2026-10-09T21:23",  // l'adversaire confirme à 21:23
+    reponseAdversaire: 5,     // l'adversaire déclare 5 min après moi
+    // Décision d'arbitrage : dépend des captures jointes par le joueur
+    decision: {
+      avecPieces: "Tes captures montrent le score final. La déclaration de Rachid_GOAT est écartée.",
+      sansPieces: "Aucune capture de ta part. Rachid_GOAT a joint une capture montrant le score final 1–2 : sa déclaration est retenue."
+    }
+  },
+
+  /* ---- Décisions contestables (écran 26, S08-04, S04-05) ---- */
+  decisions: {
+    exclusion: {
+      titre: "Exclusion d'un tournoi", tournoi: "t01",
+      motif: "Propos insultants envers un adversaire dans le chat d'un match, signalés le 7 oct.",
+      duree: "Jusqu'à la fin de la Coupe Atlas Free Fire (18 oct.)",
+      consequence: "Tes matchs restants comptent comme des forfaits ; une dotation non remise est annulée."
+    },
+    "refus-identifiant": {
+      titre: "Inscription refusée : identifiant de jeu déjà inscrit",
+      motif: "L'identifiant eFootball « YoussKZ » est déjà inscrit à ce tournoi par un autre compte.",
+      duree: "Pour toute la durée du tournoi"
+    },
+    "refus-compte": {
+      titre: "Inscription refusée : compte déjà inscrit",
+      motif: "Ton compte Max it est déjà inscrit à ce tournoi sous un autre pseudo.",
+      duree: "Pour toute la durée du tournoi"
+    },
+    "refus-pays": {
+      titre: "Inscription refusée : pays non éligible",
+      motif: "Ce tournoi n'est pas ouvert aux joueurs du Maroc.",
+      duree: "Pour toute la durée du tournoi"
+    },
+    suspension: {
+      titre: "Suspension des inscriptions",
+      motif: "3 forfaits en 30 jours : les 19 sept., 2 oct. et 7 oct.",
+      duree: "7 jours, jusqu'au 14 oct."
+    }
+  },
+
   /* Forfaits du joueur sur 30 jours (suspension après 3 forfaits, S06-03) */
   forfaits: ["2026-09-19", "2026-10-02", "2026-10-07"],
 

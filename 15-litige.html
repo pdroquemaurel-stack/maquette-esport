@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<!-- Écran 15 — Litige et preuves.
+     US : S07-03 (litige ouvert sur déclarations divergentes ; jusqu'à 3 captures d'écran, jointes dans
+     les 30 min ; sans pièce, tranché sur les seules déclarations), S07-02 (litige ouvert par une contestation),
+     S05-04 (classement recalculé après la décision d'arbitrage).
+     Les captures choisies restent sur l'appareil : seule leur présence est simulée. -->
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Litige</title>
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .tete { padding: 0 var(--page-gutter) var(--space-4); }
+    .tete h1 { font-size: var(--font-size-xxl); line-height: var(--line-height-tight); }
+    .tete p { color: var(--color-text-secondary); font-size: var(--font-size-sm); margin-top: var(--space-1); }
+
+    /* Les deux déclarations côte à côte */
+    .declarations { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-2); padding: 0 var(--page-gutter); }
+    .declaration { background: var(--color-surface-warm); border-radius: var(--radius-md); padding: var(--space-3); text-align: center; min-width: 0; }
+    .declaration small { display: block; font-size: var(--font-size-xs); color: var(--color-text-secondary); overflow-wrap: anywhere; }
+    .declaration b { display: block; font-size: 32px; font-variant-numeric: tabular-nums; line-height: 1.2; margin: var(--space-1) 0; }
+    .declaration span { font-size: var(--font-size-xs); color: var(--color-text-secondary); }
+    .declaration.moi { background: var(--color-primary-soft); }
+
+    .bloc-rebours { text-align: center; padding: var(--space-5) var(--page-gutter) var(--space-2); }
+
+    /* Captures d'écran (3 au plus) */
+    .captures { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-2); padding: 0 var(--page-gutter); }
+    .capture { position: relative; aspect-ratio: 3 / 4; border-radius: var(--radius-sm); overflow: hidden; background: var(--color-bg-muted); }
+    .capture img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .capture .retirer { position: absolute; top: var(--space-1); right: var(--space-1); width: 28px; height: 28px; border-radius: var(--radius-round); background: var(--color-glass-dark); color: var(--color-text-on-dark); font-weight: var(--font-weight-bold); }
+    .ajout { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-1); aspect-ratio: 3 / 4; border-radius: var(--radius-sm); border: 2px dashed var(--color-border-strong); color: var(--color-text-secondary); font-size: var(--font-size-xs); font-weight: var(--font-weight-bold); cursor: pointer; text-align: center; padding: var(--space-1); }
+    .ajout svg { width: 24px; height: 24px; }
+    .note-section { font-size: var(--font-size-xs); color: var(--color-text-secondary); padding: var(--space-2) var(--page-gutter) 0; }
+
+    .decision { margin: var(--space-4) var(--page-gutter) 0; padding: var(--space-4); border-radius: var(--radius-lg); background: var(--color-surface); box-shadow: var(--shadow-card); }
+    .decision h2 { font-size: var(--font-size-lg); margin-bottom: var(--space-2); }
+    .decision .verdict { font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); color: var(--color-primary); margin-bottom: var(--space-2); }
+    .decision p { color: var(--color-text-secondary); font-size: var(--font-size-sm); }
+    .attente { margin-top: var(--space-4); }
+    .barre-action .bouton + .bouton { margin-top: var(--space-2); }
+  </style>
+</head>
+<body data-zone="esport">
+<div class="cadre">
+  <div class="telephone">
+    <div class="barre-etat" data-heure="21:10"></div>
+    <header class="entete-esport" data-titre="Litige" data-repli="14"></header>
+    <main class="contenu" id="page"></main>
+    <div class="barre-action" id="action"></div>
+    <!-- Champ de fichiers hors de la zone redessinée chaque seconde -->
+    <input type="file" accept="image/*" multiple class="cache-visuel" id="fichiers" tabindex="-1">
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/esport.js"></script>
+<script src="js/demo.js"></script>
+<script>
+  const c = DONNEES.monMatch;
+  const t = Esport.tournoi(c.tournoi);
+  const tour = DONNEES.arbres[c.tournoi].tours[c.tour];
+  const moi = DONNEES.joueur.pseudo;
+  const MAX_CAPTURES = 3;
+  const DELAI_DECISION = 8000;   // la décision arrive 8 s (réelles) après le passage en arbitrage
+
+  /* ---- États de démo ---- */
+  const scenario = Esport.lireScenario();
+  const divergence = { declMoi: { moi: 2, adv: 1, heure: "21:43" }, declAdv: { moi: 1, adv: 2, heure: "21:47" }, statut: "litige" };
+  if (scenario === "litige-ouvert") {
+    Esport.preparerMatchDemo(Object.assign({ litige: { ouverture: "2026-10-09T21:47", pieces: 0 } }, divergence), "2026-10-09T21:48");
+  }
+  if (scenario === "decision-rendue") {
+    Esport.preparerMatchDemo(Object.assign({}, divergence, { statut: "arbitre",
+      litige: { ouverture: "2026-10-09T21:47", pieces: 2, envoye: true, envoi: "21:55", decision: "moi", heureDecision: "22:20" } }), "2026-10-09T22:20");
+    Esport.enregistrerMonResultat(2, 1, "Arbitrage");
+  }
+  Esport.demarrerHorloge();
+
+  // Captures choisies (aperçus locaux, rien n'est envoyé)
+  let captures = [];
+  let minuteurDecision = null;
+
+  function limitePieces(mm) { return Esport.plus(mm.litige.ouverture, c.delaiPieces); }
+
+  /* Envoi des pièces (ou expiration du délai) : passage en arbitrage */
+  function passerEnArbitrage(nbPieces) {
+    const mm = Esport.monMatch();
+    Esport.majMonMatch({ litige: Object.assign({}, mm.litige, { pieces: nbPieces, envoye: true, envoi: Esport.hhmm(Esport.horloge()) }) });
+  }
+
+  /* Décision du responsable local : avec au moins une capture, ma déclaration l'emporte */
+  function rendreDecision() {
+    const mm = Esport.monMatch();
+    const gagnant = mm.litige.pieces > 0 ? "moi" : "adversaire";
+    const d = gagnant === "moi" ? (mm.declMoi || { moi: 2, adv: 1 }) : mm.declAdv;
+    Esport.majMonMatch({ statut: "arbitre", litige: Object.assign({}, mm.litige, { decision: gagnant, heureDecision: Esport.hhmm(Esport.horloge()) }) });
+    Esport.enregistrerMonResultat(d.moi, d.adv, "Arbitrage");
+    Nav.toast("Décision d'arbitrage rendue");
+  }
+
+  function evaluer() {
+    const mm = Esport.monMatch();
+    if (!mm.litige || mm.litige.decision) return;
+    // Délai de 30 min écoulé : le litige part à l'arbitrage avec les pièces déjà jointes
+    if (!mm.litige.envoye && Esport.horloge() >= limitePieces(mm)) {
+      passerEnArbitrage(captures.length);
+      return;
+    }
+    if (mm.litige.envoye && !minuteurDecision) minuteurDecision = setTimeout(rendreDecision, DELAI_DECISION);
+  }
+
+  function carteDeclaration(titre, d, classe) {
+    return '<div class="declaration ' + (classe || "") + '"><small>' + titre + "</small>" +
+      (d ? "<b>" + d.moi + " – " + d.adv + "</b><span>" + Esport.pseudo() + " – " + c.adversaire + (d.heure ? " · " + d.heure : "") + "</span>"
+         : "<b>—</b><span>Contestation, sans déclaration</span>") + "</div>";
+  }
+
+  function rendre() {
+    evaluer();
+    const mm = Esport.monMatch();
+    const page = document.getElementById("page");
+    const zone = document.getElementById("action");
+    let html = '<div class="tete"><h1>Litige</h1><p>' + tour + " · " + t.nom + " · contre " + c.adversaire + "</p></div>";
+    let action = "";
+
+    if (!mm.litige) {
+      page.innerHTML = html + '<div class="vide"><strong>Aucun litige en cours</strong>Un litige s\'ouvre quand les déclarations divergent ou qu\'une déclaration est contestée.<br>' +
+        '<a href="#" class="bouton bouton-primaire" data-ecran="05">Mes matchs</a></div>';
+      zone.innerHTML = "";
+      return;
+    }
+
+    html += '<div class="declarations">' + carteDeclaration("Ta déclaration", mm.declMoi, "moi") + carteDeclaration("Déclaration de " + c.adversaire, mm.declAdv) + "</div>";
+
+    if (mm.litige.decision) {
+      // Décision rendue, avec son motif
+      const gagnantMoi = mm.litige.decision === "moi";
+      const d = gagnantMoi ? (mm.declMoi || { moi: 2, adv: 1 }) : mm.declAdv;
+      html += '<section class="decision"><h2>Décision du responsable local</h2>' +
+        '<p class="verdict">' + (gagnantMoi ? "Victoire de " + Esport.pseudo() : "Victoire de " + c.adversaire) + " · " + d.moi + " – " + d.adv + "</p>" +
+        "<p><b>Motif :</b> " + (mm.litige.pieces > 0 ? c.decision.avecPieces : c.decision.sansPieces) + "</p>" +
+        "<p>Rendue à " + mm.litige.heureDecision + ". " + (gagnantMoi ? "Tu passes au tour suivant." : "Tu es éliminé du tournoi.") +
+        " L'arbre et le classement du tournoi ont été recalculés.</p></section>";
+      action = '<a href="#" class="bouton bouton-primaire bouton-pleine-largeur" data-ecran="12" data-id="' + t.id + '">Voir l\'arbre et le classement</a>' +
+        '<a href="#" class="bouton bouton-secondaire bouton-pleine-largeur" data-ecran="05">Mes matchs</a>';
+    } else if (mm.litige.envoye) {
+      // En attente d'arbitrage
+      html += '<div class="encart attente">' + Esport.icone("calendrier", "f-primary") +
+        "<div><strong>En attente d'arbitrage</strong><p>" +
+        (mm.litige.pieces ? mm.litige.pieces + (mm.litige.pieces > 1 ? " captures envoyées" : " capture envoyée") + " à " + mm.litige.envoi + "."
+                          : "Aucune capture jointe : le litige sera tranché sur les seules déclarations.") +
+        " Le responsable local du Maroc examine le litige ; tu seras prévenu de sa décision.</p></div></div>";
+      action = '<a href="#" class="bouton bouton-secondaire bouton-pleine-largeur" data-ecran="05">Mes matchs</a>';
+    } else {
+      // Pièces à joindre dans les 30 minutes
+      const limite = limitePieces(mm);
+      html += '<div class="bloc-rebours"><div class="rebours">' + Esport.rebours(limite) + '</div><p class="rebours-legende">pour joindre tes preuves, jusqu\'à ' + Esport.hhmm(limite) + "</p></div>";
+      html += '<h2 class="titre-section">Captures d\'écran <span class="ligne-sous-titre">' + captures.length + " / " + MAX_CAPTURES + "</span></h2>";
+      html += '<div class="captures">' + captures.map((cap, i) =>
+        '<div class="capture"><img src="' + cap.url + '" alt="Capture ' + (i + 1) + '"><button class="retirer" data-retirer="' + i + '" aria-label="Retirer la capture">×</button></div>'
+      ).join("") +
+        (captures.length < MAX_CAPTURES
+          ? '<label class="ajout" for="fichiers" tabindex="0">' + Esport.icone("article", "f-muted") + "Ajouter une capture</label>"
+          : "") + "</div>";
+      html += '<p class="note-section">Montre l\'écran de fin de match avec le score. Les pièces sont conservées 90 jours après la clôture du litige.</p>';
+      action = '<button class="bouton bouton-primaire bouton-pleine-largeur" id="envoyer"' + (captures.length ? "" : " disabled") + ">Envoyer " +
+        (captures.length > 1 ? "les " + captures.length + " captures" : "la capture") + "</button>" +
+        '<button class="bouton bouton-lien bouton-pleine-largeur" id="sans-piece">Laisser trancher sans capture</button>';
+    }
+    page.innerHTML = html + '<p class="note-section" style="text-align:center">Démo : il est ' + Esport.hhmm(Esport.horloge()) + ", le temps défile 30 fois plus vite.</p>" +
+      '<div class="fin-contenu"></div>';
+    zone.innerHTML = action;
+  }
+
+  /* ---- Actions ---- */
+  document.getElementById("fichiers").addEventListener("change", (e) => {
+    const fichiers = [...e.target.files].slice(0, MAX_CAPTURES - captures.length);
+    fichiers.forEach((f) => captures.push({ url: URL.createObjectURL(f), nom: f.name }));
+    if (e.target.files.length > fichiers.length) Nav.toast("3 captures au maximum");
+    e.target.value = "";
+    rendre();
+  });
+  document.querySelector(".telephone").addEventListener("click", (e) => {
+    const retirer = e.target.closest("[data-retirer]");
+    if (retirer) { captures.splice(Number(retirer.dataset.retirer), 1); return rendre(); }
+    if (e.target.closest("#envoyer") && captures.length) { passerEnArbitrage(captures.length); Nav.toast("Captures envoyées"); }
+    if (e.target.closest("#sans-piece")) passerEnArbitrage(0);
+  });
+
+  Esport.monter(rendre);
+  setInterval(rendre, 1000);
+</script>
+</body>
+</html>

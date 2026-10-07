@@ -15,7 +15,13 @@ const Demo = (function () {
   const RACCOURCIS = [
     { libelle: "Forfait adverse", ecran: "11", scenario: "forfait-adverse" },
     { libelle: "Mon forfait", ecran: "11", scenario: "mon-forfait" },
+    { libelle: "Double absence", ecran: "11", scenario: "double-absence" },
+    { libelle: "Résultat divergent", ecran: "14", scenario: "resultat-divergent" },
+    { libelle: "Déclaration adverse à contester", ecran: "14", scenario: "declaration-adverse" },
+    { libelle: "Délai de déclaration dépassé", ecran: "14", scenario: "delai-depasse" },
     { libelle: "Litige ouvert", ecran: "15", scenario: "litige-ouvert" },
+    { libelle: "Décision d'arbitrage rendue", ecran: "15", scenario: "decision-rendue" },
+    { libelle: "Exclusion d'un tournoi (contestation)", ecran: "26", scenario: "exclusion" },
     { libelle: "Refus : identifiant de jeu déjà inscrit", ecran: "08", scenario: "refus-doublon" },
     { libelle: "Refus : compte déjà inscrit", ecran: "08", scenario: "refus-compte" },
     { libelle: "Refus : pays non éligible", ecran: "08", scenario: "refus-pays" },

@@ -194,11 +194,13 @@ Icône discrète en haut à droite, présente sur tous les écrans. Ce n'est pas
   - compte Max it suspendu (00c) ;
   - session Max it expirée (retour vers Max it puis vers l'écran d'origine) ;
   - premier accès (00c → 02) ;
-  - forfait adverse (11) ;
-  - mon forfait (11) ;
-  - litige ouvert (15) ;
-  - inscription refusée pour doublon (08) ;
-  - liste d'attente (08) ;
+  - forfait adverse, mon forfait, double absence (11) ;
+  - résultat divergent, déclaration adverse à contester, délai de déclaration dépassé (14) ;
+  - litige ouvert, décision d'arbitrage rendue (15) ;
+  - exclusion d'un tournoi, à contester (26) ;
+  - refus : identifiant de jeu, compte, pays ; liste d'attente ; suspension après 3 forfaits ;
+    inscription annulée par abonnement expiré (08) ;
+  - équipe incomplète à la clôture (10) ;
   - abonnement expiré (24) ;
   - paiement refusé (22).
 
@@ -250,6 +252,9 @@ En-tête      : 🔔 25 Notifications        Menu démo : icône en haut à droi
 | 1 | Socle (CSS, données, routeur, menu de démo), 00a, 00b, 00c | terminé |
 | 2 | 02, 03, 04, 06, 12, 13, 17 et barre du bas e-sport | terminé |
 | 3 | 05, 07, 08, 09, 10 et page de contrôle `outils/controle.html` | terminé |
+| 4 | 11, 14, 15, 26 et test de parcours `outils/parcours-match.html` | terminé |
+
+Démo des matchs (lot 4) : dans 11, 14 et 15, le temps défile 30 fois plus vite (1 s = 30 s) ; les raccourcis du menu de démo mènent à chaque état.
 
 ## Couverture
 
@@ -258,7 +263,13 @@ En-tête      : 🔔 25 Notifications        Menu démo : icône en haut à droi
 |---|---|
 | S01-01 | Compte suspendu et session expirée simulés via le menu de démo. |
 | S01-05 | La reprise elle-même est côté serveur ; seul son résultat est visible (02, 23, 28). |
-| S06-01, S06-04 | Automatismes sans écran propre ; leurs effets sont visibles dans 11 et 12. |
+| S06-01, S06-04 | Automatismes sans écran propre ; leurs effets sont visibles dans 11 et 12 (vainqueur au tour suivant, qualification d'office après double absence). |
+| S06-02 | Compte à rebours, présence de -10 min au début, rappel à -5 min, démarrage dès que les deux sont présents (11). La convocation reçue 15 min avant arrive par notification (25). |
+| S06-03 | Forfait (motif, heure), victoire par forfait, double absence (11, 12). Le compteur de forfaits est fixe (1 sur 30 jours) ; la suspension après 3 forfaits est montrée en 08. Le forfait en poule (défaite au score de la fiche jeu) n'est pas maquetté. |
+| S07-01 | Saisie, correction tant que l'adversaire n'a pas déclaré, match clos par concordance, refus après le délai (14). La déclaration est ouverte dès le démarrage du match, pas seulement après la fin prévue. |
+| S07-02 | Déclaration adverse retenue, contestation pendant 30 min, résultat définitif sans contestation (14). Les avis à l'adversaire passent par les notifications (25). Le cas « aucune déclaration dans le délai » n'est pas maquetté (voir US en suspens). |
+| S07-03 | Litige automatique, 3 captures au plus, délai de 30 min, arbitrage puis décision avec motif (15). Les captures restent sur l'appareil ; la conservation 90 jours est seulement mentionnée. La décision est simulée : avec au moins une capture, la déclaration du joueur l'emporte. |
+| S08-04 | Côté joueur seulement : décision d'exclusion (motif, durée, conséquences) et contestation transmise au responsable local (26). L'exclusion elle-même relève du back-office. |
 | S08-02 | Activation par pays simulée par un indicateur dans `data.js` (ex. masquer les vidéos). |
 | S12-02 | Courriels et SMS reçus hors de l'application ; seules les préférences (27) sont maquettées. |
 | S03-06 | Le versement sur le numéro Max it n'apparaît que par la notification (25). |
@@ -277,6 +288,7 @@ En-tête      : 🔔 25 Notifications        Menu démo : icône en haut à droi
 
 ### US en suspens
 - S01-03 Âge du joueur et accès des mineurs : ni refus pour âge, ni consentement parental.
+- S07-02, cas « aucun joueur ne déclare dans le délai » : la règle (deux éliminés ou litige) n'est pas tranchée dans le backlog ; non maquetté.
 
 ### US MVP hors périmètre (back-office)
 S02-01, S03-01, S03-02, S07-04, S08-01, S08-03, S08-05, S09-01, S09-03, et la partie gestion de S09-02.

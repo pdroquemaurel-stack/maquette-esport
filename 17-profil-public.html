@@ -49,25 +49,23 @@
   const estMoi = demande === Esport.pseudo() || demande === DONNEES.joueur.pseudo;
   const pseudoDonnees = estMoi ? DONNEES.joueur.pseudo : demande;
 
-  /* Vainqueur d'un match d'arbre : [A, B, score A, score B, vainqueur si égalité] */
-  function vainqueur(m) {
-    if (!m[0] || !m[1] || m[2] === null || m[3] === null) return null;
-    if (m[2] === m[3]) return m[4] || null;
-    return m[2] > m[3] ? m[0] : m[1];
-  }
+  /* Vainqueur d'un match d'arbre (forfaits et arbitrages compris), voir esport.js */
+  const vainqueur = Esport.vainqueur;
 
   /* Résultats du joueur, retrouvés dans les arbres, les poules et le classement de t10 */
   function resultats() {
     const liste = [];
 
     Object.keys(DONNEES.arbres).forEach((id) => {
-      const arbre = DONNEES.arbres[id];
+      const arbre = Esport.arbre(id);
       if (!arbre.matchs[0].some((m) => m[0] === pseudoDonnees || m[1] === pseudoDonnees)) return;
       let texte = "En lice";
       let classe = "en-lice";
       arbre.matchs.forEach((tourMatchs, r) => tourMatchs.forEach((m) => {
         const g = vainqueur(m);
-        if (!g || (m[0] !== pseudoDonnees && m[1] !== pseudoDonnees)) return;
+        if (m[0] !== pseudoDonnees && m[1] !== pseudoDonnees) return;
+        if (m[6] === "Double absence") { texte = "Éliminé en " + arbre.tours[r].toLowerCase(); classe = ""; return; }
+        if (!g) return;
         if (g !== pseudoDonnees) { texte = "Éliminé en " + arbre.tours[r].toLowerCase(); classe = ""; }
         else if (r === arbre.matchs.length - 1) { texte = "Vainqueur"; classe = "victoire"; }
       }));

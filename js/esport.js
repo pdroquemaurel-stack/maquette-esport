@@ -240,6 +240,180 @@ const Esport = (function () {
       "</a>";
   }
 
+  /* ---------- Horloge accélérée (écrans 11, 14, 15) ----------
+     Dans la salle de match, le temps défile 30 fois plus vite : 1 s = 30 s.
+     Ailleurs, tant que l'horloge n'est pas lancée, l'heure reste celle de data.js. */
+  const VITESSE = 30;
+  function horloge() {
+    const h = Etat.get("horloge");
+    if (!h) return maintenant();
+    return new Date(new Date(h.simule).getTime() + (Date.now() - h.reel) * VITESSE);
+  }
+  function regleHorloge(isoSimule) { Etat.set("horloge", { reel: Date.now(), simule: isoSimule }); }
+  function demarrerHorloge() { if (!Etat.get("horloge")) regleHorloge(DONNEES.maintenant); }
+  /* Date située « minutes » après une heure ISO */
+  function plus(iso, minutes) { return new Date(new Date(iso).getTime() + minutes * 60000); }
+  /* « 21:30 » */
+  function hhmm(d) { return String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0"); }
+  /* Compte à rebours « 12:05 » (minutes:secondes simulées) jusqu'à une date */
+  function rebours(cible) {
+    const s = Math.max(0, Math.floor((cible - horloge()) / 1000));
+    return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
+  }
+
+  /* ---------- Mon match (lot 4) ----------
+     monMatch mémorise : presenceMoi (heure), issue (demarre, forfait-adverse, mon-forfait, double-absence),
+     declMoi / declAdv ({ moi, adv } : mon score, celui de l'adversaire), statut (attente-adv, clos,
+     litige, retenu-adverse, definitif), litige ({ ouverture, pieces, envoye, decision }). */
+  function monMatch() { return Object.assign({}, Etat.get("monMatch") || {}); }
+  function majMonMatch(changements) { Etat.set("monMatch", Object.assign(monMatch(), changements)); }
+  function cleMonMatch() { const c = DONNEES.monMatch; return c.tournoi + "-" + c.tour + "-" + c.match; }
+
+  /* États de démo (14, 15) : match démarré à 21:23, sans résultat, horloge réglée sur « heure » */
+  function preparerMatchDemo(supplement, heure) {
+    const resultats = Object.assign({}, resultatsMatchs());
+    delete resultats[cleMonMatch()];
+    Etat.set("matchs", resultats);
+    Etat.set("monMatch", Object.assign({
+      presenceMoi: "21:21", adversaireVu: true, rappelVu: true,
+      issue: "demarre", demarrage: "21:23", demarrageIso: "2026-10-09T21:23"
+    }, supplement));
+    regleHorloge(heure);
+  }
+
+  /* Fin prévue du match et limite de déclaration (30 min après la fin prévue, S07-01) */
+  function finPrevue() { return plus(monMatch().demarrageIso, DONNEES.monMatch.duree); }
+  function limiteDeclaration() { return new Date(finPrevue().getTime() + DONNEES.monMatch.delaiDeclaration * 60000); }
+
+  /* Résultats ajoutés à l'arbre : { a, b, vainqueur, mention } par « tournoi-tour-match » */
+  function resultatsMatchs() { return Etat.get("matchs") || {}; }
+  function enregistrerResultat(cle, resultat) {
+    const copie = Object.assign({}, resultatsMatchs());
+    copie[cle] = resultat;
+    Etat.set("matchs", copie);
+  }
+  /* Résultat de mon match : mes scores (moi, adv) convertis dans l'ordre de l'arbre */
+  function enregistrerMonResultat(scoreMoi, scoreAdv, mention, vainqueurForce) {
+    const c = DONNEES.monMatch;
+    const moiEnA = DONNEES.arbres[c.tournoi].matchs[c.tour][c.match][0] === DONNEES.joueur.pseudo;
+    const gagnant = vainqueurForce !== undefined ? vainqueurForce
+      : scoreMoi > scoreAdv ? DONNEES.joueur.pseudo : c.adversaire;
+    enregistrerResultat(cleMonMatch(), {
+      a: moiEnA ? scoreMoi : scoreAdv, b: moiEnA ? scoreAdv : scoreMoi, vainqueur: gagnant, mention: mention || null
+    });
+  }
+
+  /* ---------- Arbre à élimination ----------
+     Match : [joueur A, joueur B, score A, score B, vainqueur (égalité, forfait), état, mention]. */
+  function vainqueur(m) {
+    if (m[6] === "Double absence") return null;
+    if (m[4] && (m[2] === null || m[3] === null || m[2] === m[3])) return m[4];
+    if (!m[0] || !m[1] || m[2] === null || m[3] === null || m[2] === m[3]) return null;
+    return m[2] > m[3] ? m[0] : m[1];
+  }
+
+  /* Les vainqueurs d'un tour remplissent le tour suivant, sans action humaine (S06-01).
+     Après une double absence, l'adversaire prévu au tour suivant est qualifié d'office (S06-03). */
+  function propager(a) {
+    for (let r = 1; r < a.matchs.length; r++) {
+      a.matchs[r].forEach((m, i) => {
+        const gauche = a.matchs[r - 1][i * 2];
+        const droite = a.matchs[r - 1][i * 2 + 1];
+        m[0] = vainqueur(gauche);
+        m[1] = vainqueur(droite);
+        if (m[2] === null && m[3] === null) {
+          if (gauche[6] === "Double absence" && m[1]) { m[4] = m[1]; m[6] = "Qualifié d'office"; }
+          else if (droite[6] === "Double absence" && m[0]) { m[4] = m[0]; m[6] = "Qualifié d'office"; }
+        }
+      });
+    }
+    return a;
+  }
+
+  /* Arbre d'un tournoi avec les résultats ajoutés pendant la démo */
+  function arbre(idTournoi) {
+    if (!DONNEES.arbres[idTournoi]) return null;
+    const copie = JSON.parse(JSON.stringify(DONNEES.arbres[idTournoi]));
+    copie.matchs.forEach((tour) => tour.forEach((m) => { while (m.length < 7) m.push(null); }));
+    const resultats = resultatsMatchs();
+    Object.keys(resultats).forEach((cle) => {
+      const [id, r, i] = cle.split("-");
+      if (id !== idTournoi) return;
+      const m = copie.matchs[Number(r)][Number(i)];
+      const v = resultats[cle];
+      m[2] = v.a; m[3] = v.b; m[4] = v.vainqueur; m[5] = null; m[6] = v.mention;
+    });
+    return propager(copie);
+  }
+
+  /* Le tournoi a-t-il été recalculé après un arbitrage ? (S05-04) */
+  function recalculeApresArbitrage(idTournoi) {
+    return Object.keys(resultatsMatchs()).some((cle) => cle.startsWith(idTournoi + "-") && resultatsMatchs()[cle].mention === "Arbitrage");
+  }
+
+  /* Où en est mon prochain match ? etape : a-venir, en-cours, litige, qualifie, elimine */
+  function prochainMatch() {
+    const c = DONNEES.monMatch;
+    const t = tournoi(c.tournoi);
+    const ins = inscription(t.id);
+    if (!ins || ins.etat !== "inscrit" || t.etat !== "en-cours") return null;
+    const a = arbre(t.id);
+    const moi = DONNEES.joueur.pseudo;
+    const resultat = resultatsMatchs()[cleMonMatch()];
+    const mm = monMatch();
+    const base = { t, tour: a.tours[c.tour], adversaire: c.adversaire, heure: hhmm(new Date(c.debut)) };
+    if (!resultat) {
+      const etape = mm.statut === "litige" ? "litige" : mm.issue === "demarre" ? "en-cours" : "a-venir";
+      return Object.assign(base, { etape });
+    }
+    if (resultat.vainqueur !== moi) return Object.assign(base, { etape: "elimine" });
+    // Qualifié : match du tour suivant, adversaire connu ou non
+    for (let r = c.tour + 1; r < a.matchs.length; r++) {
+      const m = a.matchs[r].find((x) => x[0] === moi || x[1] === moi);
+      if (m && !vainqueur(m)) return Object.assign(base, { etape: "qualifie", tour: a.tours[r], adversaire: m[0] === moi ? m[1] : m[0] });
+    }
+    return Object.assign(base, { etape: "qualifie", tour: a.tours[c.tour + 1], adversaire: null });
+  }
+
+  /* Carte sombre « prochain match » (accueil 03 et Mes matchs 05) */
+  function carteProchainMatch(p) {
+    const moi = pseudo();
+    const duel = (adversaire) =>
+      '<div class="duel"><span class="joueur"><span class="avatar avatar-moi">' + moi[0] + "</span>" + moi + "</span>" +
+      '<span class="vs">VS</span>' +
+      (adversaire
+        ? '<a href="#" class="joueur" data-ecran="17" data-pseudo="' + adversaire + '"><span class="avatar">' + adversaire[0] + "</span>" + adversaire + "</a>"
+        : '<span class="joueur"><span class="avatar">?</span>Bientôt connu</span>') + "</div>";
+    const arbreLien = '<a href="#" class="bouton bouton-verre" data-ecran="12" data-id="' + p.t.id + '">Voir l\'arbre</a>';
+    const carte = (surtitre, titre, corps, actions) =>
+      '<div class="carte-match"><span class="flamme"></span><p class="surtitre">' + surtitre + "</p><h2>" + titre + "</h2>" +
+      corps + '<div class="actions">' + actions + "</div></div>";
+
+    switch (p.etape) {
+      case "a-venir": {
+        const minutes = Math.round((new Date(DONNEES.monMatch.debut) - horloge()) / 60000);
+        return carte("Ton prochain match", p.tour + " · " + p.t.nom, duel(p.adversaire) +
+          '<p class="quand">Aujourd\'hui à ' + p.heure + (minutes > 0 ? " · <b>dans " + minutes + " min</b>" : " · <b>maintenant</b>") + "</p>",
+          '<a href="#" class="bouton bouton-primaire" data-ecran="11">Salle de match</a>' + arbreLien);
+      }
+      case "en-cours":
+        return carte("Match en cours", p.tour + " · " + p.t.nom, duel(p.adversaire) +
+          '<p class="quand">Déclare le score dès la fin du match</p>',
+          '<a href="#" class="bouton bouton-primaire" data-ecran="14">Déclarer le résultat</a>' + arbreLien);
+      case "litige":
+        return carte("Litige en cours", p.tour + " · " + p.t.nom, duel(p.adversaire) +
+          '<p class="quand">Vos déclarations divergent : le responsable local tranche</p>',
+          '<a href="#" class="bouton bouton-primaire" data-ecran="15">Voir le litige</a>' + arbreLien);
+      case "qualifie":
+        return carte("Qualifié !", p.tour + " · " + p.t.nom, duel(p.adversaire) +
+          '<p class="quand">Horaire communiqué à la convocation</p>', arbreLien);
+      default:
+        return carte("Fin du tournoi pour toi", "Éliminé en " + p.tour.toLowerCase() + " · " + p.t.nom, "",
+          '<a href="#" class="bouton bouton-primaire" data-ecran="04">Trouver un tournoi</a>' +
+          '<a href="#" class="bouton bouton-verre" data-ecran="12" data-id="' + p.t.id + '">Classement</a>');
+    }
+  }
+
   /* ---------- En-tête et barre du bas, remplis automatiquement ----------
      <header class="entete-esport" data-titre="Tournois" data-repli="03"></header>
        data-repli : affiche un bouton retour (écran si pas d'historique)
@@ -300,6 +474,9 @@ const Esport = (function () {
     inscription, changerInscription, inscriptionsCloses, etatBouton,
     equipe, changerEquipe, tailleEquipe, reglementAAccepter, accepterReglement, lireScenario,
     jourLong, jourCourt, heure, blocDate, prix,
-    badges, libelleFormat, libelleMode, carteTournoi, carteUne, contenusVisibles, ligneContenu, monter
+    badges, libelleFormat, libelleMode, carteTournoi, carteUne, contenusVisibles, ligneContenu, monter,
+    horloge, regleHorloge, demarrerHorloge, plus, hhmm, rebours,
+    monMatch, majMonMatch, cleMonMatch, preparerMatchDemo, finPrevue, limiteDeclaration, resultatsMatchs, enregistrerResultat, enregistrerMonResultat,
+    vainqueur, propager, arbre, recalculeApresArbitrage, prochainMatch, carteProchainMatch
   };
 })();

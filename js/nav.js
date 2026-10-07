@@ -17,11 +17,11 @@ const ECRANS = {
   "08": { fichier: "08-inscription-resultat.html", titre: "Inscription", pret: true },
   "09": { fichier: "09-equipe-choix.html", titre: "Créer ou rejoindre", pret: true },
   "10": { fichier: "10-equipe.html", titre: "Mon équipe", pret: true },
-  "11": { fichier: "11-match.html", titre: "Salle de match", pret: false },
+  "11": { fichier: "11-match.html", titre: "Salle de match", pret: true },
   "12": { fichier: "12-arbre.html", titre: "Arbre du tournoi", pret: true },
   "13": { fichier: "13-jeu.html", titre: "Page d'un jeu", pret: true },
-  "14": { fichier: "14-resultat.html", titre: "Déclarer le résultat", pret: false },
-  "15": { fichier: "15-litige.html", titre: "Litige", pret: false },
+  "14": { fichier: "14-resultat.html", titre: "Déclarer le résultat", pret: true },
+  "15": { fichier: "15-litige.html", titre: "Litige", pret: true },
   "17": { fichier: "17-profil-public.html", titre: "Profil public", pret: true },
   "18": { fichier: "18-video.html", titre: "Vidéo", pret: false },
   "19": { fichier: "19-article.html", titre: "Article", pret: false },
@@ -31,7 +31,7 @@ const ECRANS = {
   "23": { fichier: "23-profil.html", titre: "Mon profil", pret: false },
   "24": { fichier: "24-abonnement.html", titre: "Mon abonnement", pret: false },
   "25": { fichier: "25-notifications.html", titre: "Notifications", pret: false },
-  "26": { fichier: "26-contestation.html", titre: "Contestation", pret: false },
+  "26": { fichier: "26-contestation.html", titre: "Contestation", pret: true },
   "27": { fichier: "27-preferences-notif.html", titre: "Préférences", pret: false },
   "28": { fichier: "28-mes-donnees.html", titre: "Mes données", pret: false }
 };
@@ -49,6 +49,10 @@ const Etat = (function () {
     equipes: null,          // équipes modifiées pendant la démo ; sinon celles de data.js
     reglementsAcceptes: null, // version du règlement acceptée par tournoi (S03-03)
     historiqueNonRepris: false, // case « Ne pas reprendre mon historique » (02)
+    horloge: null,          // horloge accélérée des écrans 11, 14, 15 : { reel, simule }
+    monMatch: null,         // déroulé de mon match : présence, déclarations, litige (lot 4)
+    matchs: null,           // résultats ajoutés à l'arbre pendant la démo, par « tournoi-tour-match »
+    contestations: null,    // contestations envoyées (26)
     scenario: null,         // état alternatif forcé pour l'écran visé
     origine: null           // écran à retrouver après le paiement (S11-03)
   };
@@ -195,7 +199,7 @@ function remplirBarreEtat() {
 }
 
 /* ---- Liens déclaratifs ----
-   data-ecran="06"            : aller à l'écran 06 (data-id / data-pseudo : paramètres ;
+   data-ecran="06"            : aller à l'écran 06 (data-id / data-pseudo / data-decision : paramètres ;
                                 data-origine : mémoriser l'écran courant pour y revenir)
    data-action="esport"       : entrée dans la plateforme
    data-action="retour"       : page précédente (data-repli="03" : écran si pas d'historique)
@@ -210,6 +214,7 @@ document.addEventListener("click", (evenement) => {
     const params = {};
     if (cible.dataset.id) params.id = cible.dataset.id;
     if (cible.dataset.pseudo) params.pseudo = cible.dataset.pseudo;
+    if (cible.dataset.decision) params.decision = cible.dataset.decision;
     if (cible.dataset.origine !== undefined) Nav.memoriserOrigine();
     Nav.aller(cible.dataset.ecran, cible.dataset.scenario, Object.keys(params).length ? params : null);
   } else if (cible.dataset.action === "esport") {

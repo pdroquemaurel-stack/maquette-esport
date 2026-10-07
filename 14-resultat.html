@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<!-- Écran 14 — Déclarer le résultat de mon match.
+     US : S07-01 (chaque joueur déclare ; concordance = match clos, le vainqueur progresse ;
+     déclaration ouverte 30 min après la fin prévue ; correction tant que l'adversaire n'a pas déclaré),
+     S07-02 (une seule déclaration à l'échéance : elle est retenue, l'autre joueur a 30 min pour contester),
+     S07-03 (déclarations divergentes : litige ouvert automatiquement, écran 15).
+     Non maquetté : aucun joueur ne déclare dans le délai (règle en suspens dans le backlog). -->
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Déclarer le résultat</title>
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .tete { padding: 0 var(--page-gutter) var(--space-2); }
+    .tete h1 { font-size: var(--font-size-xxl); line-height: var(--line-height-tight); }
+    .tete p { color: var(--color-text-secondary); font-size: var(--font-size-sm); margin-top: var(--space-1); }
+    .bloc-rebours { text-align: center; padding: var(--space-4) var(--page-gutter); }
+
+    /* Saisie du score : un compteur par joueur */
+    .saisie { display: flex; align-items: center; justify-content: center; gap: var(--space-4); padding: var(--space-4) var(--page-gutter); }
+    .compteur { flex: 1; display: flex; flex-direction: column; align-items: center; gap: var(--space-2); min-width: 0; }
+    .compteur .nom { font-weight: var(--font-weight-bold); font-size: var(--font-size-sm); text-align: center; overflow-wrap: anywhere; }
+    .compteur .valeur { font-size: 48px; font-weight: var(--font-weight-bold); line-height: 1; font-variant-numeric: tabular-nums; }
+    .compteur .boutons { display: flex; gap: var(--space-2); }
+    .compteur button { width: var(--touch-target); height: var(--touch-target); border-radius: var(--radius-round); border: 1px solid var(--color-border-strong); font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); }
+    .tiret { font-size: var(--font-size-xxl); color: var(--color-text-muted); }
+
+    /* Score affiché */
+    .score { display: flex; align-items: center; justify-content: center; gap: var(--space-3); padding: var(--space-4) var(--page-gutter); font-weight: var(--font-weight-bold); }
+    .score .chiffres { font-size: 40px; font-variant-numeric: tabular-nums; }
+    .score .nom { font-size: var(--font-size-sm); flex: 1; min-width: 0; overflow-wrap: anywhere; }
+    .score .nom:first-child { text-align: right; }
+    .issue { display: flex; flex-direction: column; align-items: center; text-align: center; padding: var(--space-4) var(--page-gutter) 0; }
+    .issue .pictogramme { width: 72px; height: 72px; border-radius: var(--radius-round); display: flex; align-items: center; justify-content: center; background: var(--color-primary-soft); margin-bottom: var(--space-4); }
+    .issue .pictogramme svg { width: 36px; height: 36px; }
+    .issue .pictogramme.succes { background: var(--color-success-dark); }
+    .issue h2 { font-size: var(--font-size-xl); margin-bottom: var(--space-2); }
+    .issue p { color: var(--color-text-secondary); }
+    .encart { margin-bottom: var(--space-3); }
+    .erreur-saisie { color: var(--color-alert); font-size: var(--font-size-sm); text-align: center; padding: 0 var(--page-gutter); }
+    .barre-action .bouton + .bouton { margin-top: var(--space-2); }
+  </style>
+</head>
+<body data-zone="esport">
+<div class="cadre">
+  <div class="telephone">
+    <div class="barre-etat" data-heure="21:10"></div>
+    <header class="entete-esport" data-titre="Résultat du match" data-repli="11"></header>
+    <main class="contenu" id="page"></main>
+    <div class="barre-action" id="action"></div>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/esport.js"></script>
+<script src="js/demo.js"></script>
+<script>
+  const c = DONNEES.monMatch;
+  const t = Esport.tournoi(c.tournoi);
+  const tour = DONNEES.arbres[c.tournoi].tours[c.tour];
+  const moi = DONNEES.joueur.pseudo;
+
+  /* ---- États de démo ---- */
+  const scenario = Esport.lireScenario();
+  // Déclaration de l'adversaire à 21:45 ; délai de déclaration écoulé à 22:08
+  const declAdverse = { moi: 1, adv: 2, heure: "21:45" };
+  if (scenario === "resultat-divergent") Esport.preparerMatchDemo({ adversaireDiverge: true }, "2026-10-09T21:40");
+  if (scenario === "declaration-adverse") Esport.preparerMatchDemo({ declAdv: declAdverse, statut: "retenu-adverse" }, "2026-10-09T22:09");
+  if (scenario === "delai-depasse") Esport.preparerMatchDemo({ declAdv: declAdverse, statut: "retenu-adverse", refusMoi: "22:09" }, "2026-10-09T22:09");
+  Esport.demarrerHorloge();
+
+  // Score en cours de saisie (conservé entre deux affichages)
+  let saisie = { moi: 0, adv: 0 };
+  let erreur = "";
+
+  function limiteContestation() { return Esport.plus(Esport.limiteDeclaration().toISOString(), c.delaiContestation); }
+
+  /* Score lisible : « Youss_KZ 2 – 1 Rachid_GOAT » */
+  function score(d) {
+    return '<div class="score"><span class="nom">' + Esport.pseudo() + '</span><span class="chiffres">' + d.moi + " – " + d.adv +
+      '</span><span class="nom">' + c.adversaire + "</span></div>";
+  }
+
+  /* ---- Évolution avec l'heure (chaque seconde) ---- */
+  function evaluer() {
+    const mm = Esport.monMatch();
+    const maintenant = Esport.horloge();
+    if (mm.issue !== "demarre") return;
+
+    // L'adversaire déclare 5 minutes après moi
+    if (mm.statut === "attente-adv" && maintenant >= Esport.plus(mm.declMoi.heureIso, c.reponseAdversaire)) {
+      if (mm.adversaireDiverge) {
+        // Déclarations divergentes : litige ouvert automatiquement (S07-03)
+        const divergente = mm.declMoi.moi > mm.declMoi.adv ? { moi: mm.declMoi.adv, adv: mm.declMoi.moi } : { moi: mm.declMoi.moi, adv: mm.declMoi.adv + 1 };
+        Esport.majMonMatch({ declAdv: divergente, statut: "litige", correction: false, litige: { ouverture: maintenant.toISOString(), pieces: 0 } });
+        Nav.toast("Déclarations divergentes : un litige est ouvert");
+      } else {
+        // Déclarations identiques : match clos, le vainqueur progresse (S07-01)
+        Esport.majMonMatch({ declAdv: { moi: mm.declMoi.moi, adv: mm.declMoi.adv }, statut: "clos", correction: false });
+        Esport.enregistrerMonResultat(mm.declMoi.moi, mm.declMoi.adv);
+        Nav.toast(c.adversaire + " a confirmé le score : match clos");
+      }
+      return;
+    }
+    // Déclaration adverse retenue, pas de contestation dans les 30 min : résultat définitif (S07-02)
+    if (mm.statut === "retenu-adverse" && maintenant >= limiteContestation()) {
+      Esport.majMonMatch({ statut: "definitif" });
+      Esport.enregistrerMonResultat(mm.declAdv.moi, mm.declAdv.adv);
+    }
+  }
+
+  function rendre() {
+    evaluer();
+    const mm = Esport.monMatch();
+    const maintenant = Esport.horloge();
+    const page = document.getElementById("page");
+    const zone = document.getElementById("action");
+    const arbre = '<a href="#" class="bouton bouton-secondaire bouton-pleine-largeur" data-ecran="12" data-id="' + t.id + '">Voir l\'arbre</a>';
+    let html = '<div class="tete"><h1>' + tour + "</h1><p>" + t.nom + " · contre " + c.adversaire + "</p></div>";
+    let action = "";
+
+    if (mm.issue !== "demarre") {
+      page.innerHTML = html + '<div class="vide"><strong>Aucun résultat à déclarer</strong>Le match n\'a pas encore démarré.<br>' +
+        '<a href="#" class="bouton bouton-primaire" data-ecran="11">Salle de match</a></div>';
+      zone.innerHTML = '<a href="#" class="bouton bouton-secondaire bouton-pleine-largeur" data-ecran="05">Mes matchs</a>';
+      return;
+    }
+    const limite = Esport.limiteDeclaration();
+    const gagne = (d) => d.moi > d.adv;
+
+    if (!mm.statut || mm.correction) {
+      // Saisie (ou correction) de ma déclaration
+      html += '<div class="bloc-rebours"><div class="rebours">' + Esport.rebours(limite) + "</div>" +
+        '<p class="rebours-legende">pour déclarer, jusqu\'à ' + Esport.hhmm(limite) + " (fin prévue " + Esport.hhmm(Esport.finPrevue()) + ")</p></div>";
+      if (mm.correction) html += '<div class="encart">' + Esport.icone("alerte", "f-primary") + "<div><p>Tu peux corriger tant que " + c.adversaire + " n'a pas déclaré.</p></div></div>";
+      html += '<div class="saisie">' +
+        '<div class="compteur"><span class="nom">' + Esport.pseudo() + " (toi)</span><span class=\"valeur\">" + saisie.moi + "</span>" +
+        '<span class="boutons"><button data-score="moi" data-pas="-1" aria-label="Retirer un but">−</button><button data-score="moi" data-pas="1" aria-label="Ajouter un but">+</button></span></div>' +
+        '<span class="tiret">–</span>' +
+        '<div class="compteur"><span class="nom">' + c.adversaire + "</span><span class=\"valeur\">" + saisie.adv + "</span>" +
+        '<span class="boutons"><button data-score="adv" data-pas="-1" aria-label="Retirer un but">−</button><button data-score="adv" data-pas="1" aria-label="Ajouter un but">+</button></span></div>' +
+        "</div>" + (erreur ? '<p class="erreur-saisie" role="alert">' + erreur + "</p>" : "");
+      action = '<button class="bouton bouton-primaire bouton-pleine-largeur" id="envoyer">' + (mm.correction ? "Enregistrer la correction" : "Envoyer ma déclaration") + "</button>";
+    } else if (mm.statut === "attente-adv") {
+      html += '<div class="issue"><span class="pictogramme">' + Esport.icone("calendrier", "f-primary") + "</span>" +
+        "<h2>Déclaration envoyée</h2><p>En attente de la déclaration de " + c.adversaire + ".</p></div>" + score(mm.declMoi) +
+        '<div class="bloc-rebours"><div class="rebours">' + Esport.rebours(limite) + '</div><p class="rebours-legende">avant la clôture des déclarations (' + Esport.hhmm(limite) + ")</p></div>";
+      action = '<button class="bouton bouton-secondaire bouton-pleine-largeur" id="corriger">Corriger ma déclaration</button>';
+    } else if (mm.statut === "clos" || mm.statut === "definitif") {
+      const d = mm.statut === "clos" ? mm.declMoi : mm.declAdv;
+      html += '<div class="issue"><span class="pictogramme' + (gagne(d) ? " succes" : "") + '">' + Esport.icone(gagne(d) ? "coche" : "alerte", gagne(d) ? "f-white" : "f-primary") + "</span>" +
+        "<h2>" + (mm.statut === "clos" ? "Match clos" : "Résultat définitif") + "</h2><p>" +
+        (mm.statut === "clos" ? "Vos deux déclarations concordent. " : "Pas de contestation dans le délai : la déclaration de " + c.adversaire + " est définitive. ") +
+        (gagne(d) ? "Tu passes au tour suivant." : "Tu es éliminé du tournoi.") + "</p></div>" + score(d);
+      action = '<a href="#" class="bouton bouton-primaire bouton-pleine-largeur" data-ecran="12" data-id="' + t.id + '">Voir l\'arbre</a>' +
+        '<a href="#" class="bouton bouton-secondaire bouton-pleine-largeur" data-ecran="05">Mes matchs</a>';
+    } else if (mm.statut === "litige" || mm.statut === "arbitre") {
+      html += '<div class="issue"><span class="pictogramme">' + Esport.icone("alerte", "f-primary") + "</span>" +
+        "<h2>Déclarations divergentes</h2><p>Un litige est ouvert. Joins tes captures d'écran pour appuyer ta déclaration.</p></div>";
+      action = '<a href="#" class="bouton bouton-primaire bouton-pleine-largeur" data-ecran="15">Voir le litige</a>' + arbre;
+    } else if (mm.statut === "retenu-adverse") {
+      // Une seule déclaration à l'échéance : celle de l'adversaire est retenue (S07-02)
+      const limiteC = limiteContestation();
+      if (mm.refusMoi) {
+        html += '<div class="encart encart-alerte" role="alert" style="margin-top:var(--space-3)">' + Esport.icone("alerte", "f-primary") +
+          "<div><strong>Déclaration refusée : délai dépassé</strong><p>Les déclarations étaient ouvertes jusqu'à " + Esport.hhmm(limite) +
+          ". Ta tentative de " + mm.refusMoi + " n'a pas été enregistrée.</p></div></div>";
+      }
+      html += '<div class="issue"><h2>Déclaration de ' + c.adversaire + " retenue</h2><p>Tu n'as pas déclaré de score avant " + Esport.hhmm(limite) +
+        ". Seule la déclaration de " + c.adversaire + " (à " + mm.declAdv.heure + ") a été enregistrée.</p></div>" + score(mm.declAdv) +
+        '<div class="bloc-rebours"><div class="rebours">' + Esport.rebours(limiteC) + '</div><p class="rebours-legende">pour contester, jusqu\'à ' + Esport.hhmm(limiteC) + "</p></div>";
+      action = '<button class="bouton bouton-primaire bouton-pleine-largeur" id="contester">Contester</button>' + arbre;
+    }
+    page.innerHTML = html + '<p class="rebours-legende" style="text-align:center;font-size:var(--font-size-xs)">Démo : il est ' + Esport.hhmm(maintenant) +
+      ", le temps défile 30 fois plus vite.</p><div class=\"fin-contenu\"></div>";
+    zone.innerHTML = action;
+  }
+
+  /* ---- Actions ---- */
+  document.querySelector(".telephone").addEventListener("click", (e) => {
+    const pas = e.target.closest("[data-score]");
+    if (pas) {
+      const cle = pas.dataset.score;
+      saisie[cle] = Math.min(20, Math.max(0, saisie[cle] + Number(pas.dataset.pas)));
+      erreur = "";
+      return rendre();
+    }
+    const mm = Esport.monMatch();
+    const maintenant = Esport.horloge();
+
+    if (e.target.closest("#envoyer")) {
+      if (maintenant > Esport.limiteDeclaration()) {
+        // Délai écoulé : la déclaration est refusée (S07-01) ; seule celle de l'adversaire compte
+        Esport.majMonMatch({ refusMoi: Esport.hhmm(maintenant), correction: false,
+          declAdv: mm.declAdv || declAdverse, statut: "retenu-adverse" });
+        return;
+      }
+      if (saisie.moi === saisie.adv) {
+        erreur = "Un match à élimination ne peut pas finir sur un nul : indique le score après prolongation ou tirs au but.";
+        return rendre();
+      }
+      const decl = { moi: saisie.moi, adv: saisie.adv, heureIso: (mm.declMoi && mm.correction ? mm.declMoi.heureIso : maintenant.toISOString()) };
+      Esport.majMonMatch({ declMoi: decl, statut: "attente-adv", correction: false });
+      Nav.toast(mm.correction ? "Déclaration corrigée" : "Déclaration envoyée");
+    }
+    if (e.target.closest("#corriger")) {
+      saisie = { moi: mm.declMoi.moi, adv: mm.declMoi.adv };
+      Esport.majMonMatch({ correction: true });
+    }
+    if (e.target.closest("#contester")) {
+      // La contestation ouvre un litige (S07-02)
+      Esport.majMonMatch({ statut: "litige", litige: { ouverture: maintenant.toISOString(), pieces: 0, contestation: true } });
+      Nav.aller("15");
+    }
+  });
+
+  Esport.monter(rendre);
+  setInterval(rendre, 1000);
+</script>
+</body>
+</html>

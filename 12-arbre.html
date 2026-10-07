@@ -40,6 +40,7 @@
     .match .etiquette-direct { background: var(--color-surface); color: var(--color-alert); }
     .match.mien { box-shadow: 0 0 0 2px var(--color-primary); }
     .match.vient-de-finir { box-shadow: 0 0 0 2px var(--color-success); }
+    .match .mention-match { padding: var(--space-1) var(--space-3); font-size: var(--font-size-xs); color: var(--color-text-secondary); border-top: 1px solid var(--color-border); }
     .legende { font-size: var(--font-size-xs); color: var(--color-text-secondary); padding: 0 var(--page-gutter); }
 
     /* ---- Poules ---- */
@@ -90,13 +91,14 @@
 <script src="js/demo.js"></script>
 <script>
   const t = Esport.tournoi(Nav.param("id")) || Esport.tournoi("t05");
-  const arbreDonnees = DONNEES.arbres[t.id];
+
   const poules = DONNEES.poules[t.id];
   document.querySelector(".entete-esport").dataset.titre = t.nom;
   document.title = t.nom;
 
-  // Copie de l'arbre : le résultat « en direct » y est ajouté pendant la démo
-  const arbre = arbreDonnees ? JSON.parse(JSON.stringify(arbreDonnees)) : null;
+  // Arbre avec les résultats de la démo (mon match, forfaits, arbitrage) ;
+  // le résultat « en direct » y est ajouté pendant la consultation
+  let arbre = Esport.arbre(t.id);
   let derniereMaj = "il y a quelques secondes";
   let matchQuiVientDeFinir = null;
 
@@ -106,24 +108,9 @@
   }
   function estMoi(pseudo) { return pseudo === DONNEES.joueur.pseudo; }
 
-  /* ---------- Élimination : vainqueurs et progression automatique (S06-01) ---------- */
-  /* Match : [joueur A, joueur B, score A, score B, vainqueur en cas d'égalité, état] */
-  function vainqueur(m) {
-    if (!m[0] || !m[1] || m[2] === null || m[3] === null) return null;
-    if (m[2] === m[3]) return m[4] || null;
-    return m[2] > m[3] ? m[0] : m[1];
-  }
-
-  /* Les vainqueurs d'un tour remplissent le tour suivant, sans action humaine */
-  function propager() {
-    for (let r = 1; r < arbre.matchs.length; r++) {
-      arbre.matchs[r].forEach((m, i) => {
-        // Tant qu'un match précédent n'est pas joué, la place reste « À déterminer »
-        m[0] = vainqueur(arbre.matchs[r - 1][i * 2]);
-        m[1] = vainqueur(arbre.matchs[r - 1][i * 2 + 1]);
-      });
-    }
-  }
+  /* ---------- Élimination : vainqueurs et progression automatique (S06-01), voir esport.js ---------- */
+  const vainqueur = Esport.vainqueur;
+  function propager() { Esport.propager(arbre); }
 
   function ligneJoueur(m, cote) {
     const pseudo = m[cote];
@@ -136,6 +123,14 @@
       '<span class="score">' + (score === null ? "" : score) + "</span></div>";
   }
 
+  function libelleMention(m) {
+    if (m[6] === "Forfait") return "Forfait de " + nomAffiche(m[0] === m[4] ? m[1] : m[0]) + " : " + nomAffiche(m[4]) + " qualifié";
+    if (m[6] === "Double absence") return "Double absence : les deux joueurs sont éliminés";
+    if (m[6] === "Qualifié d'office") return nomAffiche(m[4]) + " qualifié d'office";
+    if (m[6] === "Arbitrage") return "Résultat fixé par arbitrage";
+    return m[6];
+  }
+
   function rendreArbre() {
     propager();
     // Hauteur commune : celle du premier tour, pour aligner les tours suivants
@@ -144,16 +139,22 @@
     arbre.matchs.forEach((tourMatchs, r) => {
       html += '<div class="tour"><h3>' + arbre.tours[r] + '</h3><div class="matchs" style="height:' + hauteur + 'px">';
       tourMatchs.forEach((m, i) => {
-        const mien = m[5] === "a-jouer" && (estMoi(m[0]) || estMoi(m[1]));
+        // Mon match : celui où je joue et qui n'a pas encore de vainqueur
+        const mien = (estMoi(m[0]) || estMoi(m[1])) && !vainqueur(m) && m[6] !== "Double absence";
         const direct = m[5] === "en-direct";
         const finit = matchQuiVientDeFinir === r + "-" + i;
         html += '<div class="match' + (mien ? " mien" : "") + (finit ? " vient-de-finir" : "") + '">';
-        if (mien) {
+        if (mien && m[5] === "a-jouer") {
           html += '<a href="#" class="etiquette-match" data-ecran="11">Ton match · ' + arbre.monMatch + " <span>Salle de match ›</span></a>";
+        } else if (mien) {
+          html += '<div class="etiquette-match">Ton prochain match · horaire à venir</div>';
         } else if (direct) {
           html += '<div class="etiquette-match etiquette-direct"><span class="puce-direct puce-etat"><i></i>En direct</span></div>';
         }
-        html += ligneJoueur(m, 0) + ligneJoueur(m, 1) + "</div>";
+        html += ligneJoueur(m, 0) + ligneJoueur(m, 1);
+        // Forfait, double absence, qualification d'office, arbitrage (S06-03, S07-03)
+        if (m[6]) html += '<div class="mention-match">' + libelleMention(m) + "</div>";
+        html += "</div>";
       });
       html += "</div></div>";
     });
@@ -196,7 +197,8 @@
       arbre.matchs.forEach((tourMatchs, r) => {
         tourMatchs.forEach((m) => {
           const g = vainqueur(m);
-          if (g && (m[0] === l.pseudo || m[1] === l.pseudo) && g !== l.pseudo) l.place = Math.pow(2, nbTours - 1 - r) + 1;
+          const joue = m[0] === l.pseudo || m[1] === l.pseudo;
+          if (joue && ((g && g !== l.pseudo) || m[6] === "Double absence")) l.place = Math.pow(2, nbTours - 1 - r) + 1;
           if (g === l.pseudo && r === nbTours - 1) l.place = 1;
         });
       });
@@ -232,7 +234,8 @@
     const lignes = poules ? classementPoules() : (t.etat === "termine" ? classementTermine() : classementElimination());
     const LIMITE = 100;
     let html = "";
-    if (t.recalcul) html += '<div class="encart encart-recalcul" style="margin-bottom:var(--space-4)">' + Esport.icone("alerte", "f-primary") + "<div><p>" + t.recalcul + "</p></div></div>";
+    const recalcul = t.recalcul || (Esport.recalculeApresArbitrage(t.id) ? "Classement recalculé après la décision d'arbitrage du quart de finale." : "");
+    if (recalcul) html += '<div class="encart encart-recalcul" style="margin-bottom:var(--space-4)">' + Esport.icone("alerte", "f-primary") + "<div><p>" + recalcul + "</p></div></div>";
     html += '<div class="classement-carte"><table class="tableau"><thead><tr><th>Rang</th><th>Joueur</th><th>' +
       (poules || t.etat === "termine" ? "Points" : "Statut") + "</th></tr></thead><tbody>";
     const ligneHtml = (l, classe) =>
@@ -290,21 +293,22 @@
     rendre();
   });
 
-  Esport.monter(rendre);
+  // L'arbre suit l'état mémorisé (résultats de la démo) à chaque changement
+  Esport.monter(() => { arbre = Esport.arbre(t.id); rendre(); });
 
   /* ---------- Résultat qui arrive pendant la démo (S05-03, S06-01) ----------
      Après quelques secondes, le quart « en direct » se termine : l'arbre et le classement
      se mettent à jour sans rechargement, le vainqueur passe au tour suivant. */
-  if (arbre && arbre.resultatLive && t.etat === "en-cours") {
+  const live = arbre && arbre.resultatLive;
+  const cleLive = live ? t.id + "-" + live.tour + "-" + live.match : null;
+  if (live && t.etat === "en-cours" && !Esport.resultatsMatchs()[cleLive]) {
     setTimeout(() => {
-      const r = arbre.resultatLive;
-      const m = arbre.matchs[r.tour][r.match];
-      m[2] = r.scoreA;
-      m[3] = r.scoreB;
-      m[5] = null;
-      matchQuiVientDeFinir = r.tour + "-" + r.match;
+      // Le résultat est enregistré : il reste visible ensuite sur tous les écrans
+      matchQuiVientDeFinir = live.tour + "-" + live.match;
       derniereMaj = "à l'instant";
-      rendre();
+      Esport.enregistrerResultat(cleLive, { a: live.scoreA, b: live.scoreB, vainqueur: null, mention: null });
+      const m = arbre.matchs[live.tour][live.match];
+      const r = live;
       document.getElementById("maj").classList.add("flash");
       Nav.toast("Résultat : " + m[0] + " " + r.scoreA + "–" + r.scoreB + " " + m[1] + ". " + vainqueur(m) + " passe en demi-finale.");
       setTimeout(() => { derniereMaj = "il y a quelques secondes"; matchQuiVientDeFinir = null; rendre(); }, 8000);

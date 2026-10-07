@@ -10,26 +10,6 @@
   <link rel="stylesheet" href="css/tokens.css">
   <link rel="stylesheet" href="css/style.css">
   <style>
-    /* Prochain match : carte sombre, comme sur l'accueil */
-    .prochain {
-      position: relative;
-      overflow: hidden;
-      margin: 0 var(--page-gutter);
-      padding: var(--space-4);
-      border-radius: var(--radius-lg);
-      background: var(--color-bg-dark);
-      color: var(--color-text-on-dark);
-    }
-    .prochain .flamme { position: absolute; right: -40px; top: -40px; width: 130px; height: 200px; transform: rotate(28deg); background: linear-gradient(180deg, var(--color-gaming-flame-dark), var(--color-primary)); opacity: .7; }
-    .prochain > * { position: relative; }
-    .prochain .surtitre { font-size: var(--font-size-xs); font-weight: var(--font-weight-bold); text-transform: uppercase; letter-spacing: .05em; color: var(--color-primary); }
-    .prochain h2 { font-size: var(--font-size-lg); line-height: var(--line-height-tight); margin: var(--space-1) 0 var(--space-1); }
-    .prochain p { font-size: var(--font-size-sm); color: var(--color-text-muted); margin-bottom: var(--space-4); }
-    .prochain p b { color: var(--color-text-on-dark); }
-    .prochain .actions { display: flex; gap: var(--space-2); }
-    .prochain .actions .bouton { flex: 1; padding: 0 var(--space-3); }
-    .bouton-verre { background: var(--color-glass-dark); color: var(--color-text-on-dark); }
-
     .liste { margin: 0 var(--page-gutter); background: var(--color-surface); border-radius: var(--radius-md); box-shadow: var(--shadow-card); }
     .liste .ligne { padding-left: var(--space-3); padding-right: var(--space-3); }
     .echeance { color: var(--color-text-secondary); }
@@ -56,26 +36,15 @@
 <script>
   const moi = DONNEES.joueur.pseudo;
 
-  /* Mon prochain match : match « à jouer » d'un tournoi en cours où je suis inscrit */
-  function prochainMatch() {
-    for (const t of DONNEES.tournois) {
-      const ins = Esport.inscription(t.id);
-      const arbre = DONNEES.arbres[t.id];
-      if (!ins || ins.etat !== "inscrit" || t.etat !== "en-cours" || !arbre) continue;
-      for (let r = 0; r < arbre.matchs.length; r++) {
-        const m = arbre.matchs[r].find((x) => x[5] === "a-jouer" && (x[0] === moi || x[1] === moi));
-        if (m) return { t, tour: arbre.tours[r], adversaire: m[0] === moi ? m[1] : m[0], heure: arbre.monMatch };
-      }
-    }
-    return null;
-  }
-
   /* Prochaine échéance d'un tournoi où je suis inscrit */
   function echeance(t) {
     if (Esport.reglementAAccepter(t)) return { texte: "Règlement modifié : à réaccepter", alerte: true };
     if (t.etat === "en-cours") {
-      const p = prochainMatch();
-      return p && p.t.id === t.id ? { texte: p.tour + " à " + p.heure, alerte: true } : { texte: "Tournoi en cours" };
+      const p = t.id === DONNEES.monMatch.tournoi ? Esport.prochainMatch() : null;
+      if (!p) return { texte: "Tournoi en cours" };
+      const textes = { "a-venir": p.tour + " à " + p.heure, "en-cours": "Match en cours : résultat à déclarer",
+        litige: "Litige en cours", qualifie: "Qualifié en " + p.tour.toLowerCase(), elimine: "Éliminé en " + p.tour.toLowerCase() };
+      return { texte: textes[p.etape], alerte: p.etape !== "elimine" };
     }
     return { texte: "Début " + Esport.jourLong(t.debut) + " à " + Esport.heure(t.debut) };
   }
@@ -99,17 +68,11 @@
     const equipes = tournois.filter((t) => t.mode === "equipe" && Esport.equipe(t.id) && t.etat !== "termine");
     const historique = DONNEES.joueur.historique.map((h) => Object.assign({ t: Esport.tournoi(h.tournoi) }, h));
     const repris = Etat.get("historiqueNonRepris") ? null : DONNEES.joueur.historiqueRepris;
-    const p = prochainMatch();
+    const p = Esport.prochainMatch();
     let html = "";
 
     // Prochain match
-    if (p) {
-      html += '<div class="prochain"><span class="flamme"></span><p class="surtitre">Ton prochain match</p>' +
-        "<h2>" + p.tour + " contre " + p.adversaire + "</h2>" +
-        "<p>" + p.t.nom + " · aujourd'hui à <b>" + p.heure + "</b></p>" +
-        '<div class="actions"><a href="#" class="bouton bouton-primaire" data-ecran="11">Salle de match</a>' +
-        '<a href="#" class="bouton bouton-verre" data-ecran="12" data-id="' + p.t.id + '">Voir l\'arbre</a></div></div>';
-    }
+    if (p) html += Esport.carteProchainMatch(p);
 
     // Tournois où je suis inscrit, avec leur prochaine échéance
     html += titre("Mes tournois", inscrits.length);

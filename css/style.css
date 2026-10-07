@@ -779,5 +779,48 @@ svg { display: block; flex-shrink: 0; }
 .vide strong { display: block; color: var(--color-text); font-size: var(--font-size-lg); margin-bottom: var(--space-1); }
 .vide .bouton { margin-top: var(--space-4); }
 
+/* ============ Carte sombre « prochain match » (03, 05), en écho à l'univers Gaming ============ */
+.carte-match {
+  position: relative;
+  overflow: hidden;
+  margin: var(--space-2) var(--page-gutter) 0;
+  padding: var(--space-5) var(--space-4) var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-dark);
+  color: var(--color-text-on-dark);
+}
+.carte-match .flamme {
+  position: absolute;
+  right: -40px;
+  top: -30px;
+  width: 150px;
+  height: 220px;
+  transform: rotate(28deg);
+  background: linear-gradient(180deg, var(--color-gaming-flame-dark), var(--color-primary));
+  opacity: .75;
+}
+.carte-match > * { position: relative; }
+.carte-match .surtitre { font-size: var(--font-size-xs); font-weight: var(--font-weight-bold); text-transform: uppercase; letter-spacing: .05em; color: var(--color-primary); }
+.carte-match h2 { font-size: var(--font-size-lg); line-height: var(--line-height-tight); margin: var(--space-1) 0 var(--space-4); }
+.duel { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-4); }
+.duel .joueur { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: var(--space-1); font-weight: var(--font-weight-bold); font-size: var(--font-size-sm); text-align: center; overflow-wrap: anywhere; }
+.duel .joueur .avatar { width: 48px; height: 48px; font-size: var(--font-size-lg); }
+.duel .vs { font-size: var(--font-size-xs); color: var(--color-text-muted); font-weight: var(--font-weight-bold); }
+.carte-match .quand { text-align: center; font-size: var(--font-size-sm); margin-bottom: var(--space-4); }
+.carte-match .quand b { color: var(--color-primary); }
+.carte-match .actions { display: flex; gap: var(--space-2); }
+.carte-match .actions .bouton { flex: 1; padding: 0 var(--space-3); }
+.bouton-verre { background: var(--color-glass-dark); color: var(--color-text-on-dark); }
+
+/* ============ Compte à rebours (salle de match, résultat, litige) ============ */
+.rebours {
+  font-size: 44px;
+  font-weight: var(--font-weight-bold);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  color: var(--color-primary);
+}
+.rebours-legende { font-size: var(--font-size-sm); color: var(--color-text-secondary); margin-top: var(--space-1); }
+
 /* Espace sous le contenu pour que la dernière carte ne colle pas à la barre du bas */
 .fin-contenu { height: var(--space-6); }

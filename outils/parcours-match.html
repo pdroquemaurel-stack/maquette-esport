@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<!-- Test du parcours de match (hors maquette) : 05 → 11 (présence) → 14 (déclarations divergentes)
+     → 15 (capture, arbitrage) → 12 (arbre et classement recalculés) → 05.
+     À ouvrir avec l'accès entre fichiers locaux autorisé (voir controle.html). Remplace l'état de démonstration. -->
+<html lang="fr"><meta charset="utf-8"><title>Test du parcours de match</title>
+<body><pre id="s"></pre><iframe id="f" style="width:390px;height:844px"></iframe>
+<script>
+// Parcours : 05 → 11 (présence) → 14 (déclaration divergente) → 15 (capture, arbitrage) → 12 → 05
+const R="../", f=document.getElementById("f"), s=document.getElementById("s");
+const log=(ok,m)=>{s.textContent+=(ok?"✓ ":"✗ ")+m+"\n";};
+const pause=ms=>new Promise(r=>setTimeout(r,ms));
+const doc=()=>f.contentDocument, win=()=>f.contentWindow;
+const texte=()=>doc().body.innerText.replace(/\s+/g," ");
+function charger(url){return new Promise(r=>{f.onload=()=>r(); f.src=R+url;});}
+function attendreNav(){return new Promise(r=>{f.onload=()=>r();});}
+async function attendre(cond,ms,quoi){const fin=Date.now()+ms;while(Date.now()<fin){try{if(cond())return true;}catch(e){}await pause(250);}log(false,"délai dépassé : "+quoi);return false;}
+function cliquer(sel){const e=doc().querySelector(sel); if(!e) throw new Error("introuvable "+sel); e.click();}
+function cliquerTexte(t){const e=[...doc().querySelectorAll("a,button")].find(x=>x.textContent.trim().startsWith(t)); if(!e) throw new Error("bouton introuvable : "+t); e.click();}
+(async()=>{try{
+  localStorage.clear(); localStorage.setItem("maquette-esport-etat",JSON.stringify({abonne:false}));
+  await charger("05-mes-tournois.html"); await pause(500);
+  log(/Ton prochain match/i.test(texte()) && /Quart/i.test(texte()),"05 : carte « Ton prochain match » (quart contre Rachid_GOAT)");
+  let n=attendreNav(); cliquerTexte("Salle de match"); await n; await pause(500);
+  log(/Salle de match/i.test(texte()) && doc().querySelector("#present").disabled,"11 : « Je suis présent » grisé avant 21:20");
+  await attendre(()=>!doc().querySelector("#present").disabled,60000,"ouverture de la présence");
+  log(true,"11 : présence ouverte à "+ (texte().match(/il est (\d\d:\d\d)/i)||[])[1]);
+  cliquer("#present"); await pause(400);
+  log(/Présence confirmée/i.test(texte()),"11 : présence confirmée, attente de l'adversaire");
+  await attendre(()=>/Le match a démarré/i.test(texte()),60000,"démarrage du match");
+  log(true,"11 : les deux présents, le match démarre ("+(texte().match(/démarré à (\d\d:\d\d)/i)||[])[1]+")");
+  win().eval("Esport.majMonMatch({adversaireDiverge:true})");   // l'adversaire déclarera un autre score
+  n=attendreNav(); cliquerTexte("Déclarer le résultat"); await n; await pause(500);
+  cliquer('[data-score="moi"][data-pas="1"]'); cliquer('[data-score="moi"][data-pas="1"]'); cliquer('[data-score="adv"][data-pas="1"]');
+  log(/2\s*–\s*1/.test(doc().querySelector(".saisie").innerText.replace(/\n/g," ")) || doc().querySelectorAll(".valeur")[0].textContent==="2","14 : score saisi 2–1");
+  cliquer("#envoyer"); await pause(400);
+  log(/Déclaration envoyée/i.test(texte()) && doc().querySelector("#corriger"),"14 : déclaration envoyée, « Corriger » disponible");
+  await attendre(()=>/Déclarations divergentes/i.test(texte()),60000,"déclaration adverse");
+  log(true,"14 : déclaration adverse divergente → litige ouvert");
+  n=attendreNav(); cliquerTexte("Voir le litige"); await n; await pause(500);
+  log(/Ta déclaration/i.test(texte()) && /2 – 1/i.test(texte()) && /1 – 2/i.test(texte()),"15 : les deux déclarations côte à côte (2–1 / 1–2)");
+  win().eval('captures.push({url:"data:image/gif;base64,R0lGODlhAQABAAAAACw=",nom:"fin.png"}); rendre();'); await pause(300);
+  log(/1 \/ 3/i.test(texte()),"15 : une capture jointe (1 / 3)");
+  cliquer("#envoyer"); await pause(400);
+  log(/En attente d'arbitrage/i.test(texte()),"15 : en attente d'arbitrage");
+  await attendre(()=>/Décision du responsable local/i.test(texte()),30000,"décision");
+  log(/Victoire de Youss_KZ/i.test(texte()) && /Motif/i.test(texte()),"15 : décision rendue avec son motif ("+(texte().match(/Victoire de [^\n]*/i)||[""])[0]+")");
+  n=attendreNav(); cliquerTexte("Voir l'arbre"); await n; await pause(800);
+  log(/Résultat fixé par arbitrage/i.test(texte()),"12 : arbre mis à jour, match marqué « Résultat fixé par arbitrage »");
+  const demi=[...doc().querySelectorAll(".tour")][2].textContent;
+  log(/Youss_KZ/.test(demi),"12 : Youss_KZ en demi-finale");
+  [...doc().querySelectorAll("[data-onglet]")].find(b=>b.dataset.onglet==="classement").click(); await pause(300);
+  log(/recalculé après la décision d'arbitrage/i.test(texte()),"12 : classement « recalculé après arbitrage »");
+  await charger("05-mes-tournois.html"); await pause(500);
+  log(/Qualifié/i.test(texte()),"05 : carte « Qualifié ! » en demi-finale");
+}catch(e){log(false,"erreur : "+e.message);} s.textContent+="FIN";})();
+</script>
