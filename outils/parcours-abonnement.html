@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<!-- Test des parcours d'abonnement (hors maquette), lot 5 :
+     A. joueur gratuit → tournoi réservé (06) → offre (21) → paiement confirmé (22) → retour sur 06, « S'inscrire » ;
+     B. joueur gratuit → contenus (20) → vidéo réservée (18) : bande-annonce puis verrou → 21 → 22 → retour sur 18, lisible ;
+     C. paiement refusé depuis un article réservé (19) → retour sur 19, toujours verrouillé ;
+     D. paiement abandonné depuis une vidéo sans bande-annonce (18) → retour sur 18, toujours verrouillée ;
+     E. abonné → mon abonnement (24) → mettre fin → résilié.
+     À ouvrir avec l'accès entre fichiers locaux autorisé (voir controle.html). Remplace l'état de démonstration. -->
+<html lang="fr"><meta charset="utf-8"><title>Test des parcours d'abonnement</title>
+<body><pre id="s"></pre><iframe id="f" style="width:390px;height:844px"></iframe>
+<script>
+  const R = "../", f = document.getElementById("f"), s = document.getElementById("s");
+  const log = (ok, m) => { s.textContent += (ok ? "✓ " : "✗ ") + m + "\n"; };
+  const pause = (ms) => new Promise((r) => setTimeout(r, ms));
+  const doc = () => f.contentDocument;
+  const texte = () => doc().body.innerText.replace(/\s+/g, " ");
+  const page = () => f.contentWindow.location.href.split("/").pop();
+  const charger = (url) => new Promise((r) => { f.onload = () => r(); f.src = R + url; });
+  const navigation = () => new Promise((r) => { f.onload = () => r(); });
+  function cliquer(sel) { const e = doc().querySelector(sel); if (!e) throw new Error("introuvable : " + sel); e.click(); }
+  function cliquerTexte(t) {
+    const e = [...doc().querySelectorAll("a,button")].find((x) => x.textContent.trim().startsWith(t));
+    if (!e) throw new Error("bouton introuvable : " + t); e.click();
+  }
+  async function attendre(cond, ms, quoi) {
+    const fin = Date.now() + ms;
+    while (Date.now() < fin) { try { if (cond()) return true; } catch (e) {} await pause(250); }
+    log(false, "délai dépassé : " + quoi); return false;
+  }
+  function gratuit() { localStorage.clear(); localStorage.setItem("maquette-esport-etat", JSON.stringify({ abonne: false })); }
+  /* Saisit le code secret puis confirme le paiement dans la brique 22 */
+  async function payer() {
+    const code = doc().getElementById("code");
+    code.value = "1234"; code.dispatchEvent(new Event("input"));
+    cliquer("#confirmer");
+  }
+
+  (async () => { try {
+    // ---- A. Tournoi réservé ----
+    gratuit();
+    await charger("06-tournoi.html?id=t02"); await pause(400);
+    log(/S'abonner pour s'inscrire/.test(texte()), "A · 06 t02 (gratuit) : « S'abonner pour s'inscrire »");
+    let n = navigation(); cliquerTexte("S'abonner pour s'inscrire"); await n; await pause(400);
+    log(page().startsWith("21-") && /Pour accéder au tournoi/i.test(texte()), "A · 21 : offre, avec le tournoi d'origine rappelé");
+    log(/49 MAD/.test(texte()) && /15 MAD/.test(texte()) && /3 MAD/.test(texte()) && /7 jours offerts/.test(texte()), "A · 21 : 3 offres aux tarifs du Maroc, essai sur l'offre mensuelle");
+    n = navigation(); cliquer("#payer"); await n; await pause(400);
+    log(page().startsWith("22-") && /49 MAD/.test(texte()), "A · 22 : brique Max it, montant déjà renseigné");
+    n = navigation(); await payer(); await n; await pause(600);
+    log(page() === "06-tournoi.html?id=t02", "A · retour exact sur 06 t02 (" + page() + ")");
+    log(/S'inscrire/.test(doc().getElementById("action").innerText) && !/S'abonner/.test(texte()), "A · 06 : « S'inscrire » disponible, plus aucune invitation à s'abonner");
+    log(JSON.parse(localStorage.getItem("maquette-esport-etat")).abonne === true, "A · bascule automatique en mode abonné");
+
+    // ---- B. Vidéo réservée avec bande-annonce ----
+    gratuit();
+    await charger("20-contenus.html"); await pause(400);
+    log(/réservés aux abonnés/.test(texte()), "B · 20 : contenus réservés signalés");
+    n = navigation(); cliquer('[data-ecran="18"][data-id="c02"]'); await n; await pause(400);
+    log(/Bande-annonce/.test(texte()) && doc().getElementById("lire"), "B · 18 c02 : bande-annonce lisible");
+    cliquer("#lire");
+    await attendre(() => /Vidéo réservée aux abonnés/.test(texte()), 90000, "fin de la bande-annonce");
+    log(true, "B · 18 : fin de la bande-annonce → condition d'accès et « S'abonner »");
+    n = navigation(); cliquer('.calque [data-ecran="21"]'); await n; await pause(400);
+    log(/Pour accéder à la vidéo/i.test(texte()), "B · 21 : la vidéo d'origine est rappelée");
+    n = navigation(); cliquer("#payer"); await n; await pause(300);
+    n = navigation(); await payer(); await n; await pause(600);
+    log(page() === "18-video.html?id=c02", "B · retour exact sur 18 c02 (" + page() + ")");
+    log(!/Vidéo réservée aux abonnés/.test(texte()) && doc().getElementById("lire") && !/Bande-annonce/.test(texte()), "B · 18 : vidéo complète lisible, sans verrou");
+
+    // ---- C. Paiement refusé depuis un article réservé ----
+    gratuit();
+    await charger("19-article.html?id=c04"); await pause(400);
+    log(/La suite est réservée/.test(texte()) && !doc().querySelector(".corps"), "C · 19 c04 : titre et résumé seulement, corps absent de la page");
+    n = navigation(); cliquerTexte("S'abonner"); await n; await pause(300);
+    // Refus : solde insuffisant, comme le raccourci de démo « Paiement refusé »
+    f.contentWindow.eval('Etat.set("scenario", "paiement-refuse")');
+    n = navigation(); cliquer("#payer"); await n; await pause(300);
+    await payer(); await attendre(() => /Paiement refusé/.test(texte()), 10000, "refus");
+    log(true, "C · 22 : paiement refusé");
+    n = navigation(); cliquer("#retour"); await n; await pause(600);
+    log(page() === "19-article.html?id=c04" && /La suite est réservée/.test(texte()), "C · retour sur 19 c04, toujours verrouillé");
+
+    // ---- D. Paiement abandonné depuis une vidéo sans bande-annonce ----
+    gratuit();
+    await charger("18-video.html?id=c09"); await pause(400);
+    log(/Vidéo réservée aux abonnés/.test(texte()) && !doc().getElementById("lire"), "D · 18 c09 : verrouillée d'emblée (pas de bande-annonce)");
+    n = navigation(); cliquer('.calque [data-ecran="21"]'); await n; await pause(300);
+    n = navigation(); cliquer("#payer"); await n; await pause(300);
+    n = navigation(); cliquer("#annuler"); await n; await pause(600);
+    log(page() === "18-video.html?id=c09" && /Vidéo réservée aux abonnés/.test(texte()), "D · « Annuler » : retour sur 18 c09, toujours verrouillée");
+
+    // ---- E. Mettre fin à l'abonnement ----
+    localStorage.clear(); localStorage.setItem("maquette-esport-etat", JSON.stringify({ abonne: true }));
+    await charger("24-abonnement.html"); await pause(400);
+    log(/Actif/i.test(texte()) && /Prochaine reconduction/.test(texte()), "E · 24 : abonnement actif, prochaine reconduction");
+    cliquer("#mettre-fin"); await pause(200); cliquer(".dialogue .bouton-primaire"); await pause(400);
+    log(/Résilié/i.test(texte()) && /Accès conservé jusqu'au/.test(texte()), "E · 24 : résilié, accès conservé jusqu'à l'échéance");
+  } catch (e) { log(false, "erreur : " + e.message); }
+  s.textContent += "FIN"; })();
+</script>

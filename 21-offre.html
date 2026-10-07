@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<!-- Écran 21 — Offre d'abonnement.
+     US : S11-01 (ce que débloque l'abonnement ; ouverte seulement par un geste du joueur, jamais à
+     l'ouverture de l'application), S11-02 (offres quotidienne, hebdomadaire, mensuelle aux tarifs du pays,
+     période d'essai si elle est activée ; le choix ouvre la brique de paiement Max it, écran 22). -->
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Offre d'abonnement</title>
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .bandeau-offre { position: relative; overflow: hidden; margin: 0 var(--page-gutter); padding: var(--space-5) var(--space-4); border-radius: var(--radius-lg); background: var(--color-bg-dark); color: var(--color-text-on-dark); }
+    .bandeau-offre .flamme { position: absolute; right: -40px; top: -40px; width: 140px; height: 210px; transform: rotate(28deg); background: linear-gradient(180deg, var(--color-gaming-flame-dark), var(--color-primary)); opacity: .75; }
+    .bandeau-offre > * { position: relative; }
+    .bandeau-offre h1 { font-size: var(--font-size-xxl); line-height: var(--line-height-tight); margin-bottom: var(--space-3); max-width: 75%; }
+    .bandeau-offre ul { list-style: none; display: flex; flex-direction: column; gap: var(--space-2); font-size: var(--font-size-sm); }
+    .bandeau-offre li { display: flex; gap: var(--space-2); align-items: flex-start; }
+    .bandeau-offre li svg { width: 18px; height: 18px; margin-top: 1px; }
+    .pour-acceder { margin-bottom: var(--space-3); }
+
+    /* Cartes d'offre */
+    .offres { display: flex; flex-direction: column; gap: var(--space-2); padding: 0 var(--page-gutter); }
+    .offre { position: relative; display: flex; align-items: center; gap: var(--space-3); padding: var(--space-4); border: 2px solid var(--color-border); border-radius: var(--radius-md); cursor: pointer; background: var(--color-surface); }
+    .offre:has(input:checked) { border-color: var(--color-primary); background: var(--color-primary-soft); }
+    .offre input { width: 22px; height: 22px; accent-color: var(--color-primary); flex-shrink: 0; }
+    .offre .nom { flex: 1; min-width: 0; }
+    .offre .nom strong { display: block; font-size: var(--font-size-lg); }
+    .offre .nom small { color: var(--color-text-secondary); font-size: var(--font-size-sm); }
+    .offre .prix-offre { text-align: right; font-weight: var(--font-weight-bold); font-size: var(--font-size-lg); white-space: nowrap; }
+    .offre .prix-offre small { display: block; font-size: var(--font-size-xs); color: var(--color-text-secondary); font-weight: var(--font-weight-medium); }
+    .offre .etiquette-essai { position: absolute; top: -10px; right: var(--space-4); }
+    .mentions { font-size: var(--font-size-xs); color: var(--color-text-secondary); padding: var(--space-3) var(--page-gutter) 0; }
+    .deja { margin-top: var(--space-2); }
+  </style>
+</head>
+<body data-zone="esport">
+<div class="cadre">
+  <div class="telephone">
+    <div class="barre-etat" data-heure="21:10"></div>
+    <header class="entete-esport" data-titre="Abonnement" data-repli="03"></header>
+    <main class="contenu" id="page"></main>
+    <div class="barre-action" id="action"></div>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/esport.js"></script>
+<script src="js/demo.js"></script>
+<script>
+  const offres = DONNEES.offres[DONNEES.joueur.pays];
+  let choix = "mensuelle";
+
+  /* Ce qui a mené ici : contenu ou tournoi d'origine (S11-03) */
+  function contexte() {
+    const origine = Etat.get("origine") || "";
+    const id = new URLSearchParams(origine.split("?")[1] || "").get("id");
+    if (origine.startsWith("06-") && Esport.tournoi(id)) return { quoi: "au tournoi", titre: Esport.tournoi(id).nom };
+    if ((origine.startsWith("18-") || origine.startsWith("19-")) && Esport.contenu(id)) return { quoi: origine.startsWith("18-") ? "à la vidéo" : "à l'article", titre: Esport.contenu(id).titre };
+    return null;
+  }
+
+  function rendre() {
+    const page = document.getElementById("page");
+    const zone = document.getElementById("action");
+    const etat = Esport.etatAbonnement();
+    const coche = Esport.icone("coche", "f-primary");
+    const ctx = contexte();
+    let html = "";
+
+    // Déjà abonné : pas d'offre à vendre
+    if (etat.statut === "actif" || etat.statut === "resilie") {
+      page.innerHTML = '<div class="vide"><strong>Tu es déjà abonné</strong>Tous les tournois et contenus réservés te sont ouverts.<br>' +
+        '<a href="#" class="bouton bouton-primaire" data-ecran="24">Mon abonnement</a></div>';
+      zone.innerHTML = '<button class="bouton bouton-secondaire bouton-pleine-largeur" data-action="retour" data-repli="03">Retour</button>';
+      return;
+    }
+
+    if (ctx) {
+      html += '<div class="encart pour-acceder" style="margin-bottom:var(--space-3)">' + Esport.icone("cadenas", "f-primary") +
+        "<div><strong>Pour accéder " + ctx.quoi + "</strong><p>" + ctx.titre + "</p></div></div>";
+    }
+    if (etat.statut === "expire") {
+      html += '<div class="encart encart-alerte" style="margin-bottom:var(--space-3)">' + Esport.icone("alerte", "f-primary") +
+        "<div><strong>Ton abonnement a expiré le " + Esport.jourCourt(etat.echeance) + "</strong><p>Réabonne-toi pour retrouver l'accès. Ton historique est conservé.</p></div></div>";
+    }
+    html += '<section class="bandeau-offre"><span class="flamme"></span><h1>Passe en mode abonné</h1><ul>' +
+      "<li>" + coche + "Tous les tournois réservés aux abonnés, dont les tournois MEA</li>" +
+      "<li>" + coche + "Les vidéos complètes, analyses et articles exclusifs</li>" +
+      "<li>" + coche + "Les dotations des tournois abonnés</li>" +
+      "<li>" + coche + "Sans engagement : tu arrêtes quand tu veux</li></ul></section>";
+
+    html += '<h2 class="titre-section">Choisis ta formule</h2><div class="offres" role="radiogroup">' + offres.map((o) =>
+      '<label class="offre">' + (o.essai ? '<span class="puce-etat puce-inscrit etiquette-essai">' + o.essai + "</span>" : "") +
+      '<input type="radio" name="offre" value="' + o.id + '"' + (o.id === choix ? " checked" : "") + ">" +
+      '<span class="nom"><strong>' + o.libelle + "</strong><small>" + Esport.nomOffre(o.id).replace(/^a/, "A") + "</small></span>" +
+      '<span class="prix-offre">' + Esport.prix(o.prix) + "<small>par " + o.libelle.toLowerCase() + "</small></span></label>"
+    ).join("") + "</div>";
+
+    const o = Esport.offre(choix);
+    html += '<p class="mentions">Tarifs du ' + Esport.pays().nom + ". " +
+      (o.essai ? o.essai + ", puis " + Esport.prix(o.prix) + " par " + o.libelle.toLowerCase() + ". " : "") +
+      "Reconduction automatique, résiliable à tout moment depuis ton profil. Paiement sécurisé par Max it.</p>" +
+      '<div class="fin-contenu"></div>';
+    page.innerHTML = html;
+    zone.innerHTML = '<button class="bouton bouton-primaire bouton-pleine-largeur" id="payer">' +
+      (o.essai ? "Commencer l'essai avec Max it" : "Payer " + Esport.prix(o.prix) + " avec Max it") + "</button>";
+  }
+
+  document.getElementById("page").addEventListener("change", (e) => {
+    if (e.target.name !== "offre") return;
+    choix = e.target.value;
+    rendre();
+  });
+  // Le choix ouvre la brique de paiement Max it, offre et montant déjà renseignés (S11-02)
+  document.getElementById("action").addEventListener("click", (e) => {
+    if (e.target.closest("#payer")) Nav.aller("22", null, { offre: choix });
+  });
+
+  Esport.monter(rendre);
+</script>
+</body>
+</html>

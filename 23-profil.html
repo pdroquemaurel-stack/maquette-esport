@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<!-- Écran 23 — Mon profil (onglet « Profil »).
+     US : S01-02 (pseudo unique, modifiable une fois tous les 30 jours ; identifiant de jeu par jeu, refusé
+     s'il est déjà rattaché à un autre profil ; pseudo jugé offensant remplacé par un pseudo neutre),
+     S01-05 (historique repris compris), S11-04 (résumé de l'abonnement, ou « S'abonner »).
+     Liens : 17 (profil public), 05, 21, 24, 27, 28. -->
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mon profil</title>
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .identite { display: flex; align-items: center; gap: var(--space-4); padding: var(--space-2) var(--page-gutter) var(--space-4); }
+    .identite .avatar { width: 72px; height: 72px; font-size: var(--font-size-xxl); }
+    .identite h1 { font-size: var(--font-size-xxl); line-height: var(--line-height-tight); overflow-wrap: anywhere; }
+    .identite .lien-public { display: inline-flex; align-items: center; min-height: 32px; color: var(--color-primary); font-weight: var(--font-weight-bold); font-size: var(--font-size-sm); }
+    .chiffres { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-2); padding: 0 var(--page-gutter); }
+    .chiffre { background: var(--color-surface-warm); border-radius: var(--radius-md); padding: var(--space-3) var(--space-2); text-align: center; font-size: var(--font-size-xs); color: var(--color-text-secondary); }
+    .chiffre b { display: block; font-size: var(--font-size-xl); color: var(--color-text); }
+    .bloc { margin: 0 var(--page-gutter); background: var(--color-surface); border-radius: var(--radius-md); box-shadow: var(--shadow-card); }
+    .bloc .ligne { padding-left: var(--space-4); padding-right: var(--space-3); }
+    .bloc .puce { flex-shrink: 0; }
+    .bloc .puce:disabled { color: var(--color-text-muted); border-color: var(--color-border); cursor: default; }
+    .encart { margin-bottom: var(--space-3); }
+
+    /* Feuille de modification (pseudo ou identifiant de jeu) */
+    .feuille h2 { font-size: var(--font-size-xl); margin-bottom: var(--space-1); }
+    .feuille .aide { font-size: var(--font-size-sm); color: var(--color-text-secondary); margin-bottom: var(--space-4); }
+    .feuille .erreur-champ { color: var(--color-alert); font-size: var(--font-size-sm); margin-top: var(--space-2); }
+    .feuille .puces { margin-top: var(--space-2); }
+    .feuille .bouton { margin-top: var(--space-4); }
+  </style>
+</head>
+<body data-zone="esport">
+<div class="cadre">
+  <div class="telephone">
+    <div class="barre-etat" data-heure="21:10"></div>
+    <header class="entete-esport" data-titre="Mon profil"></header>
+    <main class="contenu" id="page"></main>
+    <nav class="nav-bas" data-onglet="23"></nav>
+
+    <div class="voile" id="voile">
+      <div class="feuille" role="dialog" aria-modal="true" aria-labelledby="titre-feuille">
+        <div class="poignee"></div>
+        <h2 id="titre-feuille"></h2>
+        <p class="aide" id="aide-feuille"></p>
+        <label class="champ" id="champ-feuille"><span class="cache-visuel" id="libelle-feuille"></span><input id="saisie" autocomplete="off" spellcheck="false" maxlength="24"></label>
+        <p class="erreur-champ" id="erreur-feuille" role="alert"></p>
+        <div class="puces puces-retour" id="suggestions"></div>
+        <button class="bouton bouton-primaire bouton-pleine-largeur" id="enregistrer">Enregistrer</button>
+        <button class="bouton bouton-lien bouton-pleine-largeur" id="annuler">Annuler</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/esport.js"></script>
+<script src="js/demo.js"></script>
+<script>
+  /* ---- État de démo : pseudo jugé offensant, remplacé par un pseudo neutre (S01-02) ---- */
+  if (Esport.lireScenario() === "pseudo-offensant") {
+    Etat.set("pseudoOffensant", Esport.pseudo());
+    Etat.set("pseudo", "Joueur_48213");
+  }
+
+  /* Prochaine date à laquelle le pseudo peut changer (30 jours après le dernier changement) */
+  function prochainChangement() {
+    const dernier = Etat.get("pseudoModifieLe") || DONNEES.joueur.pseudoModifieLe;
+    return new Date(new Date(dernier + "T12:00").getTime() + 30 * 86400000);
+  }
+  function pseudoModifiable() { return !!Etat.get("pseudoOffensant") || Esport.maintenant() >= prochainChangement(); }
+
+  function rendre() {
+    const pseudo = Esport.pseudo();
+    const a = Esport.etatAbonnement();
+    const tags = Esport.gamertags();
+    const repris = Etat.get("historiqueNonRepris") ? { tournois: 0, victoires: 0 } : DONNEES.joueur.historiqueRepris;
+    const inscrits = DONNEES.tournois.filter((t) => { const i = Esport.inscription(t.id); return i && i.etat === "inscrit"; }).length;
+    const offensant = Etat.get("pseudoOffensant");
+    let html = "";
+
+    html += '<div class="identite"><span class="avatar avatar-moi">' + pseudo[0] + "</span><div>" +
+      "<h1>" + pseudo + "</h1>" +
+      '<span class="puce-etat ' + (Esport.abonne() ? "puce-inscrit" : "puce-clos") + '">' + (Esport.abonne() ? "Joueur abonné" : "Joueur gratuit") + "</span><br>" +
+      '<a href="#" class="lien-public" data-ecran="17" data-pseudo="' + pseudo + '">Voir mon profil public</a></div></div>';
+
+    if (offensant) {
+      html += '<div class="encart encart-alerte">' + Esport.icone("alerte", "f-primary") +
+        "<div><strong>Pseudo remplacé</strong><p>Ton pseudo « " + offensant + " » a été jugé offensant par le responsable local. Il est remplacé par « " + pseudo +
+        " ». Choisis-en un nouveau : la limite de 30 jours ne s'applique pas.</p></div></div>";
+    }
+
+    html += '<div class="chiffres">' +
+      '<div class="chiffre"><b>' + (DONNEES.joueur.historique.length + inscrits + repris.tournois) + "</b>Tournois joués</div>" +
+      '<div class="chiffre"><b>' + repris.victoires + "</b>Victoires</div>" +
+      '<div class="chiffre"><b>' + inscrits + "</b>En cours</div></div>";
+
+    // Pseudo
+    html += '<h2 class="titre-section">Mon pseudo</h2><div class="bloc"><div class="ligne"><span class="ligne-corps"><span class="ligne-titre">' + pseudo + "</span>" +
+      '<span class="ligne-sous-titre">' + (pseudoModifiable() ? "Modifiable maintenant, puis une fois tous les 30 jours" : "Modifiable à partir du " + Esport.jourCourt(prochainChangement().toISOString().slice(0, 10))) + "</span></span>" +
+      '<button class="puce" data-modifier="pseudo"' + (pseudoModifiable() ? "" : " disabled") + ">Modifier</button></div></div>";
+
+    // Identifiants de jeu
+    html += '<h2 class="titre-section">Mes identifiants de jeu</h2><div class="bloc">' + DONNEES.jeux.map((j) =>
+      '<div class="ligne">' + Esport.visuelJeu(j.id, "petit") + '<span class="ligne-corps"><span class="ligne-titre">' + j.nom + "</span>" +
+      '<span class="ligne-sous-titre">' + (tags[j.id] || "Non renseigné") + "</span></span>" +
+      '<button class="puce" data-modifier="' + j.id + '">' + (tags[j.id] ? "Modifier" : "Ajouter") + "</button></div>"
+    ).join("") + "</div>";
+
+    // Abonnement (S11-04)
+    html += '<h2 class="titre-section">Mon abonnement</h2><div class="bloc">';
+    if (a.statut === "actif" || a.statut === "resilie") {
+      html += '<a href="#" class="ligne" data-ecran="24"><span class="ligne-corps"><span class="ligne-titre">' + Esport.nomOffre(a.offre).replace(/^a/, "A") + "</span>" +
+        '<span class="ligne-sous-titre">' + (a.statut === "actif" ? "Échéance le " + Esport.jourCourt(a.echeance) : "Résilié · accès jusqu'au " + Esport.jourCourt(a.echeance)) + "</span></span>" +
+        Esport.icone("chevron", "f-muted") + "</a>";
+    } else {
+      html += '<div class="ligne"><span class="ligne-corps"><span class="ligne-titre">' + (a.statut === "expire" ? "Abonnement expiré" : "Joueur gratuit") + "</span>" +
+        '<span class="ligne-sous-titre">' + (a.statut === "expire" ? "Depuis le " + Esport.jourCourt(a.echeance) : "Tournois et contenus réservés verrouillés") + "</span></span>" +
+        '<a href="#" class="bouton bouton-primaire" style="min-height:36px;padding:0 var(--space-4)" data-ecran="21" data-origine>' + (a.statut === "expire" ? "Se réabonner" : "S'abonner") + "</a></div>";
+      if (a.statut === "expire") html += '<a href="#" class="ligne" data-ecran="24"><span class="ligne-corps"><span class="ligne-titre">Détail de l\'abonnement</span></span>' + Esport.icone("chevron", "f-muted") + "</a>";
+    }
+    html += "</div>";
+
+    // Mes tournois et réglages
+    html += '<h2 class="titre-section">Paramètres</h2><div class="bloc">' +
+      '<a href="#" class="ligne" data-ecran="05"><span class="ligne-corps"><span class="ligne-titre">Mes tournois et mon historique</span>' +
+      (repris.tournois ? '<span class="ligne-sous-titre">Dont ' + repris.tournois + " tournois repris de l'ancienne plateforme</span>" : "") + "</span>" + Esport.icone("chevron", "f-muted") + "</a>" +
+      '<a href="#" class="ligne" data-ecran="27"><span class="ligne-corps"><span class="ligne-titre">Préférences de notification</span></span>' + Esport.icone("chevron", "f-muted") + "</a>" +
+      '<a href="#" class="ligne" data-ecran="28"><span class="ligne-corps"><span class="ligne-titre">Mes données</span><span class="ligne-sous-titre">Télécharger, supprimer mon profil</span></span>' + Esport.icone("chevron", "f-muted") + "</a>" +
+      "</div>" + '<div class="fin-contenu"></div>';
+    document.getElementById("page").innerHTML = html;
+  }
+
+  /* ---------- Modification du pseudo ou d'un identifiant de jeu ---------- */
+  const voile = document.getElementById("voile");
+  let edition = null;   // "pseudo" ou identifiant du jeu
+
+  function ouvrir(cible) {
+    edition = cible;
+    const jeu = Esport.jeu(cible);
+    document.getElementById("titre-feuille").textContent = cible === "pseudo" ? "Modifier mon pseudo" : "Identifiant " + jeu.nom;
+    document.getElementById("libelle-feuille").textContent = cible === "pseudo" ? "Nouveau pseudo" : "Identifiant de jeu";
+    document.getElementById("aide-feuille").textContent = cible === "pseudo"
+      ? "3 à 16 caractères : lettres, chiffres, « _ » et « . ». Unique dans tous les pays. Ensuite, plus de changement pendant 30 jours."
+      : "Ton identifiant dans " + jeu.nom + ". Un identifiant ne peut être rattaché qu'à un seul profil.";
+    const saisie = document.getElementById("saisie");
+    saisie.value = cible === "pseudo" ? "" : (Esport.gamertags()[cible] || "");
+    saisie.placeholder = cible === "pseudo" ? "Ex. : Atlas_Gamer" : "Ex. : " + (cible === "freefire" ? "Pseudo#1234" : "MonPseudo");
+    document.getElementById("erreur-feuille").textContent = "";
+    document.getElementById("suggestions").innerHTML = "";
+    document.getElementById("champ-feuille").classList.remove("erreur");
+    voile.classList.add("ouvert");
+  }
+  function erreur(message, suggestions) {
+    document.getElementById("erreur-feuille").textContent = message;
+    document.getElementById("champ-feuille").classList.add("erreur");
+    document.getElementById("suggestions").innerHTML = (suggestions || []).map((s) => '<button class="puce" data-suggestion="' + s + '">' + s + "</button>").join("");
+  }
+
+  function enregistrer() {
+    const valeur = document.getElementById("saisie").value.trim();
+    if (edition === "pseudo") {
+      const pris = (p) => DONNEES.pseudosPris.some((x) => x.toLowerCase() === p.toLowerCase()) && p !== Esport.pseudo();
+      if (!/^[A-Za-z0-9_.]{3,16}$/.test(valeur)) return erreur("De 3 à 16 caractères : lettres, chiffres, « _ » ou « . ».");
+      if (valeur === Esport.pseudo()) return erreur("C'est déjà ton pseudo.");
+      if (pris(valeur)) return erreur("« " + valeur + " » est déjà pris.", [valeur + "_212", valeur + ".MA"].filter((s) => !pris(s) && s.length <= 16));
+      Etat.set("pseudo", valeur);
+      Etat.set("pseudoModifieLe", DONNEES.maintenant.slice(0, 10));
+      Etat.set("pseudoOffensant", null);
+      Nav.toast("Pseudo modifié : il apparaît partout, y compris dans les arbres");
+    } else {
+      if (valeur.length < 3) return erreur("Saisis ton identifiant de jeu.");
+      // Identifiant déjà rattaché à un autre profil : refusé avec le motif (S01-02)
+      if ((DONNEES.gamertagsPris[edition] || []).some((x) => x.toLowerCase() === valeur.toLowerCase())) {
+        return erreur("Cet identifiant est déjà rattaché à un autre profil. S'il est à toi, contacte le service client Max it.");
+      }
+      const tags = Object.assign({}, Etat.get("gamertags") || {});
+      tags[edition] = valeur;
+      Etat.set("gamertags", tags);
+      Nav.toast("Identifiant enregistré");
+    }
+    voile.classList.remove("ouvert");
+  }
+
+  document.getElementById("page").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-modifier]");
+    if (b && !b.disabled) ouvrir(b.dataset.modifier);
+  });
+  voile.addEventListener("click", (e) => {
+    if (e.target === voile || e.target.closest("#annuler")) voile.classList.remove("ouvert");
+    if (e.target.closest("#enregistrer")) enregistrer();
+    const s = e.target.closest("[data-suggestion]");
+    if (s) { document.getElementById("saisie").value = s.dataset.suggestion; document.getElementById("erreur-feuille").textContent = ""; }
+  });
+  document.getElementById("saisie").addEventListener("keydown", (e) => { if (e.key === "Enter") enregistrer(); });
+
+  Esport.monter(rendre);
+</script>
+</body>
+</html>

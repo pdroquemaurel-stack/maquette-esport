@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<!-- Écran 24 — Mon abonnement.
+     US : S11-04 (offre et échéance ; avis avant reconduction : 3 jours avant en mensuel, la veille en
+     hebdomadaire, sans préavis en quotidien ; fin à tout moment avec accès conservé jusqu'à l'échéance ;
+     expiration ou échec de reconduction : retour au niveau gratuit sans effacer l'historique ;
+     un tournoi commencé n'est pas interrompu).
+     États : actif, résilié, expiré, aucun abonnement. -->
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mon abonnement</title>
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .carte-abonnement { position: relative; overflow: hidden; margin: 0 var(--page-gutter); padding: var(--space-5) var(--space-4); border-radius: var(--radius-lg); background: var(--color-bg-dark); color: var(--color-text-on-dark); }
+    .carte-abonnement .flamme { position: absolute; right: -40px; top: -40px; width: 140px; height: 210px; transform: rotate(28deg); background: linear-gradient(180deg, var(--color-gaming-flame-dark), var(--color-primary)); opacity: .75; }
+    .carte-abonnement > * { position: relative; }
+    .carte-abonnement .surtitre { font-size: var(--font-size-xs); font-weight: var(--font-weight-bold); text-transform: uppercase; letter-spacing: .05em; color: var(--color-primary); }
+    .carte-abonnement h1 { font-size: var(--font-size-xxl); line-height: var(--line-height-tight); margin: var(--space-1) 0; }
+    .carte-abonnement p { color: var(--illu-gray-light); font-size: var(--font-size-sm); }
+    .carte-abonnement .carte-badges { margin-top: var(--space-3); }
+    .details { margin: var(--space-4) var(--page-gutter) 0; background: var(--color-surface); border-radius: var(--radius-md); box-shadow: var(--shadow-card); }
+    .details .ligne { padding-left: var(--space-4); padding-right: var(--space-4); }
+    .details .valeur { font-weight: var(--font-weight-bold); font-size: var(--font-size-sm); text-align: right; }
+    .encart { margin-top: var(--space-4); }
+    .barre-action .bouton + .bouton { margin-top: var(--space-2); }
+    .bouton-danger { color: var(--color-alert); }
+  </style>
+</head>
+<body data-zone="esport">
+<div class="cadre">
+  <div class="telephone">
+    <div class="barre-etat" data-heure="21:10"></div>
+    <header class="entete-esport" data-titre="Mon abonnement" data-repli="23"></header>
+    <main class="contenu" id="page"></main>
+    <div class="barre-action" id="action"></div>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/esport.js"></script>
+<script src="js/demo.js"></script>
+<script>
+  /* ---- États de démo ---- */
+  const scenario = Esport.lireScenario();
+  if (scenario === "expire") Esport.expirer();
+  if (scenario === "resilie") { Etat.set("abonne", true); Esport.resilier(); }
+
+  /* Avis avant reconduction selon la périodicité (S11-04) */
+  const PREAVIS = { mensuelle: 3, hebdomadaire: 1, quotidienne: 0 };
+  function avisReconduction(a) {
+    const jours = PREAVIS[a.offre];
+    if (!jours) return "Reconduite chaque jour, sans préavis.";
+    const avis = new Date(new Date(a.echeance + "T12:00").getTime() - jours * 86400000).toISOString().slice(0, 10);
+    return "Tu seras prévenu le " + Esport.jourCourt(avis) + (jours === 1 ? ", la veille." : ", " + jours + " jours avant.");
+  }
+
+  function ligne(libelle, valeur) {
+    return '<div class="ligne"><span class="ligne-corps"><span class="ligne-sous-titre">' + libelle + '</span></span><span class="valeur">' + valeur + "</span></div>";
+  }
+
+  function rendre() {
+    const a = Esport.etatAbonnement();
+    const o = Esport.offre(a.offre) || Esport.offre("mensuelle");
+    const page = document.getElementById("page");
+    const zone = document.getElementById("action");
+    const offres = '<a href="#" class="bouton bouton-primaire bouton-pleine-largeur" data-ecran="21" data-origine>';
+    let html = "";
+    let action = "";
+
+    if (a.statut === "aucun") {
+      html = '<div class="vide"><strong>Pas d\'abonnement</strong>Abonne-toi pour accéder aux tournois et contenus réservés.</div>';
+      action = offres + "Voir les offres</a>";
+    } else {
+      const titres = { actif: "Actif", resilie: "Résilié", expire: "Expiré" };
+      html += '<section class="carte-abonnement"><span class="flamme"></span><p class="surtitre">' + titres[a.statut] + "</p>" +
+        "<h1>" + Esport.nomOffre(a.offre).replace(/^a/, "A") + "</h1><p>" + Esport.prix(o.prix) + " par " + o.libelle.toLowerCase() + " · payé avec Max it</p>" +
+        '<div class="carte-badges">' + (a.statut === "expire"
+          ? '<span class="puce-etat puce-clos">Niveau gratuit</span>'
+          : '<span class="puce-etat puce-inscrit">' + Esport.icone("coche", "f-white") + "Accès abonné ouvert</span>") + "</div></section>";
+
+      html += '<div class="details">';
+      if (a.statut === "actif") {
+        html += ligne("Échéance", Esport.jourLong(a.echeance)) + ligne("Prochaine reconduction", Esport.jourCourt(a.echeance)) + ligne("Avis de reconduction", avisReconduction(a));
+      } else if (a.statut === "resilie") {
+        html += ligne("Accès conservé jusqu'au", Esport.jourLong(a.echeance)) + ligne("Reconduction", "Aucune");
+      } else {
+        html += ligne("Expiré le", Esport.jourLong(a.echeance)) + ligne("Accès", "Niveau gratuit");
+      }
+      html += "</div>";
+
+      if (a.statut === "resilie") {
+        html += '<div class="encart">' + Esport.icone("calendrier", "f-primary") +
+          "<div><strong>Ton abonnement ne sera pas reconduit</strong><p>Tu gardes l'accès aux tournois et contenus réservés jusqu'au " + Esport.jourCourt(a.echeance) + ".</p></div></div>";
+      }
+      if (a.statut === "expire") {
+        html += '<div class="encart encart-alerte">' + Esport.icone("alerte", "f-primary") +
+          "<div><strong>Tu es revenu au niveau gratuit</strong><p>Ton historique est conservé. Un tournoi déjà commencé n'est pas interrompu.</p></div></div>";
+        action = offres + "Se réabonner</a>";
+      }
+      if (a.statut === "actif") {
+        html += '<p class="ligne-sous-titre" style="padding: var(--space-3) var(--page-gutter) 0">La fin de l\'abonnement n\'interrompt pas un tournoi commencé.</p>';
+        action = '<button class="bouton bouton-lien bouton-danger bouton-pleine-largeur" id="mettre-fin">Mettre fin à mon abonnement</button>';
+      }
+      if (a.statut === "resilie") action = '<a href="#" class="bouton bouton-secondaire bouton-pleine-largeur" data-ecran="03">Retour à l\'accueil</a>';
+    }
+    page.innerHTML = html + '<div class="fin-contenu"></div>';
+    zone.innerHTML = action;
+  }
+
+  document.getElementById("action").addEventListener("click", (e) => {
+    if (!e.target.closest("#mettre-fin")) return;
+    const a = Esport.etatAbonnement();
+    Nav.dialogue({
+      titre: "Mettre fin à ton abonnement ?",
+      texte: "Il ne sera pas reconduit. Tu gardes l'accès jusqu'au " + Esport.jourCourt(a.echeance) + ".",
+      boutons: [
+        { libelle: "Mettre fin", primaire: true, action: () => { Esport.resilier(); Nav.toast("Abonnement résilié"); } },
+        { libelle: "Garder mon abonnement" }
+      ]
+    });
+  });
+
+  Esport.monter(rendre);
+</script>
+</body>
+</html>

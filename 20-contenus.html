@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<!-- Écran 20 — Contenus (onglet « Contenus »).
+     US : S10-01 / S10-02 (vidéos, verrou sur les vidéos réservées), S11-01 (contenus réservés visibles
+     avec leur condition d'accès ; bandes-annonces libres), S08-02 (vidéos masquées si la fonction
+     est désactivée dans le pays). Mène à 18 (vidéo) et 19 (article). -->
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Contenus</title>
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .filtres { display: flex; flex-direction: column; gap: var(--space-3); padding-bottom: var(--space-2); }
+    .resume { font-size: var(--font-size-sm); color: var(--color-text-secondary); padding: var(--space-2) var(--page-gutter) 0; }
+  </style>
+</head>
+<body data-zone="esport">
+<div class="cadre">
+  <div class="telephone">
+    <div class="barre-etat" data-heure="21:10"></div>
+    <header class="entete-esport" data-titre="Contenus"></header>
+
+    <main class="contenu">
+      <div class="filtres">
+        <div class="onglets" role="group" aria-label="Type de contenu" id="types"></div>
+        <div class="puces" role="group" aria-label="Filtrer par jeu" id="jeux"></div>
+      </div>
+      <p class="resume" id="resume" aria-live="polite"></p>
+      <div id="liste"></div>
+      <div class="fin-contenu"></div>
+    </main>
+
+    <nav class="nav-bas" data-onglet="20"></nav>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/esport.js"></script>
+<script src="js/demo.js"></script>
+<script>
+  let type = "tous";
+  let jeu = Nav.param("jeu") || "tous";
+
+  function rendre() {
+    const videos = Esport.fonction("video");
+    // Vidéos désactivées dans le pays : le choix « Vidéos » disparaît (S08-02)
+    const types = [["tous", "Tout"], ["video", "Vidéos"], ["article", "Articles"]].filter(([v]) => v !== "video" || videos);
+    if (!videos && type === "video") type = "tous";
+    document.getElementById("types").innerHTML = types.map(([v, l]) =>
+      '<button data-type="' + v + '" class="' + (type === v ? "actif" : "") + '" aria-pressed="' + (type === v) + '">' + l + "</button>").join("");
+    document.getElementById("jeux").innerHTML = [["tous", "Tous les jeux"]].concat(DONNEES.jeux.map((j) => [j.id, j.nom])).map(([v, l]) =>
+      '<button class="puce' + (jeu === v ? " actif" : "") + '" data-jeu="' + v + '" aria-pressed="' + (jeu === v) + '">' + l + "</button>").join("");
+
+    const liste = Esport.contenusVisibles()
+      .filter((c) => (type === "tous" || c.type === type) && (jeu === "tous" || c.jeu === jeu))
+      .sort((a, b) => b.date.localeCompare(a.date));
+    const verrouilles = liste.filter((c) => !Esport.contenuAccessible(c)).length;
+    document.getElementById("resume").textContent = liste.length
+      ? liste.length + (liste.length > 1 ? " contenus" : " contenu") + (verrouilles ? " · " + verrouilles + " réservés aux abonnés" : "")
+      : "";
+    document.getElementById("liste").innerHTML = liste.length
+      ? liste.map(Esport.ligneContenu).join("")
+      : '<div class="vide"><strong>Aucun contenu</strong>Rien pour ce jeu pour l\'instant.</div>';
+  }
+
+  document.querySelector(".filtres").addEventListener("click", (e) => {
+    const bType = e.target.closest("[data-type]");
+    const bJeu = e.target.closest("[data-jeu]");
+    if (bType) type = bType.dataset.type;
+    if (bJeu) jeu = bJeu.dataset.jeu;
+    if (bType || bJeu) rendre();
+  });
+
+  // Les verrous suivent l'interrupteur gratuit / abonné
+  Esport.monter(rendre);
+</script>
+</body>
+</html>

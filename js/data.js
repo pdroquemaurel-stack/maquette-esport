@@ -16,6 +16,8 @@ const DONNEES = {
     gamertags: { freefire: "YoussKZ#4471", efootball: "YoussKZ" },
     // Rempli quand le joueur est abonné (voir l'interrupteur du menu de démo)
     abonnement: { offre: "mensuelle", echeance: "2026-11-07" },
+    // Dernier changement de pseudo : modifiable une fois tous les 30 jours (S01-02)
+    pseudoModifieLe: "2026-08-20",
     // Inscriptions en cours (modifiables pendant la démo, voir Esport.inscription)
     // etat : "inscrit" ou "attente" (liste d'attente, avec le rang)
     inscriptions: {
@@ -351,17 +353,57 @@ const DONNEES = {
   ],
 
   /* ---- Contenus (articles et vidéos) ----
-     acces : "tous" ou "abonnes" ; bandeAnnonce : extrait lisible par tous (S11-01) */
+     acces : "tous" ou "abonnes" (règle choisie par le responsable local, S09-02)
+     Vidéo : duree en secondes ; bandeAnnonce : durée de l'extrait lisible par tous (S11-01), ou absent ;
+     sousTitres : [seconde de début, texte], répétés en boucle dans le lecteur simulé.
+     Article : resume (visible par tous) et corps (paragraphes, réservé aux abonnés si acces = "abonnes"). */
   contenus: [
-    { id: "c01", type: "video", jeu: "freefire", titre: "Les 5 meilleures rotations sur Bermuda", duree: "8:42", acces: "tous" },
-    { id: "c02", type: "video", jeu: "efootball", titre: "Finale Masters Casablanca : le résumé", duree: "12:15", acces: "abonnes", bandeAnnonce: true },
-    { id: "c03", type: "article", jeu: "pubg", titre: "PUBG Solo Night : tout savoir avant de s'inscrire", resume: "Dates, format et dotations de la soirée.", acces: "tous" },
-    { id: "c04", type: "article", jeu: "efootball", titre: "Défendre en 4-2-3-1 : le guide complet", resume: "Placement, pressing et transitions expliqués par un pro.", acces: "abonnes" },
-    { id: "c05", type: "video", jeu: "codm", titre: "Réglages manette pour CODM", duree: "6:30", acces: "abonnes", bandeAnnonce: true },
-    { id: "c06", type: "article", jeu: "freefire", titre: "Coupe Atlas : comment inscrire son escouade", resume: "Créer son équipe, inviter ses amis, valider l'inscription.", acces: "tous" },
-    { id: "c07", type: "video", jeu: "pubg", titre: "Interview : l'équipe championne d'Abidjan", duree: "9:05", acces: "tous" },
-    { id: "c08", type: "article", jeu: "freefire", titre: "Les armes les plus fortes de la saison", resume: "Notre classement après la dernière mise à jour.", acces: "abonnes" }
+    { id: "c01", type: "video", jeu: "freefire", titre: "Les 5 meilleures rotations sur Bermuda", duree: 522, acces: "tous", date: "2026-10-06",
+      description: "Où se placer à chaque zone pour finir dans le top 3 : les rotations des pros expliquées sur la carte.",
+      sousTitres: [[0, "Salut à tous, aujourd'hui on parle rotations sur Bermuda."], [6, "Première règle : ne jamais traverser la carte à découvert."], [12, "On longe la falaise pour rejoindre Clock Tower."], [18, "À la deuxième zone, prends la hauteur avant les autres."], [24, "Et garde toujours un véhicule à portée."]] },
+    { id: "c02", type: "video", jeu: "efootball", titre: "Finale Masters Casablanca : le résumé", duree: 735, acces: "abonnes", bandeAnnonce: 45, date: "2026-10-05",
+      description: "Tous les buts et les moments forts de la finale entre Reda_KAC et Zizou10, commentés en direct.",
+      sousTitres: [[0, "Bienvenue pour cette finale des Masters de Casablanca !"], [6, "Reda_KAC ouvre le score dès la 12e minute."], [12, "Zizou10 répond sur coup franc, quelle frappe !"], [18, "Prolongation : tout se joue maintenant."]] },
+    { id: "c03", type: "article", jeu: "pubg", titre: "PUBG Solo Night : tout savoir avant de s'inscrire", resume: "Dates, format et dotations de la soirée.", acces: "tous", date: "2026-10-04", lecture: 3,
+      corps: ["La PUBG Solo Night revient le 16 octobre à 21 h. Trente-deux joueurs s'affrontent en solo sur Erangel, en trois manches.",
+        "Le classement additionne les points de placement et d'élimination. Le vainqueur remporte 800 MAD, versés sur son numéro Max it.",
+        "Les inscriptions sont complètes, mais la liste d'attente reste ouverte : la première place libérée revient au premier inscrit."] },
+    { id: "c04", type: "article", jeu: "efootball", titre: "Défendre en 4-2-3-1 : le guide complet", resume: "Placement, pressing et transitions expliqués par un pro.", acces: "abonnes", date: "2026-10-03", lecture: 6,
+      corps: ["Le 4-2-3-1 reste le système le plus joué en compétition. Sa force : deux milieux défensifs qui protègent l'axe.",
+        "Premier réflexe : ne sortez jamais vos deux sentinelles en même temps. L'une presse, l'autre couvre l'espace devant la défense.",
+        "Sur les transitions, repliez votre ailier du côté du ballon. Vous fermez la passe en profondeur et forcez l'adversaire à jouer large.",
+        "Enfin, réglez le pressing sur « après perte de balle » : vous récupérez haut sans vous exposer aux contres."] },
+    { id: "c05", type: "video", jeu: "codm", titre: "Réglages manette pour CODM", duree: 390, acces: "abonnes", bandeAnnonce: 30, date: "2026-10-02",
+      description: "Sensibilité, zone morte, boutons : les réglages qui font la différence en classé.",
+      sousTitres: [[0, "Voici mes réglages manette pour Call of Duty: Mobile."], [6, "Sensibilité de visée : 6 en horizontal, 5 en vertical."], [12, "Réduisez la zone morte à 10 %."]] },
+    { id: "c06", type: "article", jeu: "freefire", titre: "Coupe Atlas : comment inscrire son escouade", resume: "Créer son équipe, inviter ses amis, valider l'inscription.", acces: "tous", date: "2026-10-01", lecture: 4,
+      corps: ["La Coupe Atlas Free Fire se joue en escouades de quatre. Pour participer, l'un d'entre vous crée l'équipe depuis la page du tournoi.",
+        "Le capitaine choisit si l'équipe est ouverte ou fermée, puis invite ses coéquipiers par leur pseudo ou partage le lien de l'équipe.",
+        "Dès que le quatrième joueur rejoint l'équipe, elle est inscrite automatiquement. Attention : une équipe incomplète à la clôture n'est pas inscrite."] },
+    { id: "c07", type: "video", jeu: "pubg", titre: "Interview : l'équipe championne d'Abidjan", duree: 545, acces: "tous", date: "2026-09-30",
+      description: "Les vainqueurs de l'Abidjan PUBG Night racontent leur préparation et leur stratégie.",
+      sousTitres: [[0, "On s'entraîne tous les soirs après le travail."], [6, "Le secret, c'est la communication."], [12, "Rendez-vous à la prochaine édition !"]] },
+    { id: "c08", type: "article", jeu: "freefire", titre: "Les armes les plus fortes de la saison", resume: "Notre classement après la dernière mise à jour.", acces: "abonnes", date: "2026-09-29", lecture: 5,
+      corps: ["La dernière mise à jour a rebattu les cartes. En tête de notre classement, le MP40 reste imbattable à courte distance.",
+        "À moyenne portée, le Woodpecker profite de la hausse de ses dégâts. Il devient le meilleur choix en fin de partie.",
+        "Grande perdante : la M1887, dont la cadence a été réduite. Gardez-la pour les combats en intérieur."] },
+    { id: "c09", type: "video", jeu: "efootball", titre: "Analyse : les 10 plus beaux buts de la saison", duree: 440, acces: "abonnes", date: "2026-09-27",
+      description: "Retour sur les plus beaux buts des tournois eFootball du Maroc, analysés image par image.",
+      sousTitres: [[0, "Numéro 10 : une volée de Badr_Pro en poule."], [6, "Numéro 9 : le slalom de Sara_Goal."]] },
+    { id: "c10", type: "article", jeu: "efootball", titre: "Ligue du Royaume : le point après la 3e journée", resume: "Qui file vers la phase finale, qui doit s'imposer.", acces: "tous", date: "2026-10-08", lecture: 3,
+      corps: ["Reda_KAC survole la poule B avec trois victoires. Dans la poule A, Zizou10 est déjà qualifié.",
+        "Mouad_FC et Ayoub.R comptent six points chacun : la confrontation directe a donné l'avantage à Mouad_FC.",
+        "Dernière journée lundi soir. Les deux premiers de chaque poule rejoignent la phase finale à élimination directe."] }
   ],
+
+  /* Motifs proposés pour signaler un contenu (S09-02 : 3 signalements = retrait en attente de revue) */
+  motifsSignalement: ["Contenu choquant ou haineux", "Fausse information", "Triche ou piratage", "Publicité ou spam", "Autre raison"],
+
+  /* Identifiants de jeu déjà rattachés à d'autres profils (S01-02) */
+  gamertagsPris: { freefire: ["ShadowMA#0001", "AtlasKing#7777"], pubg: ["KingAbidjan"], efootball: ["Zizou10"], codm: ["SniperCasa"] },
+
+  /* Solde Orange Money affiché dans la brique de paiement simulée (22) */
+  soldeOrangeMoney: 230.5,
 
   /* ---- Fonctionnalités activées par pays (S08-02) ---- */
   fonctions: {

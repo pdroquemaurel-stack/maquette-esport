@@ -201,8 +201,9 @@ Icône discrète en haut à droite, présente sur tous les écrans. Ce n'est pas
   - refus : identifiant de jeu, compte, pays ; liste d'attente ; suspension après 3 forfaits ;
     inscription annulée par abonnement expiré (08) ;
   - équipe incomplète à la clôture (10) ;
-  - abonnement expiré (24) ;
-  - paiement refusé (22).
+  - paiement refusé, paiement abandonné (22, retour sur l'écran affiché) ;
+  - abonnement résilié, abonnement expiré (24) ;
+  - pseudo jugé offensant (23).
 
 ---
 
@@ -253,6 +254,7 @@ En-tête      : 🔔 25 Notifications        Menu démo : icône en haut à droi
 | 2 | 02, 03, 04, 06, 12, 13, 17 et barre du bas e-sport | terminé |
 | 3 | 05, 07, 08, 09, 10 et page de contrôle `outils/controle.html` | terminé |
 | 4 | 11, 14, 15, 26 et test de parcours `outils/parcours-match.html` | terminé |
+| 5 | 18, 19, 20, 21, 22, 23, 24 et test de parcours `outils/parcours-abonnement.html` | terminé |
 
 Démo des matchs (lot 4) : dans 11, 14 et 15, le temps défile 30 fois plus vite (1 s = 30 s) ; les raccourcis du menu de démo mènent à chaque état.
 
@@ -269,6 +271,14 @@ Démo des matchs (lot 4) : dans 11, 14 et 15, le temps défile 30 fois plus vite
 | S07-01 | Saisie, correction tant que l'adversaire n'a pas déclaré, match clos par concordance, refus après le délai (14). Ouverture de la déclaration : voir « Décisions ». |
 | S07-02 | Déclaration adverse retenue, contestation pendant 30 min, résultat définitif sans contestation (14). Les avis à l'adversaire passent par les notifications (25). Aucune déclaration dans le délai : voir « Décisions ». |
 | S07-03 | Litige automatique, 3 captures au plus, délai de 30 min, arbitrage puis décision avec motif (15). Les captures restent sur l'appareil ; la conservation 90 jours est seulement mentionnée. La décision est simulée : avec au moins une capture, la déclaration du joueur l'emporte. |
+| S01-02 | Pseudo unique modifiable une fois tous les 30 jours, identifiant de jeu refusé s'il est déjà rattaché, pseudo offensant remplacé (02, 23, raccourci « Pseudo jugé offensant »). Les badges ne sont pas maquettés (fonction non activée). |
+| S09-02 | Côté joueur seulement : bouton « Signaler » avec motif, une fois par article (19). Le retrait après 3 signalements, la publication et la règle d'accès par pays relèvent du back-office ; seul leur effet (verrou) est visible. |
+| S10-01 | Lecteur simulé sans fichier vidéo : lecture dans l'application, sous-titres, mode « économie de données » (240p), reprise à la seconde près (18). Non maquettés : démarrage en moins de 5 s, fluidité et reprise après une coupure réseau. |
+| S10-02 | Vidéo réservée verrouillée avec condition d'accès et offre ; ni téléchargement ni lien externe (18, 20). Le blocage d'une adresse de lecture ouverte hors plateforme est côté serveur. |
+| S11-01 | Contenus et tournois réservés visibles avec leur condition d'accès, bandes-annonces libres, page d'offre ouverte seulement par un geste du joueur (03, 06, 18, 19, 20, 21, 23). Le corps d'un article réservé n'est pas inséré dans la page, mais il reste présent dans `js/data.js` (dans le produit, le serveur ne l'enverrait pas). |
+| S11-02 | Offres et essai du pays (21), brique de paiement simulée avec offre et montant renseignés, issues confirmé / refusé / abandonné (22). Moyens de paiement et reçus : ceux de Max it, seulement évoqués. |
+| S11-03 | Retour exact sur l'écran d'origine (06, 18, 19, 23, 24, 03, 08), déverrouillé après confirmation et bascule en mode abonné ; toujours verrouillé après refus ou abandon (`outils/parcours-abonnement.html`). |
+| S11-04 | Offre, échéance, avis de reconduction selon la périodicité, « Mettre fin », états actif / résilié / expiré (24, 23, 03). L'avis lui-même arrive par notification (25) ; l'échec de reconduction est figuré par l'état « expiré ». |
 | S08-04 | Côté joueur seulement : décision d'exclusion (motif, durée, conséquences) et contestation transmise au responsable local (26). L'exclusion elle-même relève du back-office. |
 | S08-02 | Activation par pays simulée par un indicateur dans `data.js` (ex. masquer les vidéos). |
 | S12-02 | Courriels et SMS reçus hors de l'application ; seules les préférences (27) sont maquettées. |

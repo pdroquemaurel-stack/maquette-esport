@@ -31,6 +31,8 @@
     "08-inscription-resultat.html?id=t09", "09-equipe-choix.html?id=t12", "10-equipe.html?id=t01",
     "11-match.html", "14-resultat.html", "15-litige.html",
     "26-contestation.html?decision=exclusion&id=t01", "26-contestation.html?decision=refus-identifiant&id=t09",
+    "18-video.html?id=c01", "18-video.html?id=c02", "18-video.html?id=c09", "19-article.html?id=c03", "19-article.html?id=c04",
+    "20-contenus.html", "21-offre.html", "22-paiement-maxit.html?offre=mensuelle", "23-profil.html", "24-abonnement.html",
     "12-arbre.html?id=t05", "12-arbre.html?id=t03", "12-arbre.html?id=t10",
     "13-jeu.html?id=freefire", "13-jeu.html?id=codm", "17-profil-public.html?pseudo=Rachid_GOAT"
   ];
@@ -94,7 +96,8 @@
       if (cible.endsWith(".html") && !fichiers.includes(cible)) defauts.push("lien cassé : " + cible);
       else sorties++;
     });
-    if (doc.querySelector('[data-action="retour"], [data-action="esport"]')) sorties++;
+    // data-sortie : bouton qui quitte l'écran par script (ex. retour à l'écran d'origine après paiement)
+    if (doc.querySelector('[data-action="retour"], [data-action="esport"], [data-sortie]')) sorties++;
     if (!sorties) defauts.push("impasse : aucune sortie");
     return defauts;
   }

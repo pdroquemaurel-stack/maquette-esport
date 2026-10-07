@@ -30,8 +30,11 @@ const Demo = (function () {
     { libelle: "Suspension après 3 forfaits", ecran: "08", scenario: "suspension" },
     { libelle: "Inscription annulée (abonnement expiré)", ecran: "08", scenario: "abonnement-expire" },
     { libelle: "Équipe incomplète à la clôture", ecran: "10", scenario: "equipe-incomplete" },
+    { libelle: "Paiement refusé", ecran: "22", scenario: "paiement-refuse" },
+    { libelle: "Paiement abandonné", ecran: "22", scenario: "paiement-abandonne" },
+    { libelle: "Abonnement résilié", ecran: "24", scenario: "resilie" },
     { libelle: "Abonnement expiré", ecran: "24", scenario: "expire" },
-    { libelle: "Paiement refusé", ecran: "22", scenario: "paiement-refuse" }
+    { libelle: "Pseudo jugé offensant", ecran: "23", scenario: "pseudo-offensant" }
   ];
 
   const ICONE_REGLAGES =
@@ -117,6 +120,8 @@ const Demo = (function () {
       // Un abonnement expiré ramène le joueur au niveau gratuit (S11-04)
       if (r.scenario === "expire" || r.scenario === "abonnement-expire") Etat.set("abonne", false);
       fermer();
+      // Paiement : on revient ensuite sur l'écran affiché (S11-03)
+      if (r.ecran === "22") Nav.memoriserOrigine();
       return Nav.aller(r.ecran, r.scenario);
     }
 

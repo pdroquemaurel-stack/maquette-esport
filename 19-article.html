@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<!-- Écran 19 — Article (19-article.html?id=c04).
+     US : S11-01 (article réservé : un joueur gratuit voit le titre, le visuel, le résumé et la condition
+     d'accès ; le corps n'est pas inséré dans la page), S09-02 (signalement : 3 signalements retirent
+     le contenu en attente de revue). Limite de maquette : le corps reste présent dans js/data.js. -->
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Article</title>
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .visuel-article { position: relative; height: 180px; }
+    .visuel-article .visuel-jeu { width: 100%; height: 100%; border-radius: 0; }
+    .visuel-article .visuel-jeu svg { width: 64px; height: 64px; }
+    .article { padding: var(--space-4) var(--page-gutter) 0; }
+    .article .carte-badges { margin: 0 0 var(--space-2); }
+    .article h1 { font-size: var(--font-size-xxl); line-height: var(--line-height-tight); }
+    .article .meta { font-size: var(--font-size-sm); color: var(--color-text-secondary); margin: var(--space-2) 0 var(--space-4); }
+    .article .chapeau { font-size: var(--font-size-lg); font-weight: var(--font-weight-medium); line-height: var(--line-height-base); margin-bottom: var(--space-4); }
+    .article .corps p { margin-bottom: var(--space-4); line-height: 1.6; }
+
+    /* Article réservé : invitation à s'abonner à la place du corps */
+    .verrou-article { margin: 0 var(--page-gutter); padding: var(--space-5) var(--space-4); border-radius: var(--radius-lg); background: var(--color-surface-warm); text-align: center; }
+    .verrou-article .cercle { width: 56px; height: 56px; border-radius: var(--radius-round); background: var(--color-primary-soft); display: flex; align-items: center; justify-content: center; margin: 0 auto var(--space-3); }
+    .verrou-article .cercle svg { width: 28px; height: 28px; }
+    .verrou-article strong { display: block; font-size: var(--font-size-lg); margin-bottom: var(--space-1); }
+    .verrou-article p { color: var(--color-text-secondary); font-size: var(--font-size-sm); margin-bottom: var(--space-4); }
+
+    .signaler { display: flex; justify-content: center; padding: var(--space-4) var(--page-gutter) 0; }
+    .signaler .bouton-lien { display: inline-flex; align-items: center; gap: var(--space-2); color: var(--color-text-secondary); font-weight: var(--font-weight-medium); font-size: var(--font-size-sm); }
+    .signaler svg { width: 18px; height: 18px; }
+
+    /* Feuille de signalement */
+    .feuille h2 { font-size: var(--font-size-xl); margin-bottom: var(--space-1); }
+    .feuille .aide { font-size: var(--font-size-sm); color: var(--color-text-secondary); margin-bottom: var(--space-3); }
+    .motif { display: flex; align-items: center; gap: var(--space-3); min-height: var(--touch-target); border-bottom: 1px solid var(--color-border); cursor: pointer; }
+    .motif input { width: 20px; height: 20px; accent-color: var(--color-primary); }
+    .feuille .bouton { margin-top: var(--space-4); }
+  </style>
+</head>
+<body data-zone="esport">
+<div class="cadre">
+  <div class="telephone">
+    <div class="barre-etat" data-heure="21:10"></div>
+    <header class="entete-esport" data-titre="Article" data-repli="20"></header>
+    <main class="contenu" id="page"></main>
+    <nav class="nav-bas" data-onglet="20"></nav>
+
+    <!-- Feuille « Signaler » -->
+    <div class="voile" id="voile-signaler">
+      <div class="feuille" role="dialog" aria-modal="true" aria-labelledby="titre-signaler">
+        <div class="poignee"></div>
+        <h2 id="titre-signaler">Signaler cet article</h2>
+        <p class="aide">Le responsable local examinera ton signalement.</p>
+        <div id="motifs"></div>
+        <button class="bouton bouton-primaire bouton-pleine-largeur" id="envoyer-signalement" disabled>Envoyer le signalement</button>
+        <button class="bouton bouton-lien bouton-pleine-largeur" id="annuler-signalement">Annuler</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/esport.js"></script>
+<script src="js/demo.js"></script>
+<script>
+  const c = Esport.contenu(Nav.param("id")) || Esport.contenu("c04");
+  const jeu = Esport.jeu(c.jeu);
+  document.title = c.titre;
+
+  function signale() { return (Etat.get("signalements") || {})[c.id]; }
+
+  function rendre() {
+    const accessible = Esport.contenuAccessible(c);
+    let html = '<div class="visuel-article">' + Esport.visuelJeu(c.jeu, "grand") + "</div>" +
+      '<article class="article">' +
+      (accessible ? "" : '<div class="carte-badges"><span class="puce-etat puce-reserve">' + Esport.icone("cadenas", "f-primary") + "Réservé aux abonnés</span></div>") +
+      "<h1>" + c.titre + "</h1>" +
+      '<p class="meta">' + jeu.nom + " · " + Esport.jourLong(c.date) + " · " + c.lecture + " min de lecture</p>" +
+      '<p class="chapeau">' + c.resume + "</p>";
+    // Joueur gratuit sur un article réservé : le corps n'est pas inséré dans la page (S11-01)
+    if (accessible) html += '<div class="corps">' + c.corps.map((p) => "<p>" + p + "</p>").join("") + "</div>";
+    html += "</article>";
+
+    if (!accessible) {
+      html += '<div class="verrou-article"><span class="cercle">' + Esport.icone("cadenas", "f-primary") + "</span>" +
+        "<strong>La suite est réservée aux abonnés</strong>" +
+        "<p>Abonne-toi pour lire l'article en entier, ainsi que toutes les analyses et vidéos exclusives.</p>" +
+        '<a href="#" class="bouton bouton-primaire bouton-pleine-largeur" data-ecran="21" data-origine>S\'abonner</a></div>';
+    }
+
+    html += '<div class="signaler">' + (signale()
+      ? '<span class="bouton-lien">' + Esport.icone("coche", "f-muted") + "Signalé : " + signale().toLowerCase() + "</span>"
+      : '<button class="bouton-lien" id="signaler">' + Esport.icone("alerte", "f-muted") + "Signaler</button>") + "</div>";
+
+    const autres = Esport.contenusVisibles().filter((x) => x.type === "article" && x.id !== c.id).slice(0, 3);
+    html += '<h2 class="titre-section">À lire aussi</h2>' + autres.map(Esport.ligneContenu).join("") + '<div class="fin-contenu"></div>';
+    document.getElementById("page").innerHTML = html;
+  }
+
+  /* ---- Signalement (S09-02) ---- */
+  const voile = document.getElementById("voile-signaler");
+  document.getElementById("motifs").innerHTML = DONNEES.motifsSignalement.map((m) =>
+    '<label class="motif"><input type="radio" name="motif" value="' + m + '">' + m + "</label>").join("");
+  document.getElementById("page").addEventListener("click", (e) => {
+    if (e.target.closest("#signaler")) voile.classList.add("ouvert");
+  });
+  voile.addEventListener("change", () => { document.getElementById("envoyer-signalement").disabled = false; });
+  voile.addEventListener("click", (e) => {
+    if (e.target === voile || e.target.closest("#annuler-signalement")) voile.classList.remove("ouvert");
+  });
+  document.getElementById("envoyer-signalement").addEventListener("click", () => {
+    const choix = voile.querySelector('input[name="motif"]:checked');
+    if (!choix) return;
+    const liste = Object.assign({}, Etat.get("signalements") || {});
+    liste[c.id] = choix.value;
+    voile.classList.remove("ouvert");
+    Etat.set("signalements", liste);
+    Nav.toast("Signalement envoyé. Merci !");
+  });
+
+  Esport.monter(rendre);
+</script>
+</body>
+</html>

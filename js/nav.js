@@ -23,13 +23,13 @@ const ECRANS = {
   "14": { fichier: "14-resultat.html", titre: "Déclarer le résultat", pret: true },
   "15": { fichier: "15-litige.html", titre: "Litige", pret: true },
   "17": { fichier: "17-profil-public.html", titre: "Profil public", pret: true },
-  "18": { fichier: "18-video.html", titre: "Vidéo", pret: false },
-  "19": { fichier: "19-article.html", titre: "Article", pret: false },
-  "20": { fichier: "20-contenus.html", titre: "Contenus", pret: false },
-  "21": { fichier: "21-offre.html", titre: "Offre d'abonnement", pret: false },
-  "22": { fichier: "22-paiement-maxit.html", titre: "Paiement Max it", pret: false },
-  "23": { fichier: "23-profil.html", titre: "Mon profil", pret: false },
-  "24": { fichier: "24-abonnement.html", titre: "Mon abonnement", pret: false },
+  "18": { fichier: "18-video.html", titre: "Vidéo", pret: true },
+  "19": { fichier: "19-article.html", titre: "Article", pret: true },
+  "20": { fichier: "20-contenus.html", titre: "Contenus", pret: true },
+  "21": { fichier: "21-offre.html", titre: "Offre d'abonnement", pret: true },
+  "22": { fichier: "22-paiement-maxit.html", titre: "Paiement Max it", pret: true },
+  "23": { fichier: "23-profil.html", titre: "Mon profil", pret: true },
+  "24": { fichier: "24-abonnement.html", titre: "Mon abonnement", pret: true },
   "25": { fichier: "25-notifications.html", titre: "Notifications", pret: false },
   "26": { fichier: "26-contestation.html", titre: "Contestation", pret: true },
   "27": { fichier: "27-preferences-notif.html", titre: "Préférences", pret: false },
@@ -53,6 +53,15 @@ const Etat = (function () {
     monMatch: null,         // déroulé de mon match : présence, déclarations, litige (lot 4)
     matchs: null,           // résultats ajoutés à l'arbre pendant la démo, par « tournoi-tour-match »
     contestations: null,    // contestations envoyées (26)
+    abonnement: null,       // { offre, echeance, statut } : actif, resilie, expire (lot 5)
+    positions: null,        // position de lecture de chaque vidéo, en secondes (18)
+    economieDonnees: false, // mode « économie de données » du lecteur (18)
+    sousTitres: false,      // sous-titres activés (18)
+    signalements: null,     // contenus signalés par le joueur (19)
+    gamertags: null,        // identifiants de jeu modifiés (23)
+    pseudoModifieLe: null,  // date du dernier changement de pseudo (23)
+    pseudoOffensant: null,  // ancien pseudo remplacé car jugé offensant (23)
+    toastSuivant: null,     // message à afficher sur la page suivante (retour après paiement)
     scenario: null,         // état alternatif forcé pour l'écran visé
     origine: null           // écran à retrouver après le paiement (S11-03)
   };
@@ -123,14 +132,19 @@ const Nav = {
     Nav.aller("03");
   },
 
-  /* Mémorise l'écran courant avant de partir vers l'offre (S11-03) */
+  /* Mémorise l'écran courant avant de partir vers l'offre (S11-03).
+     L'offre (21) et le paiement (22) ne sont jamais des écrans d'origine. */
   memoriserOrigine() {
-    Etat.set("origine", window.location.pathname.split("/").pop() + window.location.search);
+    const page = window.location.pathname.split("/").pop();
+    if (page === ECRANS["21"].fichier || page === ECRANS["22"].fichier) return;
+    Etat.set("origine", page + window.location.search);
   },
 
-  retourOrigine() {
+  /* Retour exact sur l'écran d'origine, avec un message affiché à l'arrivée */
+  retourOrigine(message) {
     const origine = Etat.get("origine");
     Etat.set("origine", null);
+    if (message) Etat.set("toastSuivant", message);
     window.location.href = origine || ECRANS["03"].fichier;
   },
 
@@ -250,4 +264,10 @@ function verifierSession() {
 document.addEventListener("DOMContentLoaded", () => {
   remplirBarreEtat();
   verifierSession();
+  // Message laissé par la page précédente (ex. « Abonnement activé » au retour du paiement)
+  const message = Etat.get("toastSuivant");
+  if (message) {
+    Etat.set("toastSuivant", null);
+    setTimeout(() => Nav.toast(message), 300);
+  }
 });

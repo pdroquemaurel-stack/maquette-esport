@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<!-- Écran 22 — Brique de paiement Max it (simulée) (22-paiement-maxit.html?offre=mensuelle).
+     US : S11-02 (offre et montant déjà renseignés ; la plateforme ne traite aucun paiement, elle reçoit
+     le résultat : confirmé, refusé ou abandonné), S11-03 (retour exact sur l'écran d'origine :
+     déverrouillé si confirmé, toujours verrouillé sinon). Aucun vrai paiement : le code n'est pas vérifié. -->
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Paiement Max it</title>
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    /* La brique Max it : feuille blanche sur fond gris, comme les écrans Max it */
+    .telephone { background: var(--color-bg-muted); }
+    .entete-maxit { height: var(--top-bar-height); flex-shrink: 0; display: flex; align-items: center; gap: var(--space-2); padding: 0 var(--space-2) 0 var(--space-4); }
+    .entete-maxit .marque { display: flex; align-items: center; gap: var(--space-2); flex: 1; font-weight: var(--font-weight-bold); font-size: var(--font-size-lg); }
+    .entete-maxit .logo { width: 32px; height: 32px; border-radius: var(--radius-sm); background: var(--color-primary); color: var(--color-on-primary); display: flex; align-items: center; justify-content: center; font-size: var(--font-size-sm); }
+    .fermer { width: var(--touch-target); height: var(--touch-target); border-radius: var(--radius-round); background: var(--color-surface); box-shadow: var(--shadow-raised); display: flex; align-items: center; justify-content: center; }
+    .fermer svg { width: 20px; height: 20px; }
+
+    .feuille-paiement { flex: 1; overflow-y: auto; background: var(--color-surface); border-radius: var(--radius-sheet) var(--radius-sheet) 0 0; padding: var(--space-6) var(--page-gutter) var(--space-4); }
+    .marchand { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-5); }
+    .marchand .icone-marchand { width: 48px; height: 48px; border-radius: var(--radius-md); background: var(--color-surface-warm); display: flex; align-items: center; justify-content: center; }
+    .marchand .icone-marchand svg { width: 26px; height: 26px; }
+    .marchand small { display: block; color: var(--color-text-secondary); font-size: var(--font-size-sm); }
+    .montant { text-align: center; padding: var(--space-4) 0 var(--space-5); border-bottom: 1px solid var(--color-border); margin-bottom: var(--space-4); }
+    .montant small { display: block; font-size: var(--font-size-sm); color: var(--color-text-secondary); }
+    .montant b { display: block; font-size: var(--font-size-display); line-height: 1.2; }
+    .montant .essai { color: var(--color-success-dark); font-size: var(--font-size-sm); font-weight: var(--font-weight-bold); }
+    .lignes { display: grid; grid-template-columns: auto 1fr; gap: var(--space-2) var(--space-4); font-size: var(--font-size-sm); margin-bottom: var(--space-5); }
+    .lignes dt { color: var(--color-text-secondary); }
+    .lignes dd { text-align: right; font-weight: var(--font-weight-medium); }
+    .code label { display: block; font-weight: var(--font-weight-bold); font-size: var(--font-size-sm); margin-bottom: var(--space-2); }
+    .code input { width: 100%; height: 56px; border: 1px solid var(--color-border-strong); border-radius: var(--radius-md); text-align: center; font: inherit; font-size: var(--font-size-xxl); letter-spacing: .6em; }
+    .code input:focus { outline: 0; border-color: var(--color-primary); }
+    .code small { display: block; font-size: var(--font-size-xs); color: var(--color-text-muted); margin-top: var(--space-2); }
+
+    .resultat { display: flex; flex-direction: column; align-items: center; text-align: center; padding-top: var(--space-8); }
+    .resultat .pictogramme { width: 80px; height: 80px; border-radius: var(--radius-round); display: flex; align-items: center; justify-content: center; background: var(--color-bg-muted); margin-bottom: var(--space-4); }
+    .resultat .pictogramme svg { width: 40px; height: 40px; }
+    .resultat .pictogramme.succes { background: var(--color-success-dark); }
+    .resultat h1 { font-size: var(--font-size-xxl); margin-bottom: var(--space-2); }
+    .resultat p { color: var(--color-text-secondary); }
+    .resultat .recu { font-size: var(--font-size-xs); color: var(--color-text-muted); margin-top: var(--space-3); }
+    .chargement { width: 48px; height: 48px; border-radius: var(--radius-round); border: 4px solid var(--color-primary-soft); border-top-color: var(--color-primary); animation: tourne 1s linear infinite; margin: var(--space-10) auto var(--space-4); }
+    @keyframes tourne { to { transform: rotate(360deg); } }
+    .demo-note { font-size: var(--font-size-xs); color: var(--color-text-muted); text-align: center; margin-top: var(--space-4); }
+    .pied-paiement { flex-shrink: 0; background: var(--color-surface); padding: var(--space-3) var(--page-gutter) var(--space-5); }
+    .pied-paiement .bouton + .bouton { margin-top: var(--space-2); }
+  </style>
+</head>
+<body>
+<div class="cadre">
+  <div class="telephone">
+    <div class="barre-etat" data-heure="21:10"></div>
+    <header class="entete-maxit">
+      <span class="marque"><span class="logo" aria-hidden="true">M</span>Paiement Max it</span>
+      <button class="fermer" id="fermer" data-sortie aria-label="Fermer et abandonner le paiement">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path class="f-text" d="M6.4 5 12 10.6 17.6 5 19 6.4 13.4 12 19 17.6 17.6 19 12 13.4 6.4 19 5 17.6 10.6 12 5 6.4z"/></svg>
+      </button>
+    </header>
+    <main class="feuille-paiement" id="page"></main>
+    <div class="pied-paiement" id="action"></div>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/esport.js"></script>
+<script src="js/demo.js"></script>
+<script>
+  const scenario = Esport.lireScenario();
+  const refusForce = scenario === "paiement-refuse";
+  const abandonDemo = scenario === "paiement-abandonne";
+  const o = Esport.offre(Nav.param("offre")) || Esport.offre("mensuelle");
+  // Solde affiché : insuffisant dans l'état de démo « paiement refusé »
+  const solde = refusForce ? 12 : DONNEES.soldeOrangeMoney;
+  const numero = DONNEES.joueur.numero.replace(/(\d\d) (\d\d)$/, "•• ••");
+  let etape = "saisie";   // saisie, traitement, confirme, refuse
+
+  function rendre() {
+    const page = document.getElementById("page");
+    const zone = document.getElementById("action");
+    if (etape === "saisie") {
+      const premier = Esport.jourCourt(new Date(Esport.maintenant().getTime() + (o.essai ? parseInt(o.essai, 10) : 0) * 86400000).toISOString().slice(0, 10));
+      page.innerHTML =
+        '<div class="marchand"><span class="icone-marchand">' + Esport.icone("manette", "f-primary") + "</span>" +
+        "<span><strong>Max it E-sport</strong><small>" + Esport.nomOffre(o.id).replace(/^a/, "A") + "</small></span></div>" +
+        '<div class="montant"><small>Montant</small><b>' + Esport.prix(o.prix) + "</b>" +
+        (o.essai ? '<span class="essai">' + o.essai + " · premier prélèvement le " + premier + "</span>" : "<small>par " + o.libelle.toLowerCase() + ", reconduit automatiquement</small>") + "</div>" +
+        '<dl class="lignes"><dt>Payer avec</dt><dd>Orange Money</dd><dt>Compte</dt><dd>' + numero + "</dd>" +
+        "<dt>Solde disponible</dt><dd>" + solde.toLocaleString("fr-FR", { minimumFractionDigits: 2 }) + " " + Esport.pays().monnaie + "</dd></dl>" +
+        '<div class="code"><label for="code">Code secret Orange Money</label>' +
+        '<input id="code" type="password" inputmode="numeric" maxlength="4" autocomplete="off" aria-describedby="aide-code">' +
+        '<small id="aide-code">Maquette : saisis 4 chiffres au choix, aucun paiement n\'est effectué.</small></div>' +
+        (abandonDemo ? '<p class="demo-note">Démo « paiement abandonné » : la brique va se fermer comme si tu la quittais.</p>' : "");
+      zone.innerHTML = '<button class="bouton bouton-primaire bouton-pleine-largeur" id="confirmer" disabled>Confirmer le paiement</button>' +
+        '<button class="bouton bouton-lien bouton-pleine-largeur" id="annuler" data-sortie>Annuler</button>';
+      const code = document.getElementById("code");
+      code.addEventListener("input", () => {
+        code.value = code.value.replace(/\D/g, "").slice(0, 4);
+        document.getElementById("confirmer").disabled = code.value.length !== 4;
+      });
+    } else if (etape === "traitement") {
+      page.innerHTML = '<div class="chargement" aria-hidden="true"></div><p style="text-align:center" role="status">Paiement en cours…</p>';
+      zone.innerHTML = "";
+    } else if (etape === "confirme") {
+      page.innerHTML = '<div class="resultat"><span class="pictogramme succes">' + Esport.icone("coche", "f-white") + "</span>" +
+        "<h1>Paiement confirmé</h1><p>Ton " + Esport.nomOffre(o.id) + " est actif. Tu retournes là où tu étais.</p>" +
+        '<p class="recu">Reçu n° MX-' + Date.now().toString().slice(-8) + " · envoyé par SMS</p></div>";
+      zone.innerHTML = '<button class="bouton bouton-primaire bouton-pleine-largeur" id="continuer" data-sortie>Continuer</button>';
+    } else {
+      page.innerHTML = '<div class="resultat"><span class="pictogramme">' + Esport.icone("alerte", "f-alert") + "</span>" +
+        "<h1>Paiement refusé</h1><p>Solde Orange Money insuffisant. Aucun montant n'a été débité.</p></div>";
+      zone.innerHTML = '<button class="bouton bouton-primaire bouton-pleine-largeur" id="retour" data-sortie>Retour</button>';
+    }
+  }
+
+  /* ---- Issues du paiement (S11-02, S11-03) ---- */
+  function abandonner() {
+    Nav.retourOrigine("Paiement abandonné : aucun montant débité");
+  }
+  function confirmer() {
+    etape = "traitement";
+    rendre();
+    setTimeout(() => {
+      if (refusForce || solde < o.prix) { etape = "refuse"; rendre(); return; }
+      // Paiement confirmé : l'accès s'ouvre tout de suite, le mode abonné est activé
+      Esport.souscrire(o.id);
+      etape = "confirme";
+      rendre();
+      setTimeout(continuer, 2000);
+    }, 1500);
+  }
+  let parti = false;   // évite un double retour (bouton « Continuer » et retour automatique)
+  function continuer() {
+    if (parti) return;
+    parti = true;
+    Nav.retourOrigine("Abonnement activé : accès débloqué");
+  }
+
+  document.querySelector(".telephone").addEventListener("click", (e) => {
+    if (e.target.closest("#confirmer") && !e.target.closest("#confirmer").disabled) confirmer();
+    if (e.target.closest("#annuler") || e.target.closest("#fermer")) {
+      if (etape === "confirme") continuer();
+      else if (etape !== "traitement") abandonner();
+    }
+    if (e.target.closest("#continuer")) continuer();
+    if (e.target.closest("#retour")) Nav.retourOrigine("Paiement refusé : ton accès reste verrouillé");
+  });
+
+  rendre();
+  if (abandonDemo) setTimeout(abandonner, 3000);
+</script>
+</body>
+</html>

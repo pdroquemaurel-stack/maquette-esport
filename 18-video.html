@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<!-- Écran 18 — Lecteur vidéo (18-video.html?id=c02).
+     US : S10-01 (lecture dans l'application, sous-titres activables, mode « économie de données »,
+     reprise à l'endroit interrompu), S10-02 (vidéo réservée : refus de lecture, condition d'accès et offre ;
+     aucun téléchargement ni lien externe), S11-01 (bande-annonce lisible par un joueur gratuit).
+     Lecteur simulé : aucune ressource en ligne, l'image est le visuel du jeu. -->
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Vidéo</title>
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    /* ---- Lecteur ---- */
+    .lecteur { background: var(--color-bg-dark); color: var(--color-text-on-dark); }
+    .ecran-video { position: relative; height: 210px; overflow: hidden; }
+    .ecran-video .visuel-jeu { position: absolute; inset: 0; width: 100%; height: 100%; border-radius: 0; opacity: .85; }
+    .ecran-video .visuel-jeu svg { width: 80px; height: 80px; opacity: .35; }
+    .ecran-video.eco .visuel-jeu { filter: blur(1.5px); }
+    .haut-video { position: absolute; top: var(--space-2); left: var(--space-3); right: var(--space-3); display: flex; justify-content: space-between; gap: var(--space-2); }
+    .etiquette-video { font-size: var(--font-size-xs); font-weight: var(--font-weight-bold); background: var(--color-glass-dark); border-radius: var(--radius-pill); padding: 2px var(--space-2); }
+    .etiquette-video.orange { background: var(--color-primary); }
+    .bouton-lecture { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 64px; height: 64px; border-radius: var(--radius-round); background: var(--color-glass-dark); display: flex; align-items: center; justify-content: center; }
+    .bouton-lecture svg { width: 32px; height: 32px; }
+    .sous-titre { position: absolute; left: var(--space-4); right: var(--space-4); bottom: var(--space-3); text-align: center; }
+    .sous-titre span { background: var(--color-overlay); padding: 2px var(--space-2); border-radius: var(--radius-xs); font-size: var(--font-size-sm); line-height: 1.6; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+
+    /* Calque par-dessus l'image : verrou ou reprise */
+    .calque { position: absolute; inset: 0; background: var(--color-overlay); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: var(--space-2); padding: var(--space-4); }
+    .calque.opaque { background: var(--color-bg-dark); }
+    .calque svg { width: 28px; height: 28px; }
+    .calque strong { font-size: var(--font-size-lg); }
+    .calque p { font-size: var(--font-size-sm); color: var(--illu-gray-light); }
+    .calque .actions-calque { display: flex; gap: var(--space-2); flex-wrap: wrap; justify-content: center; }
+    .calque .bouton { min-height: 40px; }
+    .bouton-verre { background: var(--color-glass-dark); color: var(--color-text-on-dark); }
+
+    .controles { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-2) var(--space-3); }
+    .controles input[type="range"] { flex: 1; min-width: 0; accent-color: var(--color-primary); height: var(--touch-target); }
+    .controles .temps { font-size: var(--font-size-xs); font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .bascule-lecteur { min-width: var(--touch-target); height: 32px; padding: 0 var(--space-2); border-radius: var(--radius-pill); border: 1px solid var(--color-border-dark); font-size: var(--font-size-xs); font-weight: var(--font-weight-bold); color: var(--color-text-on-dark); }
+    .bascule-lecteur[aria-pressed="true"] { background: var(--color-primary); border-color: var(--color-primary); }
+
+    /* ---- Informations ---- */
+    .infos { padding: var(--space-4) var(--page-gutter) 0; }
+    .infos h1 { font-size: var(--font-size-xl); line-height: var(--line-height-tight); }
+    .infos .meta { font-size: var(--font-size-sm); color: var(--color-text-secondary); margin: var(--space-1) 0 var(--space-2); }
+    .infos .carte-badges { margin-bottom: var(--space-2); }
+    .infos .description { color: var(--color-text-secondary); font-size: var(--font-size-sm); }
+    .condition { margin-top: var(--space-4); }
+    .reglages { font-size: var(--font-size-xs); color: var(--color-text-secondary); padding: var(--space-3) var(--page-gutter) 0; }
+  </style>
+</head>
+<body data-zone="esport">
+<div class="cadre">
+  <div class="telephone">
+    <div class="barre-etat" data-heure="21:10"></div>
+    <header class="entete-esport" data-titre="Vidéo" data-repli="20"></header>
+    <main class="contenu">
+      <div class="lecteur" id="lecteur"></div>
+      <div id="infos"></div>
+      <div class="fin-contenu"></div>
+    </main>
+    <nav class="nav-bas" data-onglet="20"></nav>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/esport.js"></script>
+<script src="js/demo.js"></script>
+<script>
+  const c = Esport.contenu(Nav.param("id")) || Esport.contenu("c02");
+  const jeu = Esport.jeu(c.jeu);
+  document.title = c.titre;
+
+  let lecture = false;          // en cours de lecture
+  let position = 0;             // seconde courante
+  let bandeAnnonceFinie = false;
+  let repriseProposee = false;  // « Reprendre à … » déjà répondu
+
+  /* Mode de lecture : complet (accès ouvert), bande-annonce (gratuit, extrait libre) ou verrou */
+  function mode() {
+    if (Esport.contenuAccessible(c)) return "complet";
+    return c.bandeAnnonce ? "bande-annonce" : "verrou";
+  }
+  function dureeLue() { return mode() === "bande-annonce" ? c.bandeAnnonce : c.duree; }
+  function positionMemorisee() { return (Etat.get("positions") || {})[c.id] || 0; }
+  function memoriserPosition(p) {
+    const positions = Object.assign({}, Etat.get("positions") || {});
+    positions[c.id] = p;
+    Etat.set("positions", positions);
+  }
+
+  /* Sous-titre affiché à la seconde courante (répété en boucle) */
+  function sousTitre() {
+    if (!c.sousTitres || !c.sousTitres.length) return "";
+    const cycle = c.sousTitres[c.sousTitres.length - 1][0] + 6;
+    const s = position % cycle;
+    let texte = "";
+    c.sousTitres.forEach(([debut, t]) => { if (s >= debut) texte = t; });
+    return texte;
+  }
+
+  const ICONE_LECTURE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path class="f-white" d="M8 5v14l11-7z"/></svg>';
+  const ICONE_PAUSE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path class="f-white" d="M6 5h4v14H6zm8 0h4v14h-4z"/></svg>';
+
+  /* ---- Lecteur (reconstruit à chaque changement d'état, pas à chaque seconde) ---- */
+  function rendreLecteur() {
+    const m = mode();
+    const eco = !!Etat.get("economieDonnees");
+    const st = !!Etat.get("sousTitres");
+    const verrouAffiche = m === "verrou" || bandeAnnonceFinie;
+    const reprise = m === "complet" && !repriseProposee && positionMemorisee() > 0 && !lecture;
+    let ecran = '<div class="ecran-video' + (eco ? " eco" : "") + '">' + Esport.visuelJeu(c.jeu, "grand") +
+      '<div class="haut-video"><span class="etiquette-video' + (m === "bande-annonce" ? " orange" : "") + '">' +
+      (m === "bande-annonce" ? "Bande-annonce" : jeu.nom) + "</span>" +
+      '<span class="etiquette-video">' + (eco ? "Économie · 240p" : "Auto · 720p") + "</span></div>";
+
+    if (verrouAffiche) {
+      // Lecture refusée : condition d'accès et offre (S10-02)
+      ecran += '<div class="calque opaque">' + Esport.icone("cadenas", "f-primary") +
+        "<strong>Vidéo réservée aux abonnés</strong><p>Abonne-toi pour voir la vidéo complète (" + Esport.duree(c.duree) + ").</p>" +
+        '<div class="actions-calque"><a href="#" class="bouton bouton-primaire" data-ecran="21" data-origine>S\'abonner</a>' +
+        (bandeAnnonceFinie ? '<button class="bouton bouton-verre" id="revoir">Revoir la bande-annonce</button>' : "") + "</div></div>";
+    } else if (reprise) {
+      // Reprise à l'endroit interrompu (S10-01)
+      ecran += '<div class="calque"><strong>Reprendre à ' + Esport.duree(positionMemorisee()) + " ?</strong>" +
+        '<div class="actions-calque"><button class="bouton bouton-primaire" id="reprendre">Reprendre</button>' +
+        '<button class="bouton bouton-verre" id="debut">Depuis le début</button></div></div>';
+    } else {
+      ecran += '<button class="bouton-lecture" id="lire" aria-label="' + (lecture ? "Pause" : "Lecture") + '">' + (lecture ? ICONE_PAUSE : ICONE_LECTURE) + "</button>" +
+        '<div class="sous-titre" id="sous-titre"' + (st ? "" : " hidden") + "><span>" + sousTitre() + "</span></div>";
+    }
+    ecran += "</div>";
+
+    const controles = '<div class="controles">' +
+      '<input type="range" id="barre" min="0" max="' + dureeLue() + '" value="' + position + '" aria-label="Position de lecture"' + (verrouAffiche ? " disabled" : "") + ">" +
+      '<span class="temps" id="temps">' + Esport.duree(position) + " / " + Esport.duree(dureeLue()) + "</span>" +
+      '<button class="bascule-lecteur" id="st" aria-pressed="' + st + '" aria-label="Sous-titres"' + (c.sousTitres ? "" : " disabled") + ">CC</button>" +
+      '<button class="bascule-lecteur" id="eco" aria-pressed="' + eco + '" aria-label="Économie de données">Éco</button></div>';
+    document.getElementById("lecteur").innerHTML = ecran + controles;
+  }
+
+  /* Mise à jour légère, chaque seconde pendant la lecture */
+  function majProgression() {
+    const barre = document.getElementById("barre");
+    if (barre) barre.value = position;
+    const temps = document.getElementById("temps");
+    if (temps) temps.textContent = Esport.duree(position) + " / " + Esport.duree(dureeLue());
+    const st = document.getElementById("sous-titre");
+    if (st) st.firstChild.textContent = sousTitre();
+  }
+
+  /* ---- Informations sous le lecteur ---- */
+  function rendreInfos() {
+    const m = mode();
+    let html = '<div class="infos"><h1>' + c.titre + "</h1>" +
+      '<p class="meta">' + jeu.nom + " · " + Esport.jourCourt(c.date) + " · " + Esport.duree(c.duree) + "</p>";
+    if (m !== "complet") {
+      html += '<div class="carte-badges"><span class="puce-etat puce-reserve">' + Esport.icone("cadenas", "f-primary") + "Réservé aux abonnés</span>" +
+        (c.bandeAnnonce ? '<span class="puce-etat puce-abonnes">Bande-annonce libre</span>' : "") + "</div>";
+    }
+    html += '<p class="description">' + c.description + "</p></div>";
+    if (m !== "complet") {
+      html += '<div class="encart condition">' + Esport.icone("cadenas", "f-primary") +
+        "<div><strong>Condition d'accès : abonnement</strong><p>" +
+        (c.bandeAnnonce ? "La bande-annonce (" + Esport.duree(c.bandeAnnonce) + ") est libre. " : "") +
+        "La vidéo complète est réservée aux abonnés, dès " + Esport.prix(DONNEES.offres[DONNEES.joueur.pays][0].prix) + " par jour.</p>" +
+        '<a href="#" class="lien-encart" data-ecran="21" data-origine>Voir les offres</a></div></div>';
+    }
+    html += '<p class="reglages">Lecture dans l\'application uniquement. ' +
+      (Etat.get("economieDonnees") ? "Économie de données activée : qualité réduite." : "Qualité adaptée automatiquement à ta connexion.") + "</p>";
+
+    const autres = Esport.contenusVisibles().filter((x) => x.type === "video" && x.id !== c.id).slice(0, 3);
+    html += '<h2 class="titre-section">À voir aussi</h2>' + autres.map(Esport.ligneContenu).join("");
+    document.getElementById("infos").innerHTML = html;
+  }
+
+  function rendre() {
+    if (!Esport.fonction("video")) {
+      // Vidéos désactivées dans le pays (S08-02)
+      document.getElementById("lecteur").innerHTML = "";
+      document.getElementById("infos").innerHTML = '<div class="vide"><strong>Vidéos indisponibles</strong>Les vidéos ne sont pas proposées dans ton pays.</div>';
+      return;
+    }
+    rendreLecteur();
+    rendreInfos();
+  }
+
+  /* ---- Lecture simulée : une seconde de vidéo par seconde ---- */
+  setInterval(() => {
+    if (!lecture) return;
+    position += 1;
+    if (mode() === "complet") memoriserPosition(position);
+    if (position >= dureeLue()) {
+      lecture = false;
+      if (mode() === "bande-annonce") bandeAnnonceFinie = true;
+      else { position = 0; memoriserPosition(0); Nav.toast("Lecture terminée"); }
+      rendreLecteur();
+      return;
+    }
+    majProgression();
+  }, 1000);
+
+  /* ---- Commandes ---- */
+  document.getElementById("lecteur").addEventListener("click", (e) => {
+    if (e.target.closest("#lire")) { lecture = !lecture; repriseProposee = true; rendreLecteur(); }
+    if (e.target.closest("#reprendre")) { position = positionMemorisee(); repriseProposee = true; lecture = true; rendreLecteur(); }
+    if (e.target.closest("#debut")) { position = 0; repriseProposee = true; lecture = true; rendreLecteur(); }
+    if (e.target.closest("#revoir")) { bandeAnnonceFinie = false; position = 0; lecture = true; rendreLecteur(); }
+    if (e.target.closest("#st")) Etat.set("sousTitres", !Etat.get("sousTitres"));
+    if (e.target.closest("#eco")) {
+      Etat.set("economieDonnees", !Etat.get("economieDonnees"));
+      Nav.toast(Etat.get("economieDonnees") ? "Économie de données : qualité réduite" : "Qualité automatique");
+    }
+  });
+  document.getElementById("lecteur").addEventListener("input", (e) => {
+    if (e.target.id !== "barre") return;
+    position = Number(e.target.value);
+    repriseProposee = true;
+    if (mode() === "complet") memoriserPosition(position);
+    majProgression();
+  });
+
+  // La position mémorisée ne redessine pas la page ; les autres changements (abonnement, réglages) oui
+  document.addEventListener("DOMContentLoaded", rendre);
+  document.addEventListener("etat-change", (e) => {
+    if (e.detail && e.detail.cle === "positions") return;
+    rendre();
+  });
+</script>
+</body>
+</html>

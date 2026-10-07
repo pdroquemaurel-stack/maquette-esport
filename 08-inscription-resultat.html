@@ -78,7 +78,7 @@
   }
   if (resultat === "abonnement-expire") {
     Esport.changerInscription(t.id, null);
-    Etat.set("abonne", false);
+    Esport.expirer();
   }
 
   /* ---- Contenu de chaque état ---- */

@@ -218,6 +218,15 @@ const Esport = (function () {
 
   /* ---------- Contenus (articles et vidéos) ---------- */
 
+  /* Durée lisible : 522 → « 8:42 » */
+  function duree(secondes) {
+    const s = Math.max(0, Math.floor(secondes));
+    return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
+  }
+  function contenu(id) { return DONNEES.contenus.find((c) => c.id === id); }
+  /* Le joueur peut-il lire / ouvrir ce contenu en entier ? */
+  function contenuAccessible(c) { return c.acces === "tous" || abonne(); }
+
   /* Contenus visibles : les vidéos disparaissent si la fonction est désactivée dans le pays (S08-02) */
   function contenusVisibles() {
     const videos = fonction("video");
@@ -227,7 +236,7 @@ const Esport = (function () {
   /* Ligne de contenu ; joueur gratuit : cadenas et condition d'accès (S10-02, S11-01) */
   function ligneContenu(c) {
     const verrou = c.acces === "abonnes" && !abonne();
-    let meta = (c.type === "video" ? "Vidéo · " + c.duree : "Article") + " · " + jeu(c.jeu).nom;
+    let meta = (c.type === "video" ? "Vidéo · " + duree(c.duree) : "Article · " + c.lecture + " min") + " · " + jeu(c.jeu).nom;
     if (verrou) {
       meta += '<span class="puce-etat puce-reserve">' + icone("cadenas", "f-primary") + "Réservé aux abonnés</span>";
       if (c.bandeAnnonce) meta += '<span class="puce-etat puce-abonnes">Bande-annonce libre</span>';
@@ -239,6 +248,44 @@ const Esport = (function () {
       icone(verrou ? "cadenas" : "chevron", "f-muted") +
       "</a>";
   }
+
+  /* ---------- Abonnement (S11-02, S11-04) ----------
+     Mémorisé : { offre, echeance, statut } avec statut actif, resilie ou expire.
+     L'interrupteur de démo « abonné » reste la référence de l'accès (Etat abonne). */
+  const DUREES_OFFRES = { quotidienne: 1, hebdomadaire: 7, mensuelle: 30 };
+  function offre(id) { return DONNEES.offres[DONNEES.joueur.pays].find((o) => o.id === id); }
+  /* « abonnement mensuel » : l'identifiant d'offre (mensuelle…) accordé avec « abonnement » */
+  const ADJECTIFS = { quotidienne: "quotidien", hebdomadaire: "hebdomadaire", mensuelle: "mensuel" };
+  function nomOffre(id) { return "abonnement " + (ADJECTIFS[id] || id); }
+
+  /* État de l'abonnement : actif, resilie, expire ou aucun */
+  function etatAbonnement() {
+    const memo = Etat.get("abonnement") || {};
+    const base = Object.assign({}, DONNEES.joueur.abonnement, memo);
+    if (!abonne()) return Object.assign(base, { statut: memo.statut === "expire" ? "expire" : "aucun" });
+    return Object.assign(base, { statut: memo.statut === "resilie" ? "resilie" : "actif" });
+  }
+
+  /* Paiement confirmé : l'abonnement démarre, l'accès s'ouvre aussitôt (S11-03) */
+  function souscrire(idOffre) {
+    const o = offre(idOffre);
+    const jours = DUREES_OFFRES[idOffre] + (o.essai ? parseInt(o.essai, 10) : 0);
+    const echeance = new Date(maintenant().getTime() + jours * 86400000).toISOString().slice(0, 10);
+    Etat.set("abonnement", { offre: idOffre, echeance, statut: "actif" });
+    Etat.set("abonne", true);
+  }
+  /* Mettre fin : l'accès reste ouvert jusqu'à l'échéance (S11-04) */
+  function resilier() {
+    Etat.set("abonnement", Object.assign({}, etatAbonnement(), { statut: "resilie" }));
+  }
+  /* Expiration (fin de période ou échec de reconduction) : retour au niveau gratuit, historique conservé */
+  function expirer() {
+    Etat.set("abonnement", Object.assign({}, etatAbonnement(), { statut: "expire", echeance: "2026-10-08" }));
+    Etat.set("abonne", false);
+  }
+
+  /* ---------- Identifiants de jeu du joueur (modifiables dans 23) ---------- */
+  function gamertags() { return Object.assign({}, DONNEES.joueur.gamertags, Etat.get("gamertags") || {}); }
 
   /* ---------- Horloge accélérée (écrans 11, 14, 15) ----------
      Dans la salle de match, le temps défile 30 fois plus vite : 1 s = 30 s.
@@ -480,6 +527,7 @@ const Esport = (function () {
     equipe, changerEquipe, tailleEquipe, reglementAAccepter, accepterReglement, lireScenario,
     jourLong, jourCourt, heure, blocDate, prix,
     badges, libelleFormat, libelleMode, carteTournoi, carteUne, contenusVisibles, ligneContenu, monter,
+    duree, contenu, contenuAccessible, offre, nomOffre, etatAbonnement, souscrire, resilier, expirer, gamertags,
     horloge, regleHorloge, demarrerHorloge, plus, hhmm, rebours,
     monMatch, majMonMatch, cleMonMatch, preparerMatchDemo, finPrevue, limiteDeclaration, resultatsMatchs, enregistrerResultat, enregistrerMonResultat,
     vainqueur, doubleElimination, propager, arbre, recalculeApresArbitrage, prochainMatch, carteProchainMatch

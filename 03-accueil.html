@@ -178,10 +178,12 @@
   function rendreAbonnement() {
     const zone = document.getElementById("abonnement");
     if (Esport.abonne()) {
-      const a = DONNEES.joueur.abonnement;
+      // Abonné (actif ou résilié) : rappel compact, jamais d'invitation à s'abonner (S11-03)
+      const a = Esport.etatAbonnement();
       zone.innerHTML = '<a href="#" class="encart rappel-abonnement" data-ecran="24">' +
         Esport.icone("coche", "f-success-dark") +
-        "<div><strong>Abonnement " + a.offre + " actif</strong><p>Jusqu'au " + Esport.jourCourt(a.echeance) + " · tous les tournois et contenus sont ouverts</p></div></a>";
+        "<div><strong>" + Esport.nomOffre(a.offre).replace(/^a/, "A") + (a.statut === "resilie" ? " résilié" : " actif") + "</strong><p>" +
+        (a.statut === "resilie" ? "Accès conservé jusqu'au " : "Jusqu'au ") + Esport.jourCourt(a.echeance) + " · tous les tournois et contenus sont ouverts</p></div></a>";
       return;
     }
     const offres = DONNEES.offres[DONNEES.joueur.pays];
