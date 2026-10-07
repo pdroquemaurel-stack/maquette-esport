@@ -521,6 +521,9 @@ svg { display: block; flex-shrink: 0; }
 .jeu-efootball { background: linear-gradient(135deg, var(--color-game-green-bg), var(--color-game-green)); }
 .jeu-codm { background: linear-gradient(135deg, var(--color-game-blue-bg), var(--color-game-blue)); }
 
+/* Image du jeu : couvre tout le bloc sans déformation, recadrée au centre au minimum nécessaire */
+.visuel-image { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center; display: block; }
+
 .visuel-petit { width: 44px; height: 44px; border-radius: var(--radius-sm); }
 .visuel-grand { width: 100%; height: 100%; border-radius: 0; }
 .visuel-grand svg { width: 96px; height: 96px; opacity: .9; }

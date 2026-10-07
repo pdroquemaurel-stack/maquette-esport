@@ -55,11 +55,18 @@ const Esport = (function () {
     codm: '<path class="f-white" d="M11 2h2v3.1A7 7 0 0 1 18.9 11H22v2h-3.1A7 7 0 0 1 13 18.9V22h-2v-3.1A7 7 0 0 1 5.1 13H2v-2h3.1A7 7 0 0 1 11 5.1zm1 5a5 5 0 1 0 0 10 5 5 0 0 0 0-10zm0 3a2 2 0 1 1 0 4 2 2 0 0 1 0-4z"/>'
   };
 
-  /* Bloc visuel d'un jeu (fond dégradé + pictogramme). taille : "petit" ou "grand" */
+  /* Bloc visuel d'un jeu. taille : "petit", "grand", "bandeau" ou rien (tuile).
+     Avec une image (DONNEES.jeux[].images) : l'image couvre le bloc sans déformation (object-fit: cover),
+     le carré pour les petits formats, le large pour les bandeaux et en-têtes.
+     Dessous, le dégradé et le pictogramme restent visibles si l'image ne se charge pas. */
   function visuelJeu(idJeu, taille) {
-    return '<span class="visuel-jeu jeu-' + idJeu + (taille ? " visuel-" + taille : "") + '" aria-hidden="true">' +
+    const images = (jeu(idJeu) || {}).images;
+    const format = taille === "grand" || taille === "bandeau" ? "large" : "carre";
+    const image = images && images[format]
+      ? '<img class="visuel-image" src="' + ressource(images[format]) + '" alt="" onerror="this.remove()">' : "";
+    return '<span class="visuel-jeu jeu-' + idJeu + (taille ? " visuel-" + taille : "") + (image ? " avec-image" : "") + '" aria-hidden="true">' +
       '<span class="visuel-forme"></span>' +
-      '<svg viewBox="0 0 24 24">' + PICTOS_JEUX[idJeu] + "</svg></span>";
+      '<svg viewBox="0 0 24 24">' + PICTOS_JEUX[idJeu] + "</svg>" + image + "</span>";
   }
 
   /* ---------- Accès aux données ---------- */

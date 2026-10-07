@@ -52,6 +52,12 @@ function pageCourante() {
 function rechercheCourante() {
   return ROUTEUR ? window.__RECHERCHE || "" : window.location.search;
 }
+/* Adresse d'une image du projet (« images/jeux/pubg-carre.png »).
+   Dans le fichier unique, les images sont intégrées : le routeur fournit leur contenu. */
+function ressource(chemin) {
+  return (ROUTEUR && ROUTEUR.images && ROUTEUR.images[chemin]) || chemin;
+}
+
 /* Ouvre une page : « 06-tournoi.html?id=t01 » */
 function ouvrirPage(url) {
   if (ROUTEUR) ROUTEUR.aller(url);

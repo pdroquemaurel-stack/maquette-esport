@@ -47,8 +47,18 @@ fichiersEcrans.forEach((fichier) => {
   PAGES[fichier] = html;
 });
 
+/* ---- Images citées dans js/data.js (visuels des jeux) : intégrées une seule fois ----
+   Les écrans les obtiennent par ressource() (js/nav.js), via le routeur. */
+const IMAGES = {};
+const TYPES_IMAGES = { ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp" };
+(JS.data.match(/"images\/[^"]+\.(?:png|jpe?g|webp)"/g) || []).forEach((guillemets) => {
+  const chemin = guillemets.slice(1, -1);
+  if (!fs.existsSync(path.join(RACINE, chemin))) { console.warn("Image absente, ignorée : " + chemin); return; }
+  IMAGES[chemin] = "data:" + TYPES_IMAGES[path.extname(chemin).toLowerCase()] + ";base64," + fs.readFileSync(path.join(RACINE, chemin)).toString("base64");
+});
+
 /* JSON sûr dans une balise <script> : tous les « < » sont échappés */
-const donnees = JSON.stringify({ CSS, JS, PAGES, accueil: ECRANS["00a"].fichier }).replace(/</g, "\\u003c");
+const donnees = JSON.stringify({ CSS, JS, PAGES, IMAGES, accueil: ECRANS["00a"].fichier }).replace(/</g, "\\u003c");
 
 /* Routeur, écrit comme une fonction normale puis intégré tel quel.
    Il ne contient ni « <script » ni commentaire HTML, pour ne pas troubler la lecture du navigateur. */
@@ -79,6 +89,7 @@ function routeur() {
     courant: null,
     pile: [],          // écrans précédents, pour le bouton retour
     memoire: {},       // stockage de secours si localStorage est indisponible
+    images: D.IMAGES,  // images intégrées, par chemin (« images/jeux/pubg-carre.png »)
     aller(url) {
       if (Routeur.courant) Routeur.pile.push(Routeur.courant);
       afficher(url);
@@ -119,4 +130,4 @@ ${CSS.tokens}
 `;
 
 fs.writeFileSync(path.join(RACINE, "maquette-esport.html"), sortie);
-console.log("maquette-esport.html : " + Object.keys(PAGES).length + " écrans, " + Math.round(sortie.length / 1024) + " Ko");
+console.log("maquette-esport.html : " + Object.keys(PAGES).length + " écrans, " + Object.keys(IMAGES).length + " images, " + Math.round(sortie.length / 1024) + " Ko");

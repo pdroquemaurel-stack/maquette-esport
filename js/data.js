@@ -260,21 +260,32 @@ const DONNEES = {
 
   /* ---- Jeux ----
      boutique : offres d'achats intégrés activées par pays, prix en monnaie locale (S05-05).
-     Un jeu sans offre n'affiche pas de lien vers la boutique. */
+     Un jeu sans offre n'affiche pas de lien vers la boutique.
+     images : visuels du jeu (dossier images/jeux), affichés sans déformation, recadrés au minimum
+     pour remplir chaque emplacement. carre : tuiles et vignettes ; large : bandeaux et en-têtes.
+     Pour changer un visuel, remplacer le fichier PNG (même nom) ou modifier le chemin ici.
+     Sans image (ou si le fichier manque), le dégradé et le pictogramme du jeu s'affichent. */
   jeux: [
     {
       id: "freefire", nom: "Free Fire", genre: "Battle royale", equipe: 4,
+      images: { carre: "images/jeux/freefire-carre.png", large: "images/jeux/freefire-large.png" },
       boutique: { MA: [{ libelle: "100 diamants", prix: 10 }, { libelle: "520 diamants", prix: 49 }, { libelle: "Pass Booyah", prix: 39 }] }
     },
     {
       id: "pubg", nom: "PUBG Mobile", genre: "Battle royale", equipe: 4,
+      images: { carre: "images/jeux/pubg-carre.png", large: "images/jeux/pubg-large.png" },
       boutique: { MA: [{ libelle: "60 UC", prix: 9 }, { libelle: "325 UC", prix: 45 }] }
     },
     {
       id: "efootball", nom: "eFootball", genre: "Football", equipe: 1,
+      images: { carre: "images/jeux/efootball-carre.png", large: "images/jeux/efootball-large.png" },
       boutique: { MA: [{ libelle: "130 pièces", prix: 12 }, { libelle: "550 pièces", prix: 49 }] }
     },
-    { id: "codm", nom: "Call of Duty: Mobile", genre: "Tir", equipe: 5, boutique: null }
+    {
+      id: "codm", nom: "Call of Duty: Mobile", genre: "Tir", equipe: 5,
+      images: { carre: "images/jeux/codm-carre.png", large: "images/jeux/codm-large.png" },
+      boutique: null
+    }
   ],
 
   /* ---- Tournois ----

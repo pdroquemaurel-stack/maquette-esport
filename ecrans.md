@@ -276,6 +276,9 @@ En-tête      : 🔔 25 Notifications        Menu démo : icône en haut à droi
 | 5 | 18, 19, 20, 21, 22, 23, 24 et test de parcours `outils/parcours-abonnement.html` | terminé |
 | 6 | 25, 27, 28, fichier unique `maquette-esport.html`, tests `outils/parcours-notifications.html` et `outils/test-fichier-unique.html` | terminé |
 | 7 | Preuve à chaque déclaration (14, 15), discussion de match (11), indicateurs et badges (17, 23), équipe fermée → ouverte (10), bouton « S'abonner pour s'inscrire » réduit (style.css), 29 classement mensuel des MaxPoints (accès 03, 23, 25) | terminé |
+| 8 | Visuels des jeux en PNG (`images/jeux/<jeu>-carre.png` et `<jeu>-large.png`), déclarés dans `js/data.js` (jeux[].images), affichés sans déformation (object-fit: cover) partout où le jeu apparaît ; intégrés au fichier unique | terminé |
+
+**Visuels des jeux** : le carré sert aux tuiles et vignettes, le large aux bandeaux et en-têtes. Pour changer un visuel, remplacer le PNG en gardant son nom (ou changer le chemin dans `js/data.js`), puis reconstruire le fichier unique. Sans image, le dégradé et le pictogramme du jeu s'affichent.
 
 **Tests** (dossier `outils/`, à ouvrir avec l'accès entre fichiers locaux autorisé, par exemple `msedge --allow-file-access-from-files`) : `controle.html#gratuit` et `#abonne` (débordements, textes coupés, barre du bas, liens, impasses), `parcours-match.html`, `parcours-abonnement.html`, `parcours-notifications.html`, `test-fichier-unique.html`. Ajouter `?unique` pour les rejouer dans le fichier unique.
 **Fichier unique** : `maquette-esport.html`, reconstruit par `node outils/construire-fichier-unique.js` après chaque modification.
