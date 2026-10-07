@@ -1,0 +1,783 @@
+/* Feuille de style commune à tous les écrans de la maquette.
+   Toutes les couleurs, tailles et espacements viennent de tokens.css. */
+
+/* ============ Base ============ */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body { height: 100%; }
+
+body {
+  font-family: var(--font-family);
+  font-size: var(--font-size-md);
+  line-height: var(--line-height-base);
+  color: var(--color-text);
+  background: var(--color-bg-muted);
+  -webkit-font-smoothing: antialiased;
+}
+
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+a { color: inherit; text-decoration: none; }
+svg { display: block; flex-shrink: 0; }
+
+/* Classes de remplissage pour les SVG (les attributs fill n'acceptent pas var()) */
+.f-primary { fill: var(--color-primary); }
+.f-primary-soft { fill: var(--color-primary-soft); }
+.f-white { fill: var(--color-on-primary); }
+.f-text { fill: var(--color-text); }
+.f-muted { fill: var(--color-text-muted); }
+.f-alert { fill: var(--color-alert); }
+.f-success { fill: var(--color-success); }
+.f-success-dark { fill: var(--color-success-dark); }
+.f-warning { fill: var(--color-warning); }
+.f-blue { fill: var(--color-game-blue); }
+.f-green { fill: var(--color-game-green); }
+.f-purple { fill: var(--color-game-purple); }
+.f-flame-dark { fill: var(--color-gaming-flame-dark); }
+.f-sky { fill: var(--illu-sky); }
+.f-sand { fill: var(--illu-sand); }
+.f-terracotta { fill: var(--illu-terracotta); }
+.f-palm { fill: var(--illu-palm); }
+.f-car { fill: var(--illu-car-red); }
+.f-skin { fill: var(--illu-skin); }
+.f-hair { fill: var(--illu-hair); }
+.f-gray-light { fill: var(--illu-gray-light); }
+.f-gray { fill: var(--illu-gray); }
+.f-gray-dark { fill: var(--illu-gray-dark); }
+.f-black { fill: var(--illu-black); }
+.f-gold { fill: var(--illu-gold); }
+.f-gold-light { fill: var(--illu-gold-light); }
+.f-bill { fill: var(--illu-bill-green); }
+.f-pink { fill: var(--illu-neon-pink); }
+.f-purple-deep { fill: var(--illu-purple-deep); }
+.f-purple-dark { fill: var(--illu-purple-dark); }
+.s-text { stroke: var(--color-text); }
+.s-white { stroke: var(--color-on-primary); }
+.s-primary { stroke: var(--color-primary); }
+.s-blue { stroke: var(--color-game-blue); }
+.s-pink { stroke: var(--illu-neon-pink); }
+.s-yellow { stroke: var(--color-warning); }
+.s-purple { stroke: var(--color-game-purple); }
+
+/* ============ Cadre de téléphone ============ */
+/* Sur ordinateur : téléphone centré. Sur mobile : plein écran. */
+.cadre {
+  min-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-6);
+}
+
+.telephone {
+  position: relative;
+  width: var(--screen-width);
+  height: var(--screen-height);
+  background: var(--color-bg);
+  border-radius: 48px;
+  border: 10px solid var(--illu-black);
+  box-shadow: var(--shadow-raised);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+@media (max-width: 480px) {
+  .cadre { padding: 0; }
+  .telephone {
+    width: 100%;
+    height: 100vh;
+    height: 100dvh;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+}
+
+/* Thème sombre (univers Gaming) */
+.telephone.sombre { background: var(--color-bg-dark); color: var(--color-text-on-dark); }
+
+/* ============ Barre d'état du téléphone ============ */
+.barre-etat {
+  height: var(--status-bar-height);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--space-6);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  position: relative;
+  z-index: 30;
+}
+.barre-etat .icones-systeme { display: flex; gap: var(--space-1); align-items: center; }
+.barre-etat svg { width: 16px; height: 16px; }
+.sombre .barre-etat svg .f-text { fill: var(--color-text-on-dark); }
+
+/* ============ Zone de contenu défilante ============ */
+.contenu {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
+}
+.contenu::-webkit-scrollbar { display: none; }
+
+/* ============ Boutons icône (zone tactile 44 px) ============ */
+.bouton-icone {
+  width: var(--touch-target);
+  height: var(--touch-target);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  border-radius: var(--radius-round);
+}
+.bouton-icone svg { width: var(--icon-size); height: var(--icon-size); }
+
+.pastille {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: var(--radius-pill);
+  background: var(--color-alert);
+  color: var(--color-on-primary);
+  font-size: 10px;
+  font-weight: var(--font-weight-bold);
+  line-height: 16px;
+  text-align: center;
+}
+
+/* ============ Titres de section ============ */
+.titre-section {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-tight);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0 var(--page-gutter);
+  margin: var(--space-6) 0 var(--space-3);
+}
+
+/* ============ Carrousel horizontal ============ */
+.carrousel {
+  display: flex;
+  gap: var(--space-3);
+  overflow-x: auto;
+  padding: 0 var(--page-gutter);
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+.carrousel::-webkit-scrollbar { display: none; }
+.carrousel > * { scroll-snap-align: start; flex-shrink: 0; }
+
+/* ============ Badges ============ */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  height: 28px;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-pill);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+}
+.badge svg { width: 14px; height: 14px; }
+.badge-succes { background: var(--color-success-dark); color: var(--color-on-primary); }
+.badge-blanc { background: var(--color-surface); color: var(--color-text); }
+
+/* ============ Boutons ============ */
+.bouton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: var(--touch-target);
+  padding: 0 var(--space-5);
+  border-radius: var(--radius-pill);
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-md);
+}
+.bouton-primaire { background: var(--color-primary); color: var(--color-on-primary); }
+.bouton-primaire:active { background: var(--color-primary-pressed); }
+.bouton-secondaire { background: var(--color-surface); color: var(--color-text); border: 1px solid var(--color-border-strong); }
+.bouton-pleine-largeur { width: 100%; }
+
+.bouton-rond-orange {
+  width: var(--touch-target);
+  height: var(--touch-target);
+  border-radius: var(--radius-round);
+  background: var(--color-primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.bouton-rond-orange svg { width: 20px; height: 20px; }
+
+/* ============ Barre de navigation du bas (Max it) ============ */
+.nav-bas {
+  height: var(--bottom-nav-height);
+  flex-shrink: 0;
+  display: flex;
+  align-items: stretch;
+  justify-content: space-around;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-nav);
+  padding: 0 var(--space-2);
+  position: relative;
+  z-index: 10;
+}
+.nav-bas .onglet {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  font-weight: var(--font-weight-medium);
+  min-width: var(--touch-target);
+}
+.nav-bas .onglet .icone-onglet {
+  width: 48px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-pill);
+}
+.nav-bas .onglet svg { width: 22px; height: 22px; }
+.nav-bas .onglet.actif { color: var(--color-primary); font-weight: var(--font-weight-bold); }
+.nav-bas .onglet.actif .icone-onglet { background: var(--color-primary-soft); }
+
+/* Bouton central orange en saillie */
+.nav-bas .onglet-central { justify-content: flex-start; }
+.nav-bas .bouton-central {
+  width: var(--bottom-nav-fab-size);
+  height: var(--bottom-nav-fab-size);
+  margin-top: -14px;
+  border-radius: var(--radius-round);
+  background: var(--color-primary);
+  box-shadow: var(--shadow-fab);
+  border: 4px solid var(--color-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.nav-bas .bouton-central svg { width: 26px; height: 26px; }
+
+/* ============ Feuille modale ============ */
+.voile {
+  position: absolute;
+  inset: 0;
+  background: var(--color-overlay);
+  z-index: 50;
+  display: none;
+}
+.voile.ouvert { display: block; }
+
+.feuille {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  max-height: 85%;
+  background: var(--color-surface);
+  border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;
+  padding: var(--space-3) var(--page-gutter) var(--space-6);
+  overflow-y: auto;
+  color: var(--color-text);
+}
+.poignee {
+  width: 40px;
+  height: 5px;
+  border-radius: var(--radius-pill);
+  background: var(--color-border-strong);
+  margin: 0 auto var(--space-4);
+}
+
+/* Boîte de dialogue centrée (messages bloquants) */
+.dialogue {
+  position: absolute;
+  left: var(--space-6);
+  right: var(--space-6);
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--color-surface);
+  color: var(--color-text);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  text-align: center;
+  box-shadow: var(--shadow-raised);
+}
+.dialogue h2 { font-size: var(--font-size-lg); margin: var(--space-3) 0 var(--space-2); }
+.dialogue p { color: var(--color-text-secondary); font-size: var(--font-size-sm); margin-bottom: var(--space-5); }
+.dialogue .icone-dialogue {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto;
+  border-radius: var(--radius-round);
+  background: var(--color-primary-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.dialogue .icone-dialogue svg { width: 28px; height: 28px; }
+.dialogue .bouton + .bouton { margin-top: var(--space-2); }
+
+/* ============ Message éphémère ============ */
+.toast {
+  position: absolute;
+  left: var(--space-6);
+  right: var(--space-6);
+  bottom: calc(var(--bottom-nav-height) + var(--space-4));
+  background: var(--illu-black);
+  color: var(--color-text-on-dark);
+  font-size: var(--font-size-sm);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-sm);
+  text-align: center;
+  z-index: 60;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity .2s, transform .2s;
+  pointer-events: none;
+}
+.toast.visible { opacity: 1; transform: none; }
+
+/* ============ Menu de démonstration ============ */
+.demo-bouton {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-round);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: .55;
+  /* Zone tactile élargie sans grossir l'icône */
+  position: relative;
+}
+.demo-bouton::after { content: ""; position: absolute; inset: -8px; }
+.demo-bouton:hover { opacity: 1; }
+.demo-bouton svg { width: 16px; height: 16px; }
+.sombre .demo-bouton .f-text { fill: var(--color-text-on-dark); }
+
+.demo-titre {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  margin-bottom: var(--space-1);
+}
+.demo-aide { font-size: var(--font-size-sm); color: var(--color-text-secondary); margin-bottom: var(--space-4); }
+.demo-groupe {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  margin: var(--space-5) 0 var(--space-2);
+}
+
+/* Interrupteur segmenté gratuit / abonné */
+.segment {
+  display: flex;
+  background: var(--color-bg-muted);
+  border-radius: var(--radius-pill);
+  padding: var(--space-1);
+}
+.segment button {
+  flex: 1;
+  min-height: 40px;
+  border-radius: var(--radius-pill);
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+.segment button.actif { background: var(--color-primary); color: var(--color-on-primary); }
+
+/* Lignes du menu de démo */
+.demo-ligne {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: var(--touch-target);
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+  font-size: var(--font-size-md);
+}
+.demo-ligne small { display: block; color: var(--color-text-muted); font-size: var(--font-size-xs); }
+.demo-ligne:disabled { color: var(--color-text-muted); cursor: default; }
+.demo-ligne .lot {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  padding: 2px var(--space-2);
+  white-space: nowrap;
+}
+.demo-ligne .fleche { width: 18px; height: 18px; }
+
+/* Interrupteur on/off */
+.inter {
+  width: 44px;
+  height: 26px;
+  border-radius: var(--radius-pill);
+  background: var(--color-border-strong);
+  position: relative;
+  flex-shrink: 0;
+  transition: background .15s;
+}
+.inter::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--radius-round);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+  transition: transform .15s;
+}
+.inter.on { background: var(--color-primary); }
+.inter.on::after { transform: translateX(18px); }
+
+.demo-reinit {
+  margin-top: var(--space-5);
+  color: var(--color-primary);
+  font-weight: var(--font-weight-bold);
+  min-height: var(--touch-target);
+  width: 100%;
+}
+
+/* ============ Utilitaires ============ */
+.cache-visuel {
+  position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
+}
+
+/* =====================================================================
+   Plateforme e-sport (lot 2) — composants communs
+   ===================================================================== */
+
+/* ============ En-tête e-sport : retour, titre, notifications ============ */
+.entete-esport {
+  height: var(--top-bar-height);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 0 var(--space-2);
+  background: var(--color-bg);
+}
+.entete-esport .entete-espace { width: var(--space-2); }
+.entete-titre {
+  flex: 1;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-tight);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Libellé sous le bouton central de la barre du bas e-sport */
+.nav-bas .libelle-central { margin-top: 2px; }
+.nav-bas .libelle-central.actif { color: var(--color-primary); font-weight: var(--font-weight-bold); }
+
+/* ============ Visuels des jeux (dégradé + pictogramme, sans photo) ============ */
+.visuel-jeu {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: var(--radius-md);
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+}
+.visuel-jeu svg { width: 45%; height: 45%; position: relative; }
+/* Formes anguleuses, en écho au haut de l'univers Gaming */
+.visuel-forme {
+  position: absolute;
+  right: -20%;
+  top: -30%;
+  width: 70%;
+  height: 160%;
+  transform: rotate(24deg);
+  background: var(--color-glass-dark);
+}
+.jeu-freefire { background: linear-gradient(135deg, var(--color-gaming-flame-dark), var(--color-primary)); }
+.jeu-pubg { background: linear-gradient(135deg, var(--illu-black), var(--illu-gold)); }
+.jeu-efootball { background: linear-gradient(135deg, var(--color-game-green-bg), var(--color-game-green)); }
+.jeu-codm { background: linear-gradient(135deg, var(--color-game-blue-bg), var(--color-game-blue)); }
+
+.visuel-petit { width: 44px; height: 44px; border-radius: var(--radius-sm); }
+.visuel-grand { width: 100%; height: 100%; border-radius: 0; }
+.visuel-grand svg { width: 96px; height: 96px; opacity: .9; }
+.visuel-bandeau { width: 100%; height: 120px; border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
+.visuel-bandeau svg { width: 56px; height: 56px; }
+
+/* ============ Puces d'état (badges des tournois) ============ */
+.puce-etat {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  height: 22px;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-pill);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  white-space: nowrap;
+}
+.puce-etat svg { width: 12px; height: 12px; }
+.puce-inscrit { background: var(--color-success-dark); color: var(--color-on-primary); }
+.puce-attente { background: var(--color-warning); color: var(--color-text); }
+.puce-reserve { background: var(--illu-black); color: var(--color-on-primary); }
+.puce-abonnes { background: var(--color-surface); color: var(--color-text); border: 1px solid var(--color-border-strong); }
+.puce-mea { background: var(--color-surface-warm); color: var(--color-text); }
+.puce-clos { background: var(--color-bg-muted); color: var(--color-text-secondary); }
+.puce-direct { background: var(--color-surface); color: var(--color-alert); border: 1px solid var(--color-alert); }
+.puce-direct i {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-round);
+  background: var(--color-alert);
+  animation: clignote 1.2s infinite;
+}
+@keyframes clignote { 50% { opacity: .2; } }
+
+/* ============ Carte de tournoi (liste) ============ */
+.carte-tournoi {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  margin: 0 var(--page-gutter) var(--space-3);
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+}
+.carte-date {
+  width: 52px;
+  height: 56px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-warm);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  line-height: 1.1;
+}
+.carte-date b { font-size: var(--font-size-xl); color: var(--color-text); }
+.carte-corps { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.carte-titre { font-size: var(--font-size-md); font-weight: var(--font-weight-bold); line-height: var(--line-height-tight); }
+.carte-sous-titre { font-size: var(--font-size-sm); color: var(--color-text-secondary); }
+.carte-badges { display: flex; flex-wrap: wrap; gap: var(--space-1); margin-top: var(--space-1); }
+.carte-badges:empty { display: none; }
+.carte-chevron { width: 20px; height: 20px; }
+
+/* ============ Carte large (carrousel « à la une ») ============ */
+.carte-une {
+  position: relative;
+  width: 280px;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  margin-bottom: var(--space-2);
+}
+.carte-une-badges {
+  position: absolute;
+  top: var(--space-3);
+  left: var(--space-3);
+  right: var(--space-3);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+.carte-une-texte { display: flex; flex-direction: column; gap: 2px; padding: var(--space-3) var(--space-4) var(--space-4); }
+
+/* ============ Lien « Voir tout » à droite d'un titre de section ============ */
+.titre-section .voir-tout {
+  margin-left: auto;
+  font-size: var(--font-size-sm);
+  color: var(--color-primary);
+  font-weight: var(--font-weight-bold);
+  min-height: var(--touch-target);
+  display: inline-flex;
+  align-items: center;
+}
+
+/* ============ Puces de filtre (sélection) ============ */
+.puces {
+  display: flex;
+  gap: var(--space-2);
+  overflow-x: auto;
+  padding: 0 var(--page-gutter);
+  scrollbar-width: none;
+}
+.puces::-webkit-scrollbar { display: none; }
+.puces.puces-retour { flex-wrap: wrap; padding: 0; overflow: visible; }
+.puce {
+  flex-shrink: 0;
+  min-height: 36px;
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-surface);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+}
+.puce.actif {
+  background: var(--color-primary-soft);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  font-weight: var(--font-weight-bold);
+}
+
+/* ============ Champ de saisie et recherche ============ */
+.champ {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: 48px;
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+.champ:focus-within { border-color: var(--color-primary); }
+.champ svg { width: 20px; height: 20px; }
+.champ input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  font: inherit;
+  background: none;
+  color: var(--color-text);
+}
+.champ input::placeholder { color: var(--color-text-muted); }
+.champ.erreur { border-color: var(--color-alert); }
+
+/* ============ Onglets (segment sur fond gris) ============ */
+.onglets {
+  display: flex;
+  margin: 0 var(--page-gutter);
+  background: var(--color-bg-muted);
+  border-radius: var(--radius-pill);
+  padding: var(--space-1);
+}
+.onglets button {
+  flex: 1;
+  min-height: 40px;
+  border-radius: var(--radius-pill);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-secondary);
+}
+.onglets button.actif { background: var(--color-surface); color: var(--color-text); box-shadow: var(--shadow-sm); }
+
+/* ============ Encart d'information (bandeau) ============ */
+.encart {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+  margin: 0 var(--page-gutter);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-warm);
+  font-size: var(--font-size-sm);
+}
+.encart > svg { width: 20px; height: 20px; margin-top: 1px; }
+.encart strong { display: block; font-size: var(--font-size-md); }
+.encart p { color: var(--color-text-secondary); }
+.encart-alerte { background: var(--color-primary-soft); }
+.encart .lien-encart { color: var(--color-primary); font-weight: var(--font-weight-bold); display: inline-block; margin-top: var(--space-1); }
+
+/* ============ Lignes de liste (joueurs, contenus) ============ */
+.ligne {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 56px;
+  padding: var(--space-2) var(--page-gutter);
+  border-bottom: 1px solid var(--color-border);
+}
+.ligne:last-child { border-bottom: 0; }
+.ligne-corps { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.ligne-titre { font-weight: var(--font-weight-bold); line-height: var(--line-height-tight); }
+.ligne-sous-titre { font-size: var(--font-size-sm); color: var(--color-text-secondary); }
+.ligne > svg { width: 20px; height: 20px; }
+
+/* Ligne de contenu (article ou vidéo) */
+.contenu-ligne .vignette { position: relative; }
+.contenu-ligne .vignette .lecture {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.contenu-ligne .vignette .lecture svg { width: 20px; height: 20px; }
+.contenu-ligne .ligne-titre { font-size: var(--font-size-sm); }
+.contenu-ligne .meta { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-2); align-items: center; margin-top: var(--space-1); font-size: var(--font-size-xs); color: var(--color-text-muted); }
+
+/* Avatar rond avec initiale (aucune photo : pas de donnée personnelle) */
+.avatar {
+  width: var(--avatar-size);
+  height: var(--avatar-size);
+  flex-shrink: 0;
+  border-radius: var(--radius-round);
+  background: var(--color-surface-warm);
+  color: var(--color-primary);
+  font-weight: var(--font-weight-bold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-transform: uppercase;
+}
+.avatar-moi { background: var(--color-primary); color: var(--color-on-primary); }
+
+/* ============ Barre d'action fixée en bas (page d'un tournoi) ============ */
+.barre-action {
+  flex-shrink: 0;
+  padding: var(--space-3) var(--page-gutter) var(--space-4);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-nav);
+  position: relative;
+  z-index: 10;
+}
+.barre-action .aide-action {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  text-align: center;
+  margin-top: var(--space-2);
+}
+.bouton:disabled { background: var(--color-bg-muted); color: var(--color-text-muted); border-color: var(--color-bg-muted); cursor: default; }
+.bouton-lien { color: var(--color-primary); font-weight: var(--font-weight-bold); min-height: var(--touch-target); }
+
+/* État vide (recherche sans résultat) */
+.vide {
+  text-align: center;
+  padding: var(--space-10) var(--space-6);
+  color: var(--color-text-secondary);
+}
+.vide strong { display: block; color: var(--color-text); font-size: var(--font-size-lg); margin-bottom: var(--space-1); }
+.vide .bouton { margin-top: var(--space-4); }
+
+/* Espace sous le contenu pour que la dernière carte ne colle pas à la barre du bas */
+.fin-contenu { height: var(--space-6); }

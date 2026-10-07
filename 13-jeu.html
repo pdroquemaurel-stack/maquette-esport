@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<!-- Écran 13 — Page d'un jeu (13-jeu.html?id=freefire).
+     US : S05-05 (tournois à venir et en cours, classement, articles, vidéos, directs ;
+     lien vers la boutique Max it avec les offres du pays en monnaie locale, absent si le jeu n'a pas d'offre). -->
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Jeu</title>
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .hero { position: relative; height: 160px; flex-shrink: 0; }
+    .hero .boutons-hero { position: absolute; top: var(--space-2); left: var(--space-3); right: var(--space-3); display: flex; justify-content: space-between; }
+    .bouton-verre-rond { background: var(--color-glass-dark); }
+
+    .tete { padding: var(--space-4) var(--page-gutter) 0; }
+    .tete h1 { font-size: var(--font-size-xxl); line-height: var(--line-height-tight); }
+    .tete p { color: var(--color-text-secondary); font-size: var(--font-size-sm); }
+
+    /* Boutique Max it (S05-05) */
+    .boutique { margin: var(--space-4) var(--page-gutter) 0; padding: var(--space-4); border-radius: var(--radius-lg); background: var(--color-surface-warm); }
+    .boutique .titre-boutique { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-3); }
+    .boutique .titre-boutique strong { display: block; }
+    .boutique .titre-boutique small { color: var(--color-text-secondary); font-size: var(--font-size-xs); }
+    .boutique .icone-boutique { width: 40px; height: 40px; border-radius: var(--radius-sm); background: var(--color-primary); display: flex; align-items: center; justify-content: center; }
+    .boutique .icone-boutique svg { width: 22px; height: 22px; }
+    .offres-jeu { display: flex; gap: var(--space-2); overflow-x: auto; scrollbar-width: none; margin-bottom: var(--space-4); }
+    .offre-jeu { flex-shrink: 0; background: var(--color-surface); border-radius: var(--radius-md); padding: var(--space-2) var(--space-3); font-size: var(--font-size-sm); }
+    .offre-jeu b { display: block; color: var(--color-primary); }
+
+    .bloc-liens { margin: 0 var(--page-gutter); background: var(--color-surface); border-radius: var(--radius-md); box-shadow: var(--shadow-card); }
+    .vide-section { padding: 0 var(--page-gutter); color: var(--color-text-secondary); font-size: var(--font-size-sm); }
+  </style>
+</head>
+<body data-zone="esport">
+<div class="cadre">
+  <div class="telephone">
+    <div class="barre-etat" data-heure="21:10"></div>
+
+    <main class="contenu" id="page"></main>
+
+    <nav class="nav-bas" data-onglet="03"></nav>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/esport.js"></script>
+<script src="js/demo.js"></script>
+<script>
+  const jeu = Esport.jeu(Nav.param("id")) || Esport.jeu("freefire");
+  document.title = jeu.nom;
+
+  function rendre() {
+    const tournois = Esport.tournoisDuPays().filter((t) => t.jeu === jeu.id);
+    const enCours = tournois.filter((t) => t.etat === "en-cours");
+    const aVenir = tournois.filter((t) => t.etat === "ouvert" || t.etat === "complet").sort((a, b) => a.debut.localeCompare(b.debut));
+    const suivis = tournois.filter((t) => DONNEES.arbres[t.id] || DONNEES.poules[t.id]);
+    const contenus = Esport.contenusVisibles().filter((c) => c.jeu === jeu.id);
+    const offres = jeu.boutique && jeu.boutique[DONNEES.joueur.pays];
+    let html = "";
+
+    // Visuel, retour, notifications
+    html += '<div class="hero">' + Esport.visuelJeu(jeu.id, "grand") +
+      '<div class="boutons-hero">' +
+      '<button class="bouton-icone bouton-verre-rond" data-action="retour" data-repli="03" aria-label="Retour">' + Esport.icone("retour", "f-white") + "</button>" +
+      '<button class="bouton-icone bouton-verre-rond" data-ecran="25" aria-label="Notifications">' + Esport.icone("cloche", "f-white") + "</button>" +
+      "</div></div>";
+    html += '<div class="tete"><h1>' + jeu.nom + "</h1><p>" + jeu.genre + " · " +
+      (jeu.equipe > 1 ? "équipes de " + jeu.equipe : "un contre un") + "</p></div>";
+
+    // Boutique Max it : seulement si le jeu a des offres activées dans le pays
+    if (offres && offres.length) {
+      html += '<section class="boutique" aria-label="Boutique Max it">' +
+        '<div class="titre-boutique"><span class="icone-boutique">' + Esport.icone("boutique", "f-white") + "</span>" +
+        "<span><strong>Boutique Max it</strong><small>Achats intégrés " + jeu.nom + ", payés avec Max it</small></span></div>" +
+        '<div class="offres-jeu">' + offres.map((o) => '<span class="offre-jeu">' + o.libelle + "<b>" + Esport.prix(o.prix) + "</b></span>").join("") + "</div>" +
+        '<a href="#" class="bouton bouton-primaire bouton-pleine-largeur" data-hors="La boutique Max it (offres ' + jeu.nom + ')">Ouvrir la boutique Max it</a>' +
+        "</section>";
+    }
+
+    // Directs : tournois en cours
+    if (enCours.length) {
+      html += '<h2 class="titre-section">En direct <span class="puce-etat puce-direct"><i></i>' + enCours.length + "</span></h2>" +
+        enCours.map(Esport.carteTournoi).join("");
+    }
+
+    // Tournois à venir
+    html += '<h2 class="titre-section">Tournois à venir <a href="#" class="voir-tout" data-ecran="04">Calendrier</a></h2>';
+    html += aVenir.length ? aVenir.map(Esport.carteTournoi).join("") : '<p class="vide-section">Aucun tournoi prévu pour l\'instant.</p>';
+
+    // Classements des tournois du jeu
+    if (suivis.length) {
+      html += '<h2 class="titre-section">Classements</h2><div class="bloc-liens">' + suivis.map((t) =>
+        '<a href="#" class="ligne" data-ecran="12" data-id="' + t.id + '">' + Esport.icone("trophee", "f-primary") +
+        '<span class="ligne-corps"><span class="ligne-titre">' + t.nom + '</span><span class="ligne-sous-titre">' +
+        (t.etat === "termine" ? "Classement final" : "En cours · mis à jour en direct") + "</span></span>" +
+        Esport.icone("chevron", "f-muted") + "</a>"
+      ).join("") + "</div>";
+    }
+
+    // Articles et vidéos du jeu
+    html += '<h2 class="titre-section">Articles et vidéos <a href="#" class="voir-tout" data-ecran="20">Tout voir</a></h2>';
+    html += contenus.length ? contenus.map(Esport.ligneContenu).join("") : '<p class="vide-section">Pas encore de contenu pour ce jeu.</p>';
+    html += '<div class="fin-contenu"></div>';
+
+    document.getElementById("page").innerHTML = html;
+  }
+  Esport.monter(rendre);
+</script>
+</body>
+</html>

@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<!-- Écran 17 — Profil public d'un joueur (17-profil-public.html?pseudo=Rachid_GOAT).
+     US : S01-02 (pseudo, tournois joués, classements), S05-03 (aucune donnée personnelle :
+     seulement le pseudo et le profil public). -->
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Profil public</title>
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .identite { display: flex; flex-direction: column; align-items: center; text-align: center; padding: var(--space-4) var(--page-gutter) 0; }
+    .identite .avatar { width: 88px; height: 88px; font-size: var(--font-size-display); margin-bottom: var(--space-3); }
+    .identite h1 { font-size: var(--font-size-xxl); line-height: var(--line-height-tight); word-break: break-all; }
+    .identite .jeux { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-1); margin-top: var(--space-2); }
+
+    .chiffres { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-2); padding: var(--space-5) var(--page-gutter) 0; }
+    .chiffre { background: var(--color-surface-warm); border-radius: var(--radius-md); padding: var(--space-3) var(--space-2); text-align: center; font-size: var(--font-size-xs); color: var(--color-text-secondary); }
+    .chiffre b { display: block; font-size: var(--font-size-xl); color: var(--color-text); }
+
+    .mon-profil { margin-top: var(--space-4); }
+    .resultat { font-weight: var(--font-weight-bold); font-size: var(--font-size-sm); white-space: nowrap; }
+    .resultat.victoire { color: var(--color-success-dark); }
+    .resultat.en-lice { color: var(--color-primary); }
+    .confidentialite { display: flex; gap: var(--space-2); align-items: flex-start; font-size: var(--font-size-xs); color: var(--color-text-muted); padding: var(--space-4) var(--page-gutter) 0; }
+    .confidentialite svg { width: 16px; height: 16px; }
+  </style>
+</head>
+<body data-zone="esport">
+<div class="cadre">
+  <div class="telephone">
+    <div class="barre-etat" data-heure="21:10"></div>
+    <header class="entete-esport" data-titre="Profil du joueur" data-repli="03"></header>
+
+    <main class="contenu" id="page"></main>
+
+    <nav class="nav-bas" data-onglet=""></nav>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/esport.js"></script>
+<script src="js/demo.js"></script>
+<script>
+  /* Pseudo consulté ; mon pseudo courant correspond au pseudo de data.js */
+  const demande = Nav.param("pseudo") || "Rachid_GOAT";
+  const estMoi = demande === Esport.pseudo() || demande === DONNEES.joueur.pseudo;
+  const pseudoDonnees = estMoi ? DONNEES.joueur.pseudo : demande;
+
+  /* Vainqueur d'un match d'arbre : [A, B, score A, score B, vainqueur si égalité] */
+  function vainqueur(m) {
+    if (!m[0] || !m[1] || m[2] === null || m[3] === null) return null;
+    if (m[2] === m[3]) return m[4] || null;
+    return m[2] > m[3] ? m[0] : m[1];
+  }
+
+  /* Résultats du joueur, retrouvés dans les arbres, les poules et le classement de t10 */
+  function resultats() {
+    const liste = [];
+
+    Object.keys(DONNEES.arbres).forEach((id) => {
+      const arbre = DONNEES.arbres[id];
+      if (!arbre.matchs[0].some((m) => m[0] === pseudoDonnees || m[1] === pseudoDonnees)) return;
+      let texte = "En lice";
+      let classe = "en-lice";
+      arbre.matchs.forEach((tourMatchs, r) => tourMatchs.forEach((m) => {
+        const g = vainqueur(m);
+        if (!g || (m[0] !== pseudoDonnees && m[1] !== pseudoDonnees)) return;
+        if (g !== pseudoDonnees) { texte = "Éliminé en " + arbre.tours[r].toLowerCase(); classe = ""; }
+        else if (r === arbre.matchs.length - 1) { texte = "Vainqueur"; classe = "victoire"; }
+      }));
+      liste.push({ tournoi: Esport.tournoi(id), texte, classe });
+    });
+
+    Object.keys(DONNEES.poules).forEach((id) => {
+      DONNEES.poules[id].forEach((p) => {
+        const rang = p.joueurs.findIndex((j) => j.pseudo === pseudoDonnees);
+        if (rang >= 0) liste.push({ tournoi: Esport.tournoi(id), texte: p.nom + " · " + (rang + 1) + (rang ? "e" : "er"), classe: rang < 2 ? "en-lice" : "" });
+      });
+    });
+
+    // Free Fire Rentrée Cup (t10) : même classement que l'écran 12
+    if (!liste.some((r) => r.tournoi.id === "t10")) {
+      const index = DONNEES.pseudosClassement.indexOf(pseudoDonnees);
+      if (estMoi) liste.push({ tournoi: Esport.tournoi("t10"), texte: "117e sur 128", classe: "" });
+      else if (index >= 0) liste.push({ tournoi: Esport.tournoi("t10"), texte: index + 1 + (index ? "e" : "er") + " sur 128", classe: index === 0 ? "victoire" : "" });
+    }
+    return liste;
+  }
+
+  function rendre() {
+    const pseudo = estMoi ? Esport.pseudo() : demande;
+    const liste = resultats();
+    // Historique repris de l'ancienne plateforme (S01-05), sauf refus du joueur
+    const repris = estMoi && !Etat.get("historiqueNonRepris") ? DONNEES.joueur.historiqueRepris : { tournois: 0, victoires: 0 };
+    const victoires = liste.filter((r) => r.classe === "victoire").length + repris.victoires;
+    const jeux = [...new Set(liste.map((r) => r.tournoi.jeu))].map((id) => Esport.jeu(id).nom);
+    let html = "";
+
+    html += '<div class="identite"><span class="avatar' + (estMoi ? " avatar-moi" : "") + '">' + pseudo[0] + "</span>" +
+      "<h1>" + pseudo + "</h1>" +
+      '<div class="jeux">' + jeux.map((j) => '<span class="puce-etat puce-mea">' + j + "</span>").join("") + "</div></div>";
+
+    html += '<div class="chiffres">' +
+      '<div class="chiffre"><b>' + (liste.length + repris.tournois) + "</b>Tournois joués</div>" +
+      '<div class="chiffre"><b>' + victoires + "</b>Victoires</div>" +
+      '<div class="chiffre"><b>' + liste.filter((r) => r.classe === "en-lice").length + "</b>En cours</div></div>";
+
+    if (estMoi) {
+      html += '<a href="#" class="encart mon-profil" data-ecran="23">' + Esport.icone("profil", "f-primary") +
+        "<div><strong>C'est ton profil public</strong><p>Voici ce que voient les autres joueurs.</p>" +
+        '<span class="lien-encart">Modifier mon profil</span></div></a>';
+    }
+
+    html += '<h2 class="titre-section">Tournois joués</h2>';
+    html += liste.map((r) =>
+      '<a href="#" class="ligne" data-ecran="06" data-id="' + r.tournoi.id + '">' + Esport.visuelJeu(r.tournoi.jeu, "petit") +
+      '<span class="ligne-corps"><span class="ligne-titre">' + r.tournoi.nom + '</span><span class="ligne-sous-titre">' +
+      Esport.jeu(r.tournoi.jeu).nom + " · " + Esport.jourCourt(r.tournoi.debut) + "</span></span>" +
+      '<span class="resultat ' + r.classe + '">' + r.texte + "</span></a>"
+    ).join("");
+    if (repris.tournois) {
+      html += '<div class="ligne">' + Esport.icone("calendrier", "f-muted") +
+        '<span class="ligne-corps"><span class="ligne-titre">' + repris.tournois + " tournois sur l'ancienne plateforme</span>" +
+        '<span class="ligne-sous-titre">Historique repris · ' + repris.victoires + " victoires</span></span></div>";
+    }
+    if (!liste.length && !repris.tournois) html += '<p class="vide">Aucun tournoi joué pour l\'instant.</p>';
+
+    html += '<p class="confidentialite">' + Esport.icone("cadenas", "f-muted") +
+      "<span>Seuls le pseudo et les résultats sont publics. Aucune donnée personnelle n'est affichée.</span></p>" +
+      '<div class="fin-contenu"></div>';
+    document.getElementById("page").innerHTML = html;
+  }
+  Esport.monter(rendre);
+</script>
+</body>
+</html>

@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<!-- Écran 05 — Mes matchs et tournois (onglet central « Mes matchs »).
+     US : S05-01 (espace dédié : tournois où je suis inscrit avec leur prochaine échéance),
+     S04-01 / S04-02 (rang en liste d'attente), S04-03 (équipes à compléter), historique des tournois terminés. -->
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mes matchs</title>
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    /* Prochain match : carte sombre, comme sur l'accueil */
+    .prochain {
+      position: relative;
+      overflow: hidden;
+      margin: 0 var(--page-gutter);
+      padding: var(--space-4);
+      border-radius: var(--radius-lg);
+      background: var(--color-bg-dark);
+      color: var(--color-text-on-dark);
+    }
+    .prochain .flamme { position: absolute; right: -40px; top: -40px; width: 130px; height: 200px; transform: rotate(28deg); background: linear-gradient(180deg, var(--color-gaming-flame-dark), var(--color-primary)); opacity: .7; }
+    .prochain > * { position: relative; }
+    .prochain .surtitre { font-size: var(--font-size-xs); font-weight: var(--font-weight-bold); text-transform: uppercase; letter-spacing: .05em; color: var(--color-primary); }
+    .prochain h2 { font-size: var(--font-size-lg); line-height: var(--line-height-tight); margin: var(--space-1) 0 var(--space-1); }
+    .prochain p { font-size: var(--font-size-sm); color: var(--color-text-muted); margin-bottom: var(--space-4); }
+    .prochain p b { color: var(--color-text-on-dark); }
+    .prochain .actions { display: flex; gap: var(--space-2); }
+    .prochain .actions .bouton { flex: 1; padding: 0 var(--space-3); }
+    .bouton-verre { background: var(--color-glass-dark); color: var(--color-text-on-dark); }
+
+    .liste { margin: 0 var(--page-gutter); background: var(--color-surface); border-radius: var(--radius-md); box-shadow: var(--shadow-card); }
+    .liste .ligne { padding-left: var(--space-3); padding-right: var(--space-3); }
+    .echeance { color: var(--color-text-secondary); }
+    .echeance.alerte { color: var(--color-primary); font-weight: var(--font-weight-bold); }
+    .lien-equipe { display: inline-flex; align-items: center; min-height: 32px; color: var(--color-primary); font-size: var(--font-size-sm); font-weight: var(--font-weight-bold); }
+    .resultat { font-size: var(--font-size-sm); font-weight: var(--font-weight-bold); white-space: nowrap; }
+    .compte { margin-left: var(--space-1); color: var(--color-text-muted); font-size: var(--font-size-md); font-weight: var(--font-weight-medium); }
+  </style>
+</head>
+<body data-zone="esport">
+<div class="cadre">
+  <div class="telephone">
+    <div class="barre-etat" data-heure="21:10"></div>
+    <header class="entete-esport" data-titre="Mes matchs"></header>
+    <main class="contenu" id="page"></main>
+    <nav class="nav-bas" data-onglet="05"></nav>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/esport.js"></script>
+<script src="js/demo.js"></script>
+<script>
+  const moi = DONNEES.joueur.pseudo;
+
+  /* Mon prochain match : match « à jouer » d'un tournoi en cours où je suis inscrit */
+  function prochainMatch() {
+    for (const t of DONNEES.tournois) {
+      const ins = Esport.inscription(t.id);
+      const arbre = DONNEES.arbres[t.id];
+      if (!ins || ins.etat !== "inscrit" || t.etat !== "en-cours" || !arbre) continue;
+      for (let r = 0; r < arbre.matchs.length; r++) {
+        const m = arbre.matchs[r].find((x) => x[5] === "a-jouer" && (x[0] === moi || x[1] === moi));
+        if (m) return { t, tour: arbre.tours[r], adversaire: m[0] === moi ? m[1] : m[0], heure: arbre.monMatch };
+      }
+    }
+    return null;
+  }
+
+  /* Prochaine échéance d'un tournoi où je suis inscrit */
+  function echeance(t) {
+    if (Esport.reglementAAccepter(t)) return { texte: "Règlement modifié : à réaccepter", alerte: true };
+    if (t.etat === "en-cours") {
+      const p = prochainMatch();
+      return p && p.t.id === t.id ? { texte: p.tour + " à " + p.heure, alerte: true } : { texte: "Tournoi en cours" };
+    }
+    return { texte: "Début " + Esport.jourLong(t.debut) + " à " + Esport.heure(t.debut) };
+  }
+
+  function ligneTournoi(t, droite, sousTitre, classeSousTitre) {
+    return '<a href="#" class="ligne" data-ecran="06" data-id="' + t.id + '">' + Esport.visuelJeu(t.jeu, "petit") +
+      '<span class="ligne-corps"><span class="ligne-titre">' + t.nom + "</span>" +
+      '<span class="ligne-sous-titre ' + (classeSousTitre || "") + '">' + sousTitre + "</span></span>" +
+      (droite || Esport.icone("chevron", "f-muted")) + "</a>";
+  }
+
+  function titre(texte, n) {
+    return '<h2 class="titre-section">' + texte + (n !== undefined ? '<span class="compte">' + n + "</span>" : "") + "</h2>";
+  }
+
+  function rendre() {
+    const tournois = Esport.tournoisDuPays().concat(DONNEES.tournois.filter((t) => !t.pays.includes(DONNEES.joueur.pays)));
+    const inscrits = tournois.filter((t) => { const i = Esport.inscription(t.id); return i && i.etat === "inscrit" && t.etat !== "termine"; })
+      .sort((a, b) => a.debut.localeCompare(b.debut));
+    const attente = tournois.filter((t) => { const i = Esport.inscription(t.id); return i && i.etat === "attente"; });
+    const equipes = tournois.filter((t) => t.mode === "equipe" && Esport.equipe(t.id) && t.etat !== "termine");
+    const historique = DONNEES.joueur.historique.map((h) => Object.assign({ t: Esport.tournoi(h.tournoi) }, h));
+    const repris = Etat.get("historiqueNonRepris") ? null : DONNEES.joueur.historiqueRepris;
+    const p = prochainMatch();
+    let html = "";
+
+    // Prochain match
+    if (p) {
+      html += '<div class="prochain"><span class="flamme"></span><p class="surtitre">Ton prochain match</p>' +
+        "<h2>" + p.tour + " contre " + p.adversaire + "</h2>" +
+        "<p>" + p.t.nom + " · aujourd'hui à <b>" + p.heure + "</b></p>" +
+        '<div class="actions"><a href="#" class="bouton bouton-primaire" data-ecran="11">Salle de match</a>' +
+        '<a href="#" class="bouton bouton-verre" data-ecran="12" data-id="' + p.t.id + '">Voir l\'arbre</a></div></div>';
+    }
+
+    // Tournois où je suis inscrit, avec leur prochaine échéance
+    html += titre("Mes tournois", inscrits.length);
+    if (inscrits.length) {
+      html += '<div class="liste">' + inscrits.map((t) => {
+        const e = echeance(t);
+        return ligneTournoi(t, null, e.texte, "echeance" + (e.alerte ? " alerte" : ""));
+      }).join("") + "</div>";
+    } else {
+      html += '<div class="vide"><strong>Aucun tournoi pour l\'instant</strong>Trouve un tournoi dans le calendrier.<br>' +
+        '<a href="#" class="bouton bouton-primaire" data-ecran="04">Voir les tournois</a></div>';
+    }
+
+    // Liste d'attente
+    if (attente.length) {
+      html += titre("Liste d'attente", attente.length) + '<div class="liste">' +
+        attente.map((t) => ligneTournoi(t, '<span class="puce-etat puce-attente">' + Esport.inscription(t.id).rang + "e</span>",
+          "Une place se libère au premier désistement")).join("") + "</div>";
+    }
+
+    // Mes équipes, dont celles à compléter
+    if (equipes.length) {
+      html += titre("Mes équipes", equipes.length) + '<div class="liste">' + equipes.map((t) => {
+        const eq = Esport.equipe(t.id);
+        const taille = Esport.tailleEquipe(t);
+        const complete = eq.membres.length >= taille;
+        return '<a href="#" class="ligne" data-ecran="10" data-id="' + t.id + '"><span class="avatar">' + eq.nom[0] + "</span>" +
+          '<span class="ligne-corps"><span class="ligne-titre">' + eq.nom + '</span><span class="ligne-sous-titre">' + t.nom +
+          (eq.capitaine === moi ? " · capitaine" : "") + "</span></span>" +
+          '<span class="puce-etat ' + (complete ? "puce-inscrit" : "puce-attente") + '">' +
+          (complete ? "Inscrite" : "À compléter " + eq.membres.length + "/" + taille) + "</span></a>";
+      }).join("") + "</div>";
+    }
+
+    // Historique des tournois terminés
+    html += titre("Historique") + '<div class="liste">' +
+      historique.map((h) => ligneTournoi(h.t, '<span class="resultat">' + h.resultat + "</span>", "Terminé le " + Esport.jourCourt(h.t.debut))).join("") +
+      (repris ? '<a href="#" class="ligne" data-ecran="17" data-pseudo="' + Esport.pseudo() + '">' + Esport.icone("calendrier", "f-muted") +
+        '<span class="ligne-corps"><span class="ligne-titre">' + repris.tournois + " tournois sur l'ancienne plateforme</span>" +
+        '<span class="ligne-sous-titre">Historique repris · ' + repris.victoires + " victoires</span></span>" + Esport.icone("chevron", "f-muted") + "</a>" : "") +
+      "</div>";
+
+    html += '<div class="fin-contenu"></div>';
+    document.getElementById("page").innerHTML = html;
+  }
+  Esport.monter(rendre);
+</script>
+</body>
+</html>

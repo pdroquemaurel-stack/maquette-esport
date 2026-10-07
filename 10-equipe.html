@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<!-- Écran 10 — Mon équipe (10-equipe.html?id=t01).
+     US : S04-03 (effectif et taille exigée, inscription automatique une fois complète,
+     invitation par pseudo ou par lien, transmission du rôle de capitaine, équipe incomplète à la clôture),
+     S04-04 (le capitaine accepte ou refuse les demandes ; le joueur peut quitter l'équipe). -->
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mon équipe</title>
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .tete { display: flex; align-items: center; gap: var(--space-4); padding: 0 var(--page-gutter) var(--space-4); }
+    .blason { width: 64px; height: 64px; border-radius: var(--radius-md); background: var(--color-primary); color: var(--color-on-primary); font-size: var(--font-size-xxl); font-weight: var(--font-weight-bold); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .tete h1 { font-size: var(--font-size-xxl); line-height: var(--line-height-tight); }
+    .tete a { color: var(--color-primary); font-weight: var(--font-weight-bold); font-size: var(--font-size-sm); }
+    .tete p { color: var(--color-text-secondary); font-size: var(--font-size-sm); }
+
+    .encart-succes > svg { background: var(--color-success-dark); border-radius: var(--radius-round); padding: 2px; }
+
+    /* Effectif : une pastille par place */
+    .places { display: flex; gap: var(--space-1); margin-left: auto; }
+    .places i { width: 18px; height: 8px; border-radius: var(--radius-pill); background: var(--color-border); }
+    .places i.prise { background: var(--color-primary); }
+    .bloc { margin: 0 var(--page-gutter); background: var(--color-surface); border-radius: var(--radius-md); box-shadow: var(--shadow-card); }
+    .bloc .ligne { padding-left: var(--space-4); padding-right: var(--space-3); }
+    .place-libre .avatar { background: var(--color-bg-muted); color: var(--color-text-muted); }
+    .place-libre .ligne-titre { color: var(--color-text-muted); font-weight: var(--font-weight-medium); }
+    .boutons-ligne { display: flex; gap: var(--space-2); }
+    .boutons-ligne .puce { min-height: 36px; }
+    .puce-primaire { background: var(--color-primary); border-color: var(--color-primary); color: var(--color-on-primary); font-weight: var(--font-weight-bold); }
+
+    .inviter { display: flex; gap: var(--space-2); padding: 0 var(--page-gutter); }
+    .inviter .champ { flex: 1; }
+    .erreur-champ { color: var(--color-alert); font-size: var(--font-size-sm); padding: var(--space-2) var(--page-gutter) 0; }
+    .lien-equipe { display: flex; align-items: center; gap: var(--space-3); margin: var(--space-3) var(--page-gutter) 0; padding: var(--space-3) var(--space-4); border-radius: var(--radius-md); background: var(--color-surface-warm); font-size: var(--font-size-sm); }
+    .lien-equipe span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .note-section { font-size: var(--font-size-xs); color: var(--color-text-secondary); padding: var(--space-2) var(--page-gutter) 0; }
+
+    .actions-equipe { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-6) var(--page-gutter) 0; }
+    .bouton-danger { color: var(--color-alert); }
+  </style>
+</head>
+<body data-zone="esport">
+<div class="cadre">
+  <div class="telephone">
+    <div class="barre-etat" data-heure="21:10"></div>
+    <header class="entete-esport" data-titre="Mon équipe" data-repli="06"></header>
+    <main class="contenu" id="page"></main>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/esport.js"></script>
+<script src="js/demo.js"></script>
+<script>
+  const scenario = Esport.lireScenario();
+  const t = Esport.tournoi(Nav.param("id")) || Esport.tournoi("t01");
+  const taille = Esport.tailleEquipe(t);
+  const moi = DONNEES.joueur.pseudo;
+  // Démo « Équipe incomplète à la clôture » : l'équipe de t01 avec 3 joueurs sur 4, inscriptions closes
+  const incompleteCloture = scenario === "equipe-incomplete";
+
+  /* Pseudos connus de la plateforme (pour les invitations) */
+  function pseudosConnus() {
+    const tous = new Set(DONNEES.pseudosClassement.concat(DONNEES.pseudosPris, DONNEES.demandesSimulees));
+    Object.values(DONNEES.equipesOuvertes).forEach((liste) => liste.forEach((e) => e.membres.forEach((p) => tous.add(p))));
+    Object.values(DONNEES.poules).forEach((p) => p.forEach((g) => g.joueurs.forEach((j) => tous.add(j.pseudo))));
+    return tous;
+  }
+
+  /* Équipe affichée : la mienne, ou la version « incomplète à la clôture » de la démo */
+  function equipeAffichee() {
+    const eq = Esport.equipe(t.id) || (incompleteCloture ? DONNEES.mesEquipes.t01 : null);
+    if (!eq) return null;
+    if (incompleteCloture) return Object.assign({}, eq, { membres: eq.membres.slice(0, taille - 1), demandes: [], invitations: [] });
+    return eq;
+  }
+
+  /* Enregistre une modification de l'équipe ; une équipe complète est inscrite d'office (S04-03) */
+  function enregistrer(eq) {
+    const etaitComplete = (Esport.equipe(t.id) || { membres: [] }).membres.length >= taille;
+    if (eq.membres.length >= taille) eq.demandes = [];
+    Esport.changerEquipe(t.id, eq);
+    if (eq.membres.length >= taille && !etaitComplete) {
+      Esport.changerInscription(t.id, { etat: "inscrit" });
+      Nav.toast("Équipe complète : inscrite au tournoi. Tous les membres sont prévenus.");
+    }
+  }
+
+  function nom(pseudo) { return pseudo === moi ? Esport.pseudo() : pseudo; }
+
+  function rendre() {
+    const eq = equipeAffichee();
+    const page = document.getElementById("page");
+    if (!eq) {
+      page.innerHTML = '<div class="vide"><strong>Pas d\'équipe dans ce tournoi</strong>Crée ton équipe ou rejoins-en une pour t\'inscrire à ' + t.nom + ".<br>" +
+        '<a href="#" class="bouton bouton-primaire" data-ecran="06" data-id="' + t.id + '">Voir le tournoi</a></div>';
+      return;
+    }
+    const capitaine = eq.capitaine === moi;
+    const complete = eq.membres.length >= taille;
+    const manque = taille - eq.membres.length;
+    let html = "";
+
+    // En-tête de l'équipe
+    html += '<div class="tete"><span class="blason">' + eq.nom[0] + "</span><div><h1>" + eq.nom + "</h1>" +
+      "<p>" + (eq.ouverte ? "Équipe ouverte" : "Équipe fermée") + " · " +
+      '<a href="#" data-ecran="06" data-id="' + t.id + '">' + t.nom + "</a></p></div></div>";
+
+    // État de l'inscription
+    if (incompleteCloture) {
+      html += '<div class="encart encart-alerte">' + Esport.icone("alerte", "f-primary") +
+        "<div><strong>Équipe non inscrite</strong><p>Les inscriptions ont été closes le " + Esport.jourCourt(t.cloture) +
+        " avec " + eq.membres.length + " joueurs sur " + taille + ". Tous les membres ont été prévenus.</p></div></div>";
+    } else if (complete) {
+      html += '<div class="encart encart-succes">' + Esport.icone("coche", "f-white") +
+        "<div><strong>Équipe complète et inscrite</strong><p>Elle a été inscrite automatiquement au tournoi. Début le " +
+        Esport.jourLong(t.debut) + " à " + Esport.heure(t.debut) + ".</p></div></div>";
+    } else {
+      html += '<div class="encart">' + Esport.icone("groupe", "f-primary") +
+        "<div><strong>Il manque " + manque + (manque > 1 ? " joueurs" : " joueur") + "</strong><p>L'équipe sera inscrite automatiquement dès qu'elle sera complète. " +
+        "Une équipe incomplète le " + Esport.jourCourt(t.cloture) + " ne sera pas inscrite.</p></div></div>";
+    }
+
+    // Effectif
+    html += '<h2 class="titre-section">Effectif ' + eq.membres.length + "/" + taille +
+      '<span class="places" aria-hidden="true">' + Array.from({ length: taille }, (_, i) => '<i class="' + (i < eq.membres.length ? "prise" : "") + '"></i>').join("") + "</span></h2>";
+    html += '<div class="bloc">' + eq.membres.map((p) =>
+      '<a href="#" class="ligne" data-ecran="17" data-pseudo="' + nom(p) + '"><span class="avatar' + (p === moi ? " avatar-moi" : "") + '">' + nom(p)[0] + "</span>" +
+      '<span class="ligne-corps"><span class="ligne-titre">' + nom(p) + (p === moi ? " (toi)" : "") + "</span></span>" +
+      (p === eq.capitaine ? '<span class="puce-etat puce-mea">Capitaine</span>' : "") + "</a>"
+    ).join("") +
+    Array.from({ length: Math.max(manque, 0) }, () =>
+      '<div class="ligne place-libre"><span class="avatar">+</span><span class="ligne-corps"><span class="ligne-titre">Place libre</span></span></div>'
+    ).join("") + "</div>";
+
+    // Demandes en attente : le capitaine accepte ou refuse (S04-04)
+    if (!incompleteCloture && capitaine && eq.demandes.length) {
+      html += '<h2 class="titre-section">Demandes en attente</h2><div class="bloc">' + eq.demandes.map((p) =>
+        '<div class="ligne"><span class="avatar">' + p[0] + "</span>" +
+        '<span class="ligne-corps"><a href="#" class="ligne-titre" data-ecran="17" data-pseudo="' + p + '">' + p + '</a><span class="ligne-sous-titre">Veut rejoindre l\'équipe</span></span>' +
+        '<span class="boutons-ligne"><button class="puce" data-refuser="' + p + '">Refuser</button>' +
+        '<button class="puce puce-primaire" data-accepter="' + p + '">Accepter</button></span></div>'
+      ).join("") + "</div>";
+    }
+
+    // Inviter par pseudo ou par lien : capitaine, équipe incomplète
+    if (!incompleteCloture && capitaine && !complete) {
+      html += '<h2 class="titre-section">Inviter des joueurs</h2>' +
+        '<div class="inviter"><label class="champ" id="champ-invite"><span class="cache-visuel">Pseudo du joueur</span>' +
+        '<input id="pseudo-invite" placeholder="Pseudo du joueur" autocomplete="off"></label>' +
+        '<button class="bouton bouton-primaire" id="inviter">Inviter</button></div>' +
+        '<p class="erreur-champ" id="erreur-invite" role="alert"></p>' +
+        '<div class="lien-equipe">' + Esport.icone("groupe", "f-text") + "<span>" + eq.lien + "</span>" +
+        '<button class="bouton-lien" id="copier">Copier le lien</button></div>' +
+        '<p class="note-section">Toute personne qui ouvre ce lien peut rejoindre l\'équipe.</p>';
+      if (eq.invitations.length) {
+        html += '<div class="bloc" style="margin-top: var(--space-3)">' + eq.invitations.map((p) =>
+          '<div class="ligne"><span class="avatar">' + p[0] + '</span><span class="ligne-corps"><span class="ligne-titre">' + p +
+          '</span><span class="ligne-sous-titre">Invitation envoyée · en attente de réponse</span></span></div>'
+        ).join("") + "</div>";
+      }
+    } else if (!incompleteCloture && !capitaine && !complete) {
+      html += '<p class="note-section" style="padding-top: var(--space-4)">Seul le capitaine, ' + eq.capitaine + ", peut inviter des joueurs et accepter les demandes.</p>";
+    }
+
+    // Actions sur l'équipe
+    html += '<div class="actions-equipe">';
+    if (incompleteCloture) {
+      html += '<a href="#" class="bouton bouton-primaire bouton-pleine-largeur" data-ecran="04">Voir d\'autres tournois</a>';
+    } else {
+      if (capitaine && eq.membres.length > 1) html += '<button class="bouton bouton-secondaire bouton-pleine-largeur" id="transmettre">Transmettre le rôle de capitaine</button>';
+      html += '<button class="bouton bouton-lien bouton-danger bouton-pleine-largeur" id="quitter">Quitter l\'équipe</button>';
+    }
+    html += '</div><div class="fin-contenu"></div>';
+    page.innerHTML = html;
+  }
+
+  /* ---------- Actions ---------- */
+  document.getElementById("page").addEventListener("click", (e) => {
+    const eq = Esport.equipe(t.id);
+    if (!eq) return;
+
+    const accepter = e.target.closest("[data-accepter]");
+    if (accepter) {
+      const p = accepter.dataset.accepter;
+      Nav.toast(p + " a rejoint l'équipe");
+      enregistrer(Object.assign({}, eq, { membres: eq.membres.concat([p]), demandes: eq.demandes.filter((d) => d !== p) }));
+      return;
+    }
+    const refuser = e.target.closest("[data-refuser]");
+    if (refuser) {
+      const p = refuser.dataset.refuser;
+      enregistrer(Object.assign({}, eq, { demandes: eq.demandes.filter((d) => d !== p) }));
+      Nav.toast("Demande refusée : " + p + " est prévenu");
+      return;
+    }
+
+    if (e.target.closest("#inviter")) inviter(eq);
+    if (e.target.closest("#copier")) {
+      try { navigator.clipboard.writeText("https://" + eq.lien); } catch (erreur) { /* presse-papiers indisponible */ }
+      Nav.toast("Lien de l'équipe copié");
+    }
+    if (e.target.closest("#transmettre")) transmettre(eq);
+    if (e.target.closest("#quitter")) quitter(eq);
+  });
+
+  /* Invitation par pseudo : le joueur invité accepte quelques secondes plus tard (simulé) */
+  function inviter(eq) {
+    const saisie = document.getElementById("pseudo-invite").value.trim();
+    const erreur = document.getElementById("erreur-invite");
+    const connu = [...pseudosConnus()].find((p) => p.toLowerCase() === saisie.toLowerCase());
+    let message = "";
+    if (!saisie) message = "Saisis le pseudo du joueur à inviter.";
+    else if (!connu || connu === moi) message = "Aucun autre joueur ne porte le pseudo « " + saisie + " ».";
+    else if (eq.membres.includes(connu) || eq.invitations.includes(connu)) message = connu + " est déjà dans l'équipe ou déjà invité.";
+    erreur.textContent = message;
+    document.getElementById("champ-invite").classList.toggle("erreur", !!message);
+    if (message) return;
+
+    enregistrer(Object.assign({}, eq, { invitations: eq.invitations.concat([connu]) }));
+    Nav.toast("Invitation envoyée à " + connu);
+    setTimeout(() => {
+      const actuelle = Esport.equipe(t.id);
+      if (!actuelle || !actuelle.invitations.includes(connu) || actuelle.membres.length >= taille) return;
+      Nav.toast(connu + " a accepté ton invitation");
+      enregistrer(Object.assign({}, actuelle, {
+        membres: actuelle.membres.concat([connu]),
+        invitations: actuelle.invitations.filter((p) => p !== connu)
+      }));
+    }, 3500);
+  }
+
+  /* Transmettre le rôle de capitaine à un autre membre (S04-03) */
+  function transmettre(eq) {
+    const autres = eq.membres.filter((p) => p !== moi);
+    Nav.dialogue({
+      titre: "Nouveau capitaine",
+      texte: "Il pourra inviter des joueurs et accepter les demandes. Tu restes membre de l'équipe.",
+      boutons: autres.map((p) => ({
+        libelle: p,
+        action: () => {
+          enregistrer(Object.assign({}, eq, { capitaine: p }));
+          Nav.toast(p + " est maintenant capitaine");
+        }
+      })).concat([{ libelle: "Annuler", primaire: true }])
+    });
+  }
+
+  /* Quitter l'équipe ; un capitaine qui part sans transmettre laisse le rôle au plus ancien membre */
+  function quitter(eq) {
+    const restants = eq.membres.filter((p) => p !== moi);
+    const successeur = eq.capitaine === moi && restants.length ? restants[0] : null;
+    const inscrite = eq.membres.length >= taille;
+    Nav.dialogue({
+      titre: "Quitter " + eq.nom + " ?",
+      texte: (successeur ? "Le rôle de capitaine passera à " + successeur + ", le membre le plus ancien. " : "") +
+        (inscrite ? "L'équipe ne sera plus complète et perdra sa place si elle n'est pas complétée avant la clôture." : "Tu ne seras plus inscrit à ce tournoi."),
+      boutons: [
+        { libelle: "Quitter l'équipe", primaire: true, action: () => {
+          Esport.changerEquipe(t.id, null);
+          Esport.changerInscription(t.id, null);
+          Nav.aller("06", null, { id: t.id, message: "equipe-quittee" });
+        } },
+        { libelle: "Annuler" }
+      ]
+    });
+  }
+
+  Esport.monter(rendre);
+
+  document.addEventListener("DOMContentLoaded", () => {
+    if (Nav.param("message") === "creee") Nav.toast("Équipe créée : tu en es le capitaine");
+  });
+</script>
+</body>
+</html>

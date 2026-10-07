@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<!-- Page de contrôle automatique (hors maquette), à lancer à la fin de chaque lot.
+     Elle charge chaque écran dans un cadre de 390 × 844, dans le mode choisi, et signale :
+     - les débordements horizontaux, les textes coupés, le contenu sous la barre du bas ;
+     - les liens cassés (écran inconnu, page absente du registre) et les écrans sans sortie (impasses).
+     Mode : controle.html#gratuit ou controle.html#abonne.
+     Le navigateur doit autoriser l'accès entre fichiers locaux, par exemple :
+     msedge --allow-file-access-from-files outils/controle.html#abonne
+     Attention : la page remplace l'état de démonstration mémorisé (localStorage). -->
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>Contrôle de la maquette</title>
+  <style>
+    body { font: 14px/1.5 system-ui, sans-serif; margin: 16px; }
+    pre { white-space: pre-wrap; }
+    iframe { width: 390px; height: 844px; border: 0; position: absolute; left: -9999px; }
+  </style>
+</head>
+<body>
+<h1>Contrôle de la maquette</h1>
+<pre id="sortie">Contrôle en cours…</pre>
+<script>
+  /* Écrans contrôlés, avec les variantes utiles (tournois dans différents états) */
+  const PAGES = [
+    "00a-maxit-accueil.html", "00b-maxit-univers.html", "00c-maxit-gaming.html", "02-pseudo.html",
+    "03-accueil.html", "04-calendrier.html", "05-mes-tournois.html",
+    "06-tournoi.html?id=t01", "06-tournoi.html?id=t02", "06-tournoi.html?id=t04", "06-tournoi.html?id=t05",
+    "06-tournoi.html?id=t09", "06-tournoi.html?id=t11", "06-tournoi.html?id=t12",
+    "07-reglement.html?id=t01", "07-reglement.html?id=t02", "07-reglement.html?id=t12",
+    "08-inscription-resultat.html?id=t09", "09-equipe-choix.html?id=t12", "10-equipe.html?id=t01",
+    "12-arbre.html?id=t05", "12-arbre.html?id=t03", "12-arbre.html?id=t10",
+    "13-jeu.html?id=freefire", "13-jeu.html?id=codm", "17-profil-public.html?pseudo=Rachid_GOAT"
+  ];
+  const abonne = location.hash === "#abonne";
+  const sortie = document.getElementById("sortie");
+  // Zones qui défilent horizontalement : un débordement y est normal
+  const DEFILANTS = ".carrousel, .puces, .arbre, .offres-jeu, .visuel-jeu";
+
+  function decrire(e) {
+    const classes = typeof e.className === "string" && e.className.trim() ? "." + e.className.trim().split(/\s+/).join(".") : "";
+    return e.tagName.toLowerCase() + classes + " « " + (e.textContent || "").trim().slice(0, 40) + " »";
+  }
+
+  /* Défauts visuels d'un écran */
+  function defautsVisuels(doc) {
+    const defauts = [];
+    const telephone = doc.querySelector(".telephone");
+    if (!telephone) return ["pas de cadre .telephone"];
+    const cadre = telephone.getBoundingClientRect();
+    const vue = doc.defaultView;
+
+    if (doc.documentElement.scrollWidth > doc.documentElement.clientWidth + 1) defauts.push("la page défile horizontalement");
+
+    telephone.querySelectorAll("*").forEach((e) => {
+      if (e.closest(".voile") || e.closest(".cache-visuel") || e.classList.contains("cache-visuel")) return;
+      const r = e.getBoundingClientRect();
+      if (!r.width || !r.height) return;
+      const style = vue.getComputedStyle(e);
+      if (r.right > cadre.right + 1 && !e.closest(DEFILANTS) && style.position !== "absolute") {
+        defauts.push("déborde à droite de " + Math.round(r.right - cadre.right) + " px : " + decrire(e));
+      }
+      if (e.children.length === 0 && e.scrollWidth > e.clientWidth + 1 && (style.overflow === "hidden" || style.textOverflow === "ellipsis")) {
+        defauts.push("texte coupé : " + decrire(e));
+      }
+    });
+
+    // Le contenu défilant doit s'arrêter au-dessus de la barre du bas (navigation ou action)
+    const contenu = doc.querySelector(".contenu");
+    const barre = doc.querySelector(".nav-bas, .barre-action, .pied");
+    if (contenu && barre && contenu.getBoundingClientRect().bottom > barre.getBoundingClientRect().top + 1) {
+      defauts.push("le contenu passe sous la barre du bas");
+    }
+    return defauts;
+  }
+
+  /* Liens cassés et impasses, d'après le registre des écrans (js/nav.js) */
+  function defautsLiens(doc, vue) {
+    const defauts = [];
+    // ECRANS est déclaré avec const : il se lit par une évaluation dans la page contrôlée
+    const ECRANS = vue.eval("ECRANS");
+    const fichiers = Object.values(ECRANS).map((e) => e.fichier).concat(["index.html"]);
+    let sorties = 0;
+    doc.querySelectorAll("[data-ecran]").forEach((e) => {
+      const ecran = ECRANS[e.dataset.ecran];
+      if (!ecran) defauts.push("lien vers un écran inconnu : " + e.dataset.ecran);
+      else if (ecran.pret) sorties++;
+    });
+    doc.querySelectorAll("a[href]").forEach((a) => {
+      const cible = a.getAttribute("href").split("?")[0];
+      if (!cible || cible === "#") return;
+      if (cible.endsWith(".html") && !fichiers.includes(cible)) defauts.push("lien cassé : " + cible);
+      else sorties++;
+    });
+    if (doc.querySelector('[data-action="retour"], [data-action="esport"]')) sorties++;
+    if (!sorties) defauts.push("impasse : aucune sortie");
+    return defauts;
+  }
+
+  /* Résumé du mode, pour vérifier que l'interrupteur gratuit / abonné agit */
+  function resumeMode(doc, page) {
+    if (page.startsWith("03")) return doc.querySelector(".encart-offre") ? "encart abonnement affiché" : "encart abonnement masqué";
+    const action = doc.getElementById("action");
+    if (action) return "bouton : " + action.textContent.replace(/\s+/g, " ").trim().slice(0, 50);
+    return "";
+  }
+
+  async function lancer() {
+    let texte = "Mode " + (abonne ? "joueur abonné" : "joueur gratuit") + "\n\n";
+    let total = 0;
+    for (const page of PAGES) {
+      // Chaque écran part du même état de démonstration
+      localStorage.setItem("maquette-esport-etat", JSON.stringify({ abonne }));
+      const cadre = document.createElement("iframe");
+      document.body.appendChild(cadre);
+      await new Promise((fini) => { cadre.onload = fini; cadre.src = "../" + page; });
+      await new Promise((fini) => setTimeout(fini, 700));
+      let defauts, mode = "";
+      try {
+        const doc = cadre.contentDocument;
+        defauts = defautsVisuels(doc).concat(defautsLiens(doc, cadre.contentWindow));
+        mode = resumeMode(doc, page);
+      } catch (erreur) {
+        defauts = ["contrôle impossible (" + erreur.message + ") : autoriser l'accès entre fichiers locaux"];
+      }
+      defauts = [...new Set(defauts)];
+      total += defauts.length;
+      texte += (defauts.length ? "✗ " : "✓ ") + page + (mode ? "  [" + mode + "]" : "") + "\n" +
+        defauts.slice(0, 8).map((d) => "    " + d + "\n").join("");
+      cadre.remove();
+    }
+    localStorage.removeItem("maquette-esport-etat");
+    texte += "\n" + (total ? total + " défaut(s)" : "Aucun défaut") + "\nFIN";
+    sortie.textContent = texte;
+  }
+  lancer();
+</script>
+</body>
+</html>

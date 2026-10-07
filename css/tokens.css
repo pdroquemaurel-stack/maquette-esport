@@ -1,0 +1,120 @@
+/* Design tokens — inspirés des captures Max it (references/01, 02, 03).
+   Valeurs estimées visuellement : à ajuster si la charte officielle est fournie. */
+
+:root {
+  /* ---- Couleurs : primaire ---- */
+  --color-primary: #ff7900;          /* orange Max it : bouton central, onglet actif, CTA ronds */
+  --color-primary-pressed: #e56d00;
+  --color-primary-soft: #fff1e5;     /* pastille derrière l'onglet actif de la barre du bas */
+  --color-on-primary: #ffffff;
+
+  /* ---- Couleurs : fonds ---- */
+  --color-bg: #ffffff;               /* fond de page */
+  --color-bg-muted: #f4f4f4;         /* zone grise derrière la feuille "Tous les univers" */
+  --color-surface: #ffffff;          /* cartes blanches (Trending, solde) */
+  --color-surface-warm: #f8f3ee;     /* tuiles beige des raccourcis et univers */
+  --color-overlay: rgba(0, 0, 0, 0.45);
+  --color-bg-dark: #000000;          /* univers Gaming (fond noir) */
+  --color-surface-dark: #1a1a1f;     /* tuiles sombres du Game corner */
+
+  /* ---- Couleurs : textes ---- */
+  --color-text: #000000;             /* titres et libellés */
+  --color-text-secondary: #595959;   /* sous-titres ("Pass TV Max it TV") */
+  --color-text-muted: #8f8f8f;       /* placeholders ("Type to search"), onglets inactifs */
+  --color-text-on-dark: #ffffff;
+
+  /* ---- Couleurs : bordures ---- */
+  --color-border: #e6e6e6;           /* champ de recherche, séparateurs */
+  --color-border-strong: #cccccc;
+  --color-border-dark: #2c2c33;
+
+  /* ---- Couleurs : états ---- */
+  --color-success: #32c832;          /* vert Orange */
+  --color-success-dark: #228722;     /* badge "Exclusive" */
+  --color-warning: #ffcc00;          /* jaune Orange */
+  --color-alert: #e70000;            /* pastille de notification, erreurs */
+  --color-info: #4bb4e6;
+
+  /* Accents de l'univers Gaming (tuiles Play / Gameshop / Esport) */
+  --color-game-blue: #4bb4e6;
+  --color-game-green: #50be87;
+  --color-game-purple: #a885d8;
+  --color-game-blue-bg: #08182b;     /* fond nuit des tuiles Play / Gameshop / Esport */
+  --color-game-green-bg: #0a2416;
+  --color-game-purple-bg: #1e0f35;
+  --color-glass-dark: rgba(70, 70, 70, 0.55);  /* boutons ronds sur fond sombre */
+  --color-gaming-flame-dark: #8a2a00;          /* formes anguleuses en haut de 03 */
+
+  /* ---- Illustrations (reprises des visuels des captures) ---- */
+  --illu-sky: #f3d9b1;
+  --illu-sand: #e9b77f;
+  --illu-terracotta: #c9784a;
+  --illu-palm: #3c7a3a;
+  --illu-car-red: #d81e1e;
+  --illu-skin: #8d5a3b;
+  --illu-hair: #2b1d14;
+  --illu-gray-light: #d9d9d9;
+  --illu-gray: #9a9a9a;
+  --illu-gray-dark: #4a4a4a;
+  --illu-black: #1b1b1b;
+  --illu-gold: #e0a326;
+  --illu-gold-light: #f5d27a;
+  --illu-bill-green: #7fc46a;
+  --illu-neon-pink: #e0218a;
+  --illu-purple-deep: #3a1f6b;
+  --illu-purple-dark: #241243;
+
+  /* ---- Typographie ---- */
+  --font-family: "Helvetica Neue", Helvetica, Arial, system-ui, sans-serif;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-bold: 700;
+
+  --font-size-xs: 11px;              /* libellés de la barre du bas, badges */
+  --font-size-sm: 13px;              /* sous-titres, légendes de raccourcis */
+  --font-size-md: 15px;              /* texte courant */
+  --font-size-lg: 17px;              /* titres de carte ("World cup 2026") */
+  --font-size-xl: 20px;              /* titres de section ("Trending now") */
+  --font-size-xxl: 24px;             /* titres d'écran ("Tous les univers Max it") */
+  --font-size-display: 30px;         /* titre de hub ("Game corner") */
+  --line-height-tight: 1.2;
+  --line-height-base: 1.4;
+
+  /* ---- Rayons ---- */
+  --radius-xs: 6px;
+  --radius-sm: 10px;                 /* vignettes, icône d'app */
+  --radius-md: 16px;                 /* tuiles de raccourcis et d'univers */
+  --radius-lg: 20px;                 /* cartes bannières, carrousel */
+  --radius-sheet: 24px;              /* haut des feuilles modales */
+  --radius-pill: 999px;              /* recherche, badges, boutons secondaires */
+  --radius-round: 50%;               /* avatar, bouton central, CTA icône */
+
+  /* ---- Ombres ---- */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --shadow-raised: 0 4px 16px rgba(0, 0, 0, 0.12);   /* bouton fermer flottant */
+  --shadow-fab: 0 4px 12px rgba(255, 121, 0, 0.35);  /* bouton central orange */
+  --shadow-nav: 0 -2px 10px rgba(0, 0, 0, 0.06);     /* barre du bas */
+
+  /* ---- Espacements (base 4 px) ---- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;                   /* marge latérale de page */
+  --space-5: 20px;
+  --space-6: 24px;                   /* écart entre sections */
+  --space-8: 32px;
+  --space-10: 40px;
+  --page-gutter: var(--space-4);
+
+  /* ---- Dimensions ---- */
+  --screen-width: 390px;
+  --screen-height: 844px;
+  --status-bar-height: 44px;
+  --top-bar-height: 56px;            /* avatar + salutation + icônes */
+  --bottom-nav-height: 72px;         /* 5 onglets, libellés sous icônes */
+  --bottom-nav-fab-size: 56px;       /* bouton central orange en saillie */
+  --touch-target: 44px;              /* zone tactile minimale */
+  --icon-size: 24px;
+  --avatar-size: 36px;
+}

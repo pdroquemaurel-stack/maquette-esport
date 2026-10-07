@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<!-- Écran 09 — Créer ou rejoindre une équipe (09-equipe-choix.html?id=t01).
+     US : S04-03 (créer une équipe : nom unique dans le tournoi, ouverte ou fermée, créateur capitaine),
+     S04-04 (liste des équipes ouvertes : nom, capitaine, places restantes ; demande validée par le capitaine ;
+     une seule équipe par tournoi ; une équipe complète disparaît de la liste). -->
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Créer ou rejoindre une équipe</title>
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .tete { padding: 0 var(--page-gutter) var(--space-4); }
+    .tete h1 { font-size: var(--font-size-xxl); line-height: var(--line-height-tight); }
+    .tete p { color: var(--color-text-secondary); font-size: var(--font-size-sm); margin-top: var(--space-1); }
+    .panneau { padding-top: var(--space-4); }
+    .panneau > .encart { margin-bottom: var(--space-4); }
+
+    /* Équipes ouvertes */
+    .equipe-ligne .avatar { border-radius: var(--radius-sm); }
+    .equipe-ligne .puce { flex-shrink: 0; }
+    .equipe-ligne .puce:disabled { color: var(--color-text-muted); border-color: var(--color-border); cursor: default; }
+    .places { color: var(--color-primary); font-weight: var(--font-weight-bold); }
+
+    /* Création */
+    .formulaire { padding: 0 var(--page-gutter); }
+    .etiquette { display: block; font-weight: var(--font-weight-bold); font-size: var(--font-size-sm); margin: var(--space-5) 0 var(--space-2); }
+    .etiquette:first-child { margin-top: 0; }
+    .erreur-champ { color: var(--color-alert); font-size: var(--font-size-sm); margin-top: var(--space-2); display: none; }
+    .erreur-champ.visible { display: block; }
+    .choix-visibilite { display: flex; flex-direction: column; gap: var(--space-2); }
+    .option {
+      display: flex;
+      gap: var(--space-3);
+      align-items: flex-start;
+      padding: var(--space-3) var(--space-4);
+      border: 1px solid var(--color-border-strong);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+    }
+    .option input { width: 20px; height: 20px; accent-color: var(--color-primary); margin-top: 2px; flex-shrink: 0; }
+    .option strong { display: block; }
+    .option small { color: var(--color-text-secondary); font-size: var(--font-size-sm); }
+    .option:has(input:checked) { border-color: var(--color-primary); background: var(--color-primary-soft); }
+    .formulaire .bouton { margin-top: var(--space-6); }
+  </style>
+</head>
+<body data-zone="esport">
+<div class="cadre">
+  <div class="telephone">
+    <div class="barre-etat" data-heure="21:10"></div>
+    <header class="entete-esport" data-titre="Équipe" data-repli="06"></header>
+
+    <main class="contenu">
+      <div class="tete">
+        <h1>Ton équipe</h1>
+        <p id="sous-titre"></p>
+      </div>
+      <div class="onglets" role="tablist" id="onglets">
+        <button role="tab" data-onglet="rejoindre">Rejoindre</button>
+        <button role="tab" data-onglet="creer">Créer</button>
+      </div>
+      <div class="panneau" id="panneau"></div>
+      <div class="fin-contenu"></div>
+    </main>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/esport.js"></script>
+<script src="js/demo.js"></script>
+<script>
+  const t = Esport.tournoi(Nav.param("id")) || Esport.tournoi("t01");
+  const taille = Esport.tailleEquipe(t);
+  const moi = DONNEES.joueur.pseudo;   // identifiant du joueur dans les données
+  let onglet = "rejoindre";
+  let demandeEnCours = null;            // nom de l'équipe à qui une demande est envoyée
+
+  document.getElementById("sous-titre").textContent =
+    t.nom + " · équipes de " + taille + " joueurs. L'équipe est inscrite automatiquement dès qu'elle est complète.";
+
+  /* Équipes ouvertes encore incomplètes (une équipe complète n'apparaît plus, S04-04) */
+  function equipesOuvertes() {
+    return (DONNEES.equipesOuvertes[t.id] || []).filter((e) => e.membres.length < taille);
+  }
+
+  /* ---- Onglet « Rejoindre » ---- */
+  function rendreRejoindre() {
+    const equipes = equipesOuvertes();
+    let html = "";
+    if (demandeEnCours) {
+      html += '<div class="encart">' + Esport.icone("groupe", "f-primary") +
+        "<div><strong>Demande envoyée à " + demandeEnCours + "</strong><p>Le capitaine doit l'accepter. Tu seras prévenu par notification.</p></div></div>";
+    }
+    if (!equipes.length) {
+      html += '<div class="vide"><strong>Aucune équipe ouverte</strong>Crée la tienne et invite tes amis.</div>';
+    }
+    html += equipes.map((e) => {
+      const restantes = taille - e.membres.length;
+      const envoyee = demandeEnCours === e.nom;
+      return '<div class="ligne equipe-ligne"><span class="avatar">' + e.nom[0] + "</span>" +
+        '<span class="ligne-corps"><span class="ligne-titre">' + e.nom + '</span><span class="ligne-sous-titre">Capitaine : ' +
+        '<a href="#" data-ecran="17" data-pseudo="' + e.capitaine + '">' + e.capitaine + '</a> · <span class="places">' +
+        restantes + (restantes > 1 ? " places" : " place") + "</span></span></span>" +
+        '<button class="puce" data-demande="' + e.nom + '"' + (demandeEnCours ? " disabled" : "") + ">" +
+        (envoyee ? "Demande envoyée" : "Demander à rejoindre") + "</button></div>";
+    }).join("");
+    html += '<p class="note" style="padding: var(--space-4) var(--page-gutter) 0; font-size: var(--font-size-xs); color: var(--color-text-secondary)">' +
+      "Les équipes fermées ne sont pas listées : on les rejoint sur invitation du capitaine ou par le lien de l'équipe.</p>";
+    return html;
+  }
+
+  /* ---- Onglet « Créer » ---- */
+  function rendreCreer() {
+    return '<div class="formulaire">' +
+      '<label class="etiquette" for="nom-equipe">Nom de l\'équipe</label>' +
+      '<div class="champ" id="champ-nom"><input id="nom-equipe" maxlength="20" autocomplete="off" placeholder="Ex. : Kenitra Kings"></div>' +
+      '<p class="erreur-champ" id="erreur-nom" role="alert"></p>' +
+      '<span class="etiquette">Qui peut rejoindre ?</span>' +
+      '<div class="choix-visibilite">' +
+      '<label class="option"><input type="radio" name="visibilite" value="ouverte" checked><span><strong>Équipe ouverte</strong>' +
+      "<small>Visible dans la liste des équipes. Tu acceptes ou refuses chaque demande.</small></span></label>" +
+      '<label class="option"><input type="radio" name="visibilite" value="fermee"><span><strong>Équipe fermée</strong>' +
+      "<small>Invisible dans la liste. Tu invites les joueurs par leur pseudo ou par un lien.</small></span></label>" +
+      "</div>" +
+      '<button class="bouton bouton-primaire bouton-pleine-largeur" id="creer">Créer l\'équipe</button>' +
+      '<p class="note" style="font-size: var(--font-size-xs); color: var(--color-text-secondary); margin-top: var(--space-3)">Tu seras le capitaine. Tu pourras transmettre ce rôle à un autre membre.</p>' +
+      "</div>";
+  }
+
+  function rendre() {
+    // Un joueur n'appartient qu'à une seule équipe par tournoi (S04-04)
+    const dejaEquipe = Esport.equipe(t.id);
+    if (dejaEquipe && !demandeEnCours) {
+      document.getElementById("onglets").style.display = "none";
+      document.getElementById("panneau").innerHTML = '<div class="encart">' + Esport.icone("groupe", "f-primary") +
+        "<div><strong>Tu es déjà dans l'équipe " + dejaEquipe.nom + "</strong><p>On ne peut appartenir qu'à une seule équipe par tournoi.</p>" +
+        '<a href="#" class="lien-encart" data-ecran="10" data-id="' + t.id + '">Voir mon équipe</a></div></div>';
+      return;
+    }
+    document.querySelectorAll("#onglets button").forEach((b) => {
+      b.classList.toggle("actif", b.dataset.onglet === onglet);
+      b.setAttribute("aria-selected", b.dataset.onglet === onglet);
+    });
+    document.getElementById("panneau").innerHTML = onglet === "rejoindre" ? rendreRejoindre() : rendreCreer();
+  }
+
+  document.getElementById("onglets").addEventListener("click", (e) => {
+    const bouton = e.target.closest("[data-onglet]");
+    if (!bouton) return;
+    onglet = bouton.dataset.onglet;
+    rendre();
+  });
+
+  /* ---- Demande pour rejoindre : le capitaine accepte quelques secondes plus tard (simulé) ---- */
+  document.getElementById("panneau").addEventListener("click", (e) => {
+    const bouton = e.target.closest("[data-demande]");
+    if (bouton && !bouton.disabled) {
+      const equipe = equipesOuvertes().find((x) => x.nom === bouton.dataset.demande);
+      demandeEnCours = equipe.nom;
+      rendre();
+      Nav.toast("Demande envoyée à " + equipe.capitaine);
+      setTimeout(() => accepterDemande(equipe), 3500);
+      return;
+    }
+    if (e.target.closest("#creer")) creerEquipe();
+  });
+
+  function accepterDemande(equipe) {
+    const membres = equipe.membres.concat([moi]);
+    const complete = membres.length >= taille;
+    Esport.changerEquipe(t.id, {
+      nom: equipe.nom, ouverte: true, capitaine: equipe.capitaine, membres,
+      demandes: [], invitations: [], lien: "maxit.ma/e/" + equipe.nom.replace(/\W/g, "").slice(0, 4).toUpperCase() + "2210"
+    });
+    // Effectif atteint : l'équipe est inscrite automatiquement (S04-03)
+    if (complete) Esport.changerInscription(t.id, { etat: "inscrit" });
+    Nav.dialogue({
+      icone: Esport.icone("coche", "f-primary"),
+      titre: equipe.capitaine + " a accepté ta demande",
+      texte: "Tu fais partie de l'équipe " + equipe.nom + "." +
+        (complete ? " L'équipe est complète : elle est inscrite au tournoi." : " Il manque encore " + (taille - membres.length) + " joueur(s)."),
+      boutons: [{ libelle: "Voir mon équipe", primaire: true, action: () => Nav.aller("10", null, { id: t.id }) }]
+    });
+  }
+
+  /* ---- Création : nom unique dans le tournoi ---- */
+  function creerEquipe() {
+    const nom = document.getElementById("nom-equipe").value.trim();
+    const erreur = document.getElementById("erreur-nom");
+    const champ = document.getElementById("champ-nom");
+    const pris = DONNEES.nomsEquipesPris.concat((DONNEES.equipesOuvertes[t.id] || []).map((x) => x.nom))
+      .some((n) => n.toLowerCase() === nom.toLowerCase());
+    let message = "";
+    if (nom.length < 3) message = "Le nom doit faire au moins 3 caractères.";
+    else if (pris) message = "« " + nom + " » est déjà pris dans ce tournoi. Choisis un autre nom.";
+    erreur.textContent = message;
+    erreur.classList.toggle("visible", !!message);
+    champ.classList.toggle("erreur", !!message);
+    if (message) return;
+
+    const ouverte = document.querySelector('input[name="visibilite"]:checked').value === "ouverte";
+    Esport.changerEquipe(t.id, {
+      nom, ouverte, capitaine: moi, membres: [moi],
+      // Une équipe ouverte reçoit vite des demandes (simulé)
+      demandes: ouverte ? DONNEES.demandesSimulees.slice() : [],
+      invitations: [],
+      lien: "maxit.ma/e/" + nom.replace(/\W/g, "").slice(0, 4).toUpperCase() + "4471"
+    });
+    Nav.aller("10", null, { id: t.id, message: "creee" });
+  }
+
+  Esport.monter(rendre);
+</script>
+</body>
+</html>

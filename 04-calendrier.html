@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<!-- Écran 04 — Calendrier des tournois, recherche et filtres.
+     US : S05-01 (tournois du pays, du plus proche au plus lointain, recherche, filtres, inscriptions closes visibles),
+     S05-02 (le joueur gratuit voit aussi les tournois réservés, avec leur condition d'accès),
+     S03-04 (badge « Réservé aux abonnés »), S03-07 (tournois MEA ouverts dans le pays du joueur). -->
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Calendrier des tournois</title>
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .barre-recherche { display: flex; gap: var(--space-2); padding: 0 var(--page-gutter) var(--space-3); }
+    .barre-recherche .champ { flex: 1; }
+    .bouton-filtres {
+      width: 48px;
+      height: 48px;
+      border-radius: var(--radius-round);
+      border: 1px solid var(--color-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      flex-shrink: 0;
+    }
+    .bouton-filtres svg { width: 22px; height: 22px; }
+    .bouton-filtres.actif { border-color: var(--color-primary); background: var(--color-primary-soft); }
+    .bouton-filtres .pastille { top: -2px; right: -2px; background: var(--color-primary); }
+
+    .resume { font-size: var(--font-size-sm); color: var(--color-text-secondary); padding: var(--space-4) var(--page-gutter) 0; }
+    .titre-groupe { font-size: var(--font-size-sm); font-weight: var(--font-weight-bold); color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: .04em; padding: var(--space-5) var(--page-gutter) var(--space-3); }
+
+    /* Feuille de filtres */
+    .feuille h2 { font-size: var(--font-size-xl); margin-bottom: var(--space-2); }
+    .feuille h3 { font-size: var(--font-size-sm); font-weight: var(--font-weight-bold); margin: var(--space-5) 0 var(--space-2); }
+    .feuille .actions-filtres { display: flex; gap: var(--space-3); margin-top: var(--space-6); }
+    .feuille .actions-filtres .bouton { flex: 1; }
+  </style>
+</head>
+<body data-zone="esport">
+<div class="cadre">
+  <div class="telephone">
+    <div class="barre-etat" data-heure="21:10"></div>
+    <header class="entete-esport" data-titre="Tournois"></header>
+
+    <main class="contenu">
+      <div class="barre-recherche">
+        <label class="champ">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path class="f-muted" d="M10.5 3a7.5 7.5 0 0 1 5.9 12.1l4.8 4.8-1.4 1.4-4.8-4.8A7.5 7.5 0 1 1 10.5 3zm0 2a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11z"/></svg>
+          <span class="cache-visuel">Rechercher un tournoi ou un jeu</span>
+          <input type="search" id="recherche" placeholder="Tournoi ou jeu" autocomplete="off">
+        </label>
+        <button class="bouton-filtres" id="ouvrir-filtres" aria-label="Filtres"></button>
+      </div>
+
+      <!-- Filtre rapide par jeu (le même que dans la feuille de filtres) -->
+      <div class="puces" id="puces-jeux" role="group" aria-label="Filtrer par jeu"></div>
+
+      <p class="resume" id="resume" aria-live="polite"></p>
+      <div id="liste"></div>
+      <div class="fin-contenu"></div>
+    </main>
+
+    <nav class="nav-bas" data-onglet="04"></nav>
+
+    <!-- Feuille de filtres -->
+    <div class="voile" id="voile-filtres">
+      <div class="feuille" role="dialog" aria-modal="true" aria-labelledby="titre-filtres">
+        <div class="poignee"></div>
+        <h2 id="titre-filtres">Filtres</h2>
+        <div id="groupes-filtres"></div>
+        <div class="actions-filtres">
+          <button class="bouton bouton-secondaire" id="effacer-filtres">Effacer</button>
+          <button class="bouton bouton-primaire" id="appliquer-filtres"></button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/esport.js"></script>
+<script src="js/demo.js"></script>
+<script>
+  /* ---- Définition des filtres (S05-01) : jeu, format, date, accès, mode de jeu ---- */
+  const FILTRES = [
+    { cle: "jeu", titre: "Jeu", choix: [["tous", "Tous"]].concat(DONNEES.jeux.map((j) => [j.id, j.nom])) },
+    { cle: "format", titre: "Format", choix: [["tous", "Tous"], ["elimination", "Élimination directe"], ["poules", "Poules"]] },
+    { cle: "date", titre: "Date", choix: [["tous", "Toutes"], ["semaine", "Cette semaine"], ["mois", "Ce mois-ci"], ["plus-tard", "Plus tard"]] },
+    { cle: "acces", titre: "Accès", choix: [["tous", "Tous"], ["ouvert", "Ouvert à tous"], ["abonnes", "Réservé aux abonnés"]] },
+    { cle: "mode", titre: "Mode de jeu", choix: [["tous", "Tous"], ["solo", "Solo"], ["equipe", "Équipe"]] }
+  ];
+  const AUCUN_FILTRE = { jeu: "tous", format: "tous", date: "tous", acces: "tous", mode: "tous" };
+
+  let filtres = Object.assign({}, AUCUN_FILTRE);   // filtres appliqués
+  let brouillon = null;                            // filtres en cours de choix dans la feuille
+
+  /* Texte sans accents ni majuscules, pour la recherche */
+  function normaliser(texte) {
+    return texte.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+  }
+
+  /* Le tournoi passe-t-il les filtres et la recherche ? */
+  function correspond(t, f, recherche) {
+    const jeu = Esport.jeu(t.jeu);
+    if (recherche && !normaliser(t.nom + " " + jeu.nom).includes(normaliser(recherche))) return false;
+    if (f.jeu !== "tous" && t.jeu !== f.jeu) return false;
+    if (f.format !== "tous" && t.format !== f.format) return false;
+    if (f.acces === "ouvert" && t.acces !== "tous") return false;
+    if (f.acces === "abonnes" && t.acces !== "abonnes") return false;
+    if (f.mode !== "tous" && t.mode !== f.mode) return false;
+    if (f.date !== "tous") {
+      const maintenant = Esport.maintenant();
+      const debut = new Date(t.debut);
+      const jours = (debut - maintenant) / 86400000;
+      const memeMois = debut.getMonth() === maintenant.getMonth() && debut.getFullYear() === maintenant.getFullYear();
+      if (f.date === "semaine" && !(jours >= -1 && jours <= 7)) return false;
+      if (f.date === "mois" && !memeMois) return false;
+      if (f.date === "plus-tard" && memeMois) return false;
+    }
+    return true;
+  }
+
+  function nombreFiltresActifs(f) {
+    return Object.keys(AUCUN_FILTRE).filter((cle) => f[cle] !== "tous").length;
+  }
+
+  /* ---- Liste des tournois du pays, du plus proche au plus lointain ---- */
+  function rendreListe() {
+    const recherche = document.getElementById("recherche").value.trim();
+    const tournois = Esport.tournoisDuPays()
+      .filter((t) => correspond(t, filtres, recherche))
+      .sort((a, b) => a.debut.localeCompare(b.debut));
+
+    const groupes = [
+      { titre: "En cours", tournois: tournois.filter((t) => t.etat === "en-cours") },
+      { titre: "À venir", tournois: tournois.filter((t) => t.etat === "ouvert" || t.etat === "complet") },
+      { titre: "Terminés", tournois: tournois.filter((t) => t.etat === "termine").reverse() }
+    ];
+
+    const pays = Esport.pays().nom;
+    document.getElementById("resume").textContent = tournois.length
+      ? tournois.length + (tournois.length > 1 ? " tournois" : " tournoi") + " au " + pays
+      : "";
+
+    if (!tournois.length) {
+      document.getElementById("liste").innerHTML =
+        '<div class="vide"><strong>Aucun tournoi trouvé</strong>Essaie un autre mot ou retire des filtres.' +
+        '<br><button class="bouton bouton-secondaire" id="tout-effacer">Tout effacer</button></div>';
+      document.getElementById("tout-effacer").addEventListener("click", () => {
+        document.getElementById("recherche").value = "";
+        filtres = Object.assign({}, AUCUN_FILTRE);
+        rendre();
+      });
+      return;
+    }
+
+    document.getElementById("liste").innerHTML = groupes
+      .filter((g) => g.tournois.length)
+      .map((g) => '<h2 class="titre-groupe">' + g.titre + "</h2>" + g.tournois.map(Esport.carteTournoi).join(""))
+      .join("");
+  }
+
+  /* ---- Puces rapides par jeu ---- */
+  function rendrePuces() {
+    document.getElementById("puces-jeux").innerHTML = FILTRES[0].choix.map(([valeur, libelle]) =>
+      '<button class="puce' + (filtres.jeu === valeur ? " actif" : "") + '" data-jeu="' + valeur + '" aria-pressed="' + (filtres.jeu === valeur) + '">' + libelle + "</button>"
+    ).join("");
+  }
+
+  /* ---- Bouton filtres avec le nombre de filtres actifs ---- */
+  function rendreBoutonFiltres() {
+    const n = nombreFiltresActifs(filtres);
+    const bouton = document.getElementById("ouvrir-filtres");
+    bouton.classList.toggle("actif", n > 0);
+    bouton.innerHTML = Esport.icone("filtres", n ? "f-primary" : "f-text") + (n ? '<span class="pastille">' + n + "</span>" : "");
+    bouton.setAttribute("aria-label", "Filtres" + (n ? ", " + n + " actifs" : ""));
+  }
+
+  function rendre() {
+    rendrePuces();
+    rendreBoutonFiltres();
+    rendreListe();
+  }
+
+  /* ---- Feuille de filtres ---- */
+  function rendreFeuille() {
+    document.getElementById("groupes-filtres").innerHTML = FILTRES.map((g) =>
+      "<h3>" + g.titre + '</h3><div class="puces puces-retour" role="group" aria-label="' + g.titre + '">' +
+      g.choix.map(([valeur, libelle]) =>
+        '<button class="puce' + (brouillon[g.cle] === valeur ? " actif" : "") + '" data-cle="' + g.cle + '" data-valeur="' + valeur + '" aria-pressed="' + (brouillon[g.cle] === valeur) + '">' + libelle + "</button>"
+      ).join("") + "</div>"
+    ).join("");
+    // Le bouton annonce le nombre de résultats avant d'appliquer
+    const recherche = document.getElementById("recherche").value.trim();
+    const n = Esport.tournoisDuPays().filter((t) => correspond(t, brouillon, recherche)).length;
+    document.getElementById("appliquer-filtres").textContent = "Afficher " + n + (n > 1 ? " tournois" : " tournoi");
+  }
+
+  const voile = document.getElementById("voile-filtres");
+  document.getElementById("ouvrir-filtres").addEventListener("click", () => {
+    brouillon = Object.assign({}, filtres);
+    rendreFeuille();
+    voile.classList.add("ouvert");
+  });
+  voile.addEventListener("click", (e) => {
+    if (e.target === voile) voile.classList.remove("ouvert");
+    const puce = e.target.closest("[data-cle]");
+    if (puce) {
+      brouillon[puce.dataset.cle] = puce.dataset.valeur;
+      rendreFeuille();
+    }
+  });
+  document.getElementById("effacer-filtres").addEventListener("click", () => {
+    brouillon = Object.assign({}, AUCUN_FILTRE);
+    rendreFeuille();
+  });
+  document.getElementById("appliquer-filtres").addEventListener("click", () => {
+    filtres = brouillon;
+    voile.classList.remove("ouvert");
+    rendre();
+  });
+
+  document.getElementById("puces-jeux").addEventListener("click", (e) => {
+    const puce = e.target.closest("[data-jeu]");
+    if (!puce) return;
+    filtres.jeu = puce.dataset.jeu;
+    rendre();
+  });
+  document.getElementById("recherche").addEventListener("input", rendreListe);
+
+  // Le badge « Réservé aux abonnés » change avec l'interrupteur de démo
+  Esport.monter(rendre);
+</script>
+</body>
+</html>

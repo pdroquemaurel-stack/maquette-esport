@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<!-- Écran 08 — Résultat de l'inscription (08-inscription-resultat.html?id=t09).
+     US : S04-01 / S04-02 (réponse immédiate : place acquise ou liste d'attente avec rang),
+     S04-05 (refus : compte ou identifiant de jeu déjà inscrit, contestable), critère de pays (S03-07),
+     S06-03 (suspension de 7 jours après 3 forfaits), S03-04 (abonnement expiré : inscription annulée).
+     Pas de refus pour l'âge (S01-03 en suspens).
+     Le résultat dépend du tournoi ; les refus, la suspension et l'abonnement expiré
+     s'obtiennent depuis le menu de démo. -->
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Résultat de l'inscription</title>
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .resultat { display: flex; flex-direction: column; align-items: center; text-align: center; padding: var(--space-6) var(--page-gutter) var(--space-5); }
+    .pictogramme { width: 88px; height: 88px; border-radius: var(--radius-round); display: flex; align-items: center; justify-content: center; margin-bottom: var(--space-5); background: var(--color-primary-soft); }
+    .pictogramme svg { width: 44px; height: 44px; }
+    .pictogramme.succes { background: var(--color-success-dark); }
+    .pictogramme.refus { background: var(--color-bg-muted); }
+    .resultat h1 { font-size: var(--font-size-xxl); line-height: var(--line-height-tight); margin-bottom: var(--space-2); }
+    .resultat p { color: var(--color-text-secondary); }
+    .rang { display: block; font-size: 56px; font-weight: var(--font-weight-bold); color: var(--color-primary); line-height: 1; margin: var(--space-2) 0; }
+    .rang small { display: block; font-size: var(--font-size-sm); color: var(--color-text-secondary); font-weight: var(--font-weight-medium); margin-top: var(--space-1); }
+
+    /* Motif du refus */
+    .motif { margin-bottom: var(--space-4); }
+    .motif ul { margin: var(--space-2) 0 0 var(--space-4); }
+    .rappel { font-size: var(--font-size-xs); color: var(--color-text-muted); padding: 0 var(--page-gutter); margin-top: var(--space-2); }
+    .barre-action .bouton + .bouton { margin-top: var(--space-2); }
+  </style>
+</head>
+<body data-zone="esport">
+<div class="cadre">
+  <div class="telephone">
+    <div class="barre-etat" data-heure="21:10"></div>
+    <header class="entete-esport" data-titre="Inscription" data-repli="06"></header>
+
+    <main class="contenu" id="page"></main>
+    <div class="barre-action" id="action"></div>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/esport.js"></script>
+<script src="js/demo.js"></script>
+<script>
+  /* ---- Quel résultat afficher ? ---- */
+  const scenario = Esport.lireScenario();
+
+  // Tournoi par défaut de chaque état de démo (le menu de démo n'en transmet pas)
+  const TOURNOI_DEMO = { "refus-pays": "t07", "abonnement-expire": "t02", "liste-attente": "t11" };
+  const t = Esport.tournoi(Nav.param("id")) || Esport.tournoi(TOURNOI_DEMO[scenario] || "t09");
+
+  function choisirResultat() {
+    const SCENARIOS = {
+      "refus-doublon": "refus-identifiant", "refus-compte": "refus-compte", "refus-pays": "refus-pays",
+      "suspension": "suspension", "abonnement-expire": "abonnement-expire", "liste-attente": "attente"
+    };
+    if (SCENARIOS[scenario]) return SCENARIOS[scenario];
+    const etat = Esport.etatBouton(t);
+    if (etat === "inscrire" || etat === "inscrit") return "acquise";
+    if (etat === "complet" || etat === "attente") return "attente";
+    return "closes";
+  }
+  const resultat = choisirResultat();
+
+  /* ---- Enregistrement de l'inscription (une seule fois, à l'arrivée sur l'écran) ---- */
+  const ins = Esport.inscription(t.id);
+  if (resultat === "acquise" && !(ins && ins.etat === "inscrit")) {
+    Esport.changerInscription(t.id, { etat: "inscrit" });
+  }
+  if (resultat === "attente" && !(ins && ins.etat === "attente")) {
+    // Inscrit après les joueurs déjà en attente : rang selon l'horodatage
+    Esport.changerInscription(t.id, { etat: "attente", rang: 4 });
+  }
+  if (resultat === "abonnement-expire") {
+    Esport.changerInscription(t.id, null);
+    Etat.set("abonne", false);
+  }
+
+  /* ---- Contenu de chaque état ---- */
+  const coche = Esport.icone("coche", "f-white");
+  const alerte = Esport.icone("alerte", "f-text");
+  const quand = Esport.jourLong(t.debut) + " à " + Esport.heure(t.debut);
+  const gamertag = DONNEES.joueur.gamertags[t.jeu];
+  const derniereForfait = new Date(DONNEES.forfaits[DONNEES.forfaits.length - 1] + "T21:10");
+  const finSuspension = new Date(derniereForfait.getTime() + 7 * 86400000).toISOString().slice(0, 10);
+
+  const VOIR_TOURNOI = '<a href="#" class="bouton bouton-primaire bouton-pleine-largeur" data-ecran="06" data-id="' + t.id + '">Voir le tournoi</a>';
+  const ACCUEIL = '<a href="#" class="bouton bouton-secondaire bouton-pleine-largeur" data-ecran="03">Retour à l\'accueil</a>';
+  const CONTESTER = '<a href="#" class="bouton bouton-secondaire bouton-pleine-largeur" data-ecran="26" data-id="' + t.id + '">Contester</a>';
+  const AUTRES = '<a href="#" class="bouton bouton-primaire bouton-pleine-largeur" data-ecran="04">Voir d\'autres tournois</a>';
+
+  function motif(titre, lignes) {
+    return '<div class="encart motif">' + alerte + "<div><strong>" + titre + "</strong>" +
+      lignes.map((l) => "<p>" + l + "</p>").join("") + "</div></div>";
+  }
+
+  function contenu() {
+    switch (resultat) {
+      case "acquise":
+        return {
+          picto: '<div class="pictogramme succes">' + coche + "</div>",
+          titre: "Ta place est acquise !",
+          texte: "Tu es inscrit à " + t.nom + ". Rendez-vous le " + quand + ". Tu seras convoqué dès que ton adversaire sera connu.",
+          actions: VOIR_TOURNOI + ACCUEIL
+        };
+      case "attente": {
+        const rang = Esport.inscription(t.id).rang;
+        return {
+          picto: '<div class="pictogramme">' + Esport.icone("groupe", "f-primary") + "</div>",
+          titre: "Tu es sur liste d'attente",
+          texte: '<span class="rang">' + rang + "e<small>sur la liste d'attente</small></span>" +
+            "Le tournoi est complet. La première place libérée revient au premier de la liste : tu seras prévenu par notification.",
+          actions: VOIR_TOURNOI + ACCUEIL
+        };
+      }
+      case "refus-pays":
+        return {
+          picto: '<div class="pictogramme refus">' + alerte + "</div>",
+          titre: "Inscription refusée",
+          texte: "Ton inscription à " + t.nom + " n'a pas été enregistrée.",
+          motif: motif("Motif : pays non éligible", [
+            "Ce tournoi est ouvert aux joueurs de : " + t.pays.map((p) => DONNEES.pays[p].nom).join(", ") + ".",
+            "Ton compte Max it est rattaché au " + Esport.pays().nom + "."
+          ]),
+          actions: AUTRES + CONTESTER
+        };
+      case "refus-compte":
+        return {
+          picto: '<div class="pictogramme refus">' + alerte + "</div>",
+          titre: "Inscription refusée",
+          texte: "Ton inscription à " + t.nom + " n'a pas été enregistrée.",
+          motif: motif("Motif : compte déjà inscrit", [
+            "Ton compte Max it est déjà inscrit à ce tournoi sous un autre pseudo.",
+            "Un même compte ne peut être inscrit qu'une fois par tournoi."
+          ]),
+          actions: AUTRES + CONTESTER
+        };
+      case "refus-identifiant":
+        return {
+          picto: '<div class="pictogramme refus">' + alerte + "</div>",
+          titre: "Inscription refusée",
+          texte: "Ton inscription à " + t.nom + " n'a pas été enregistrée.",
+          motif: motif("Motif : identifiant de jeu déjà inscrit", [
+            "L'identifiant " + Esport.jeu(t.jeu).nom + " « " + (gamertag || "—") + " » est déjà inscrit à ce tournoi par un autre compte.",
+            "Un même identifiant de jeu ne peut être inscrit qu'une fois par tournoi."
+          ]),
+          actions: AUTRES + CONTESTER
+        };
+      case "suspension":
+        return {
+          picto: '<div class="pictogramme">' + Esport.icone("cadenas", "f-primary") + "</div>",
+          titre: "Inscriptions suspendues",
+          texte: "Tu pourras de nouveau t'inscrire à un tournoi le " + Esport.jourLong(finSuspension) + ".",
+          motif: motif("Motif : 3 forfaits en 30 jours", [
+            "Tu as été déclaré forfait le " + DONNEES.forfaits.map(Esport.jourCourt).join(", le ") + ".",
+            "Après 3 forfaits en 30 jours, les inscriptions sont bloquées pendant 7 jours."
+          ]),
+          actions: ACCUEIL + CONTESTER
+        };
+      case "abonnement-expire":
+        return {
+          picto: '<div class="pictogramme">' + Esport.icone("cadenas", "f-primary") + "</div>",
+          titre: "Inscription annulée",
+          texte: "Ton abonnement a expiré le 8 oct., avant le début de " + t.nom + ". Ton inscription à ce tournoi réservé aux abonnés est donc annulée.",
+          motif: motif("Tu peux encore jouer ce tournoi", [
+            "Réabonne-toi avant le " + quand + ", puis inscris-toi de nouveau."
+          ]),
+          actions: '<a href="#" class="bouton bouton-primaire bouton-pleine-largeur" data-ecran="21" data-origine>Se réabonner</a>' +
+            '<a href="#" class="bouton bouton-secondaire bouton-pleine-largeur" data-ecran="06" data-id="' + t.id + '">Voir le tournoi</a>'
+        };
+      default:
+        return {
+          picto: '<div class="pictogramme refus">' + alerte + "</div>",
+          titre: "Inscription impossible",
+          texte: "Les inscriptions à " + t.nom + " ne sont pas ouvertes pour toi en ce moment.",
+          actions: VOIR_TOURNOI + ACCUEIL
+        };
+    }
+  }
+
+  function rendre() {
+    const c = contenu();
+    document.getElementById("page").innerHTML =
+      '<div class="resultat">' + c.picto + "<h1>" + c.titre + "</h1><p>" + c.texte + "</p></div>" +
+      (c.motif || "") +
+      Esport.carteTournoi(t) +
+      (resultat.startsWith("refus") || resultat === "suspension" ? '<p class="rappel">Cette décision est enregistrée avec son motif. Tu peux la contester auprès du responsable local.</p>' : "");
+    document.getElementById("action").innerHTML = c.actions;
+  }
+  Esport.monter(rendre);
+</script>
+</body>
+</html>

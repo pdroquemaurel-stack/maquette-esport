@@ -1,0 +1,320 @@
+/* Données fictives de la maquette.
+   Seul fichier de données : tous les écrans lisent l'objet DONNEES. */
+
+const DONNEES = {
+
+  /* Date et heure « actuelles » de la maquette : vendredi soir, pendant le Défi eFootball */
+  maintenant: "2026-10-09T21:10",
+
+  /* ---- Joueur connecté (compte Max it) ---- */
+  joueur: {
+    prenom: "Youssef",
+    numero: "+212 6 61 23 45 67",
+    pays: "MA",
+    pseudo: "Youss_KZ",
+    // Identifiants de jeu (gamertags), un par jeu
+    gamertags: { freefire: "YoussKZ#4471", efootball: "YoussKZ" },
+    // Rempli quand le joueur est abonné (voir l'interrupteur du menu de démo)
+    abonnement: { offre: "mensuelle", echeance: "2026-11-07" },
+    // Inscriptions en cours (modifiables pendant la démo, voir Esport.inscription)
+    // etat : "inscrit" ou "attente" (liste d'attente, avec le rang)
+    inscriptions: {
+      t01: { etat: "inscrit" },
+      t05: { etat: "inscrit" },
+      t11: { etat: "attente", rang: 3 }
+    },
+    // Tournois terminés joués sur la nouvelle plateforme (écran 05)
+    historique: [{ tournoi: "t10", resultat: "117e sur 128" }],
+    // Ancien joueur : historique repris de l'ancienne plateforme (S01-05)
+    historiqueRepris: { tournois: 12, victoires: 2 }
+  },
+
+  /* ---- Équipes (S04-03, S04-04) ----
+     Une équipe n'existe que dans son tournoi. membres[0] est le membre le plus ancien.
+     mesEquipes : équipe du joueur par tournoi (modifiable pendant la démo, voir Esport.equipe). */
+  mesEquipes: {
+    t01: {
+      nom: "Kenitra Kings", ouverte: false, capitaine: "Youss_KZ",
+      membres: ["Youss_KZ", "Ismail_Pro", "Saad.Booyah", "Yahya_FF"],
+      demandes: [], invitations: [], lien: "maxit.ma/e/KK4471"
+    }
+  },
+
+  /* Équipes ouvertes de chaque tournoi en équipe : nom, capitaine, membres actuels */
+  equipesOuvertes: {
+    t01: [
+      { nom: "Team Sahara", capitaine: "Bilal_Rush", membres: ["Bilal_Rush", "Chaimae_FF", "Hassan.Pro"] },
+      { nom: "Casa Legends", capitaine: "Ali_Headshot", membres: ["Ali_Headshot", "Meryem.FF"] },
+      { nom: "Rabat Wolves", capitaine: "Taha_Sniper", membres: ["Taha_Sniper"] }
+    ],
+    t12: [
+      { nom: "Casa Drop Squad", capitaine: "Hassan.Pro", membres: ["Hassan.Pro", "Bilal_Rush", "Asmae.G"] },
+      { nom: "Erg Chebbi Team", capitaine: "Rania_212", membres: ["Rania_212"] }
+    ],
+    t04: [
+      { nom: "Dakar Booyah", capitaine: "Simba_221", membres: ["Simba_221", "Awa.FF"] },
+      { nom: "Atlas Elite", capitaine: "Driss_Rush", membres: ["Driss_Rush", "Jihane_GG", "Leila_GG"] }
+    ],
+    t06: [
+      { nom: "Rabat Snipers", capitaine: "Rania_212", membres: ["Rania_212", "Asmae.G", "Nadia.X"] }
+    ]
+  },
+
+  /* Noms d'équipe déjà utilisés dans les tournois (le nom est unique dans un tournoi) */
+  nomsEquipesPris: ["Atlas Squad", "Casa Legends", "Team Sahara", "Rabat Wolves", "Marrakech Fire",
+    "Tanger Storm", "Kenitra Kings", "Dakar Booyah", "Atlas Elite", "Rabat Snipers", "Casa Drop Squad", "Erg Chebbi Team"],
+
+  /* Joueurs qui demandent à rejoindre une équipe ouverte que le joueur vient de créer */
+  demandesSimulees: ["Houda_FF", "Omar_Sniper"],
+
+  /* Forfaits du joueur sur 30 jours (suspension après 3 forfaits, S06-03) */
+  forfaits: ["2026-09-19", "2026-10-02", "2026-10-07"],
+
+  /* Pseudos déjà pris (écran 02) */
+  pseudosPris: ["Youss_KZ", "ShadowMA", "AtlasKing", "Simba_221", "KingAbidjan", "Zizou10"],
+
+  /* ---- Pays ---- */
+  pays: {
+    MA: { nom: "Maroc", monnaie: "MAD", indicatif: "+212" },
+    SN: { nom: "Sénégal", monnaie: "FCFA", indicatif: "+221" },
+    CI: { nom: "Côte d'Ivoire", monnaie: "FCFA", indicatif: "+225" }
+  },
+
+  /* ---- Offres d'abonnement par pays (S11-02) ---- */
+  offres: {
+    MA: [
+      { id: "quotidienne", libelle: "Jour", prix: 3, essai: null },
+      { id: "hebdomadaire", libelle: "Semaine", prix: 15, essai: null },
+      { id: "mensuelle", libelle: "Mois", prix: 49, essai: "7 jours offerts" }
+    ],
+    SN: [
+      { id: "quotidienne", libelle: "Jour", prix: 150, essai: null },
+      { id: "hebdomadaire", libelle: "Semaine", prix: 700, essai: null },
+      { id: "mensuelle", libelle: "Mois", prix: 2500, essai: null }
+    ],
+    CI: [
+      { id: "quotidienne", libelle: "Jour", prix: 150, essai: null },
+      { id: "hebdomadaire", libelle: "Semaine", prix: 750, essai: null },
+      { id: "mensuelle", libelle: "Mois", prix: 2500, essai: "3 jours offerts" }
+    ]
+  },
+
+  /* ---- Jeux ----
+     boutique : offres d'achats intégrés activées par pays, prix en monnaie locale (S05-05).
+     Un jeu sans offre n'affiche pas de lien vers la boutique. */
+  jeux: [
+    {
+      id: "freefire", nom: "Free Fire", genre: "Battle royale", equipe: 4,
+      boutique: { MA: [{ libelle: "100 diamants", prix: 10 }, { libelle: "520 diamants", prix: 49 }, { libelle: "Pass Booyah", prix: 39 }] }
+    },
+    {
+      id: "pubg", nom: "PUBG Mobile", genre: "Battle royale", equipe: 4,
+      boutique: { MA: [{ libelle: "60 UC", prix: 9 }, { libelle: "325 UC", prix: 45 }] }
+    },
+    {
+      id: "efootball", nom: "eFootball", genre: "Football", equipe: 1,
+      boutique: { MA: [{ libelle: "130 pièces", prix: 12 }, { libelle: "550 pièces", prix: 49 }] }
+    },
+    { id: "codm", nom: "Call of Duty: Mobile", genre: "Tir", equipe: 5, boutique: null }
+  ],
+
+  /* ---- Tournois ----
+     acces : "tous" ou "abonnes" (S03-04)
+     portee : "local" ou "MEA" (S03-07) ; pays : pays où le tournoi est ouvert
+     mode : "solo" ou "equipe" ; format : "elimination" ou "poules"
+     etat : "ouvert", "complet", "en-cours", "termine" */
+  tournois: [
+    {
+      id: "t01", nom: "Coupe Atlas Free Fire", jeu: "freefire", acces: "tous",
+      portee: "local", pays: ["MA"], mode: "equipe", format: "elimination",
+      debut: "2026-10-18T20:00", ouverture: "2026-10-01", cloture: "2026-10-17",
+      places: 64, inscrits: 41, dotations: ["2 000 MAD", "1 000 MAD", "500 MAD"], etat: "ouvert",
+      // Règlement modifié après l'ouverture des inscriptions : nouvelle acceptation requise (S03-03)
+      reglement: {
+        version: 2, modifie: true, date: "2026-10-08",
+        changements: [
+          "Article 3 : la présence se confirme désormais 10 minutes avant le match, au lieu de 5.",
+          "Article 6 : la dotation de la 3e place passe de 250 à 500 MAD."
+        ]
+      }
+    },
+    {
+      id: "t02", nom: "eFootball Masters Casablanca", jeu: "efootball", acces: "abonnes",
+      portee: "local", pays: ["MA"], mode: "solo", format: "elimination",
+      debut: "2026-10-12T19:00", ouverture: "2026-09-28", cloture: "2026-10-11",
+      places: 128, inscrits: 97, dotations: ["10 Go de data", "5 Go de data", "2 Go de data"], etat: "ouvert",
+      reglement: { version: 1 }
+    },
+    {
+      id: "t03", nom: "Ligue eFootball du Royaume", jeu: "efootball", acces: "tous",
+      portee: "local", pays: ["MA"], mode: "solo", format: "poules",
+      debut: "2026-10-05T18:00", ouverture: "2026-09-20", cloture: "2026-10-03",
+      places: 16, inscrits: 16, dotations: ["3 000 MAD", "1 500 MAD"], etat: "en-cours",
+      reglement: { version: 1 }
+    },
+    {
+      id: "t04", nom: "MEA Free Fire Championship", jeu: "freefire", acces: "abonnes",
+      portee: "MEA", pays: ["MA", "SN", "CI"], mode: "equipe", format: "poules",
+      debut: "2026-11-08T17:00", ouverture: "2026-10-01", cloture: "2026-11-05",
+      places: 256, inscrits: 88, dotations: ["Un smartphone par membre", "50 Go de data par membre"], etat: "ouvert",
+      reglement: { version: 1 }
+    },
+    {
+      id: "t05", nom: "Défi eFootball du vendredi", jeu: "efootball", acces: "tous",
+      portee: "local", pays: ["MA"], mode: "solo", format: "elimination",
+      debut: "2026-10-09T20:00", ouverture: "2026-10-02", cloture: "2026-10-08",
+      places: 16, inscrits: 16, dotations: ["1 Go de data", "500 Mo de data"], etat: "en-cours",
+      reglement: { version: 1 }
+    },
+    {
+      id: "t06", nom: "CODM Rabat Showdown", jeu: "codm", acces: "abonnes",
+      portee: "local", pays: ["MA"], mode: "equipe", format: "elimination",
+      debut: "2026-10-30T20:00", ouverture: "2026-10-06", cloture: "2026-10-28",
+      places: 16, inscrits: 6, dotations: ["2 500 MAD"], etat: "ouvert",
+      reglement: { version: 1 }
+    },
+    {
+      id: "t07", nom: "Coupe de la Teranga eFootball", jeu: "efootball", acces: "tous",
+      portee: "local", pays: ["SN"], mode: "solo", format: "elimination",
+      debut: "2026-10-19T20:00", ouverture: "2026-10-01", cloture: "2026-10-17",
+      places: 64, inscrits: 52, dotations: ["100 000 FCFA", "50 000 FCFA"], etat: "ouvert",
+      reglement: { version: 1 }
+    },
+    {
+      id: "t08", nom: "Abidjan PUBG Night", jeu: "pubg", acces: "abonnes",
+      portee: "local", pays: ["CI"], mode: "equipe", format: "poules",
+      debut: "2026-10-24T21:00", ouverture: "2026-10-03", cloture: "2026-10-22",
+      places: 24, inscrits: 11, dotations: ["150 000 FCFA"], etat: "ouvert",
+      reglement: { version: 1 }
+    },
+    {
+      id: "t09", nom: "MEA eFootball Cup", jeu: "efootball", acces: "tous",
+      portee: "MEA", pays: ["MA", "SN"], mode: "solo", format: "poules",
+      debut: "2026-11-15T19:00", ouverture: "2026-10-08", cloture: "2026-11-12",
+      places: 512, inscrits: 143, dotations: ["Une console de jeu", "20 Go de data"], etat: "ouvert",
+      reglement: { version: 1 }
+    },
+    {
+      id: "t10", nom: "Free Fire Rentrée Cup", jeu: "freefire", acces: "tous",
+      portee: "local", pays: ["MA"], mode: "solo", format: "elimination",
+      debut: "2026-09-20T20:00", ouverture: "2026-09-01", cloture: "2026-09-18",
+      places: 128, inscrits: 128, dotations: ["1 000 MAD", "500 MAD", "250 MAD"], etat: "termine",
+      reglement: { version: 1 },
+      // Classement recalculé après une décision d'arbitrage (S05-04)
+      recalcul: "Classement recalculé le 21/09 après une décision d'arbitrage."
+    },
+    {
+      // Tournoi en équipe ouvert à tous, sans le joueur : parcours équipe testable en mode gratuit
+      id: "t12", nom: "PUBG Squad Casablanca", jeu: "pubg", acces: "tous",
+      portee: "local", pays: ["MA"], mode: "equipe", format: "elimination",
+      debut: "2026-10-25T20:00", ouverture: "2026-10-05", cloture: "2026-10-23",
+      places: 32, inscrits: 19, dotations: ["4 000 MAD", "2 000 MAD", "1 000 MAD"], etat: "ouvert",
+      reglement: { version: 1 }
+    },
+    {
+      id: "t11", nom: "PUBG Solo Night", jeu: "pubg", acces: "tous",
+      portee: "local", pays: ["MA"], mode: "solo", format: "elimination",
+      debut: "2026-10-16T21:00", ouverture: "2026-10-04", cloture: "2026-10-15",
+      places: 32, inscrits: 32, dotations: ["800 MAD"], etat: "complet",
+      reglement: { version: 1 }
+    }
+  ],
+
+  /* ---- Arbre du Défi eFootball (t05) : élimination simple à 16 joueurs (S02-02) ----
+     Chaque match : [joueur A, joueur B, score A, score B] ; score null = pas encore joué.
+     Le quart « en direct » reçoit son résultat pendant la démo (S06-01). */
+  arbres: {
+    t05: {
+      tours: ["Huitièmes", "Quarts", "Demi-finales", "Finale"],
+      matchs: [
+        [
+          ["Youss_KZ", "Brahim.10", 3, 1], ["Rachid_GOAT", "Sanaa_FC", 2, 0],
+          ["AtlasKing", "Mehdi_Gz", 1, 1, "AtlasKing"], ["Nour.ElHoda", "Tarik_77", 4, 2],
+          ["ShadowMA", "Ilyas_Pro", 2, 3], ["Zakaria.B", "Hamza_OCS", 0, 2],
+          ["Karim_RCA", "Yassine_MAS", 1, 0], ["Salma_WAC", "Anas_10", 2, 1]
+        ],
+        [
+          ["Youss_KZ", "Rachid_GOAT", null, null, null, "a-jouer"],
+          ["AtlasKing", "Nour.ElHoda", 1, 2],
+          ["Ilyas_Pro", "Hamza_OCS", 2, 1, null, "en-direct"],
+          ["Karim_RCA", "Salma_WAC", null, null]
+        ],
+        [[null, "Nour.ElHoda", null, null], [null, null, null, null]],
+        [[null, null, null, null]]
+      ],
+      // Résultat qui arrive pendant la démo : quart n° 3 (index 2)
+      resultatLive: { tour: 1, match: 2, scoreA: 3, scoreB: 1 },
+      // Heure de mon prochain match
+      monMatch: "21:30"
+    },
+    t10: {
+      // Tournoi terminé : seule la phase finale est affichée
+      tours: ["Quarts", "Demi-finales", "Finale"],
+      matchs: [
+        [["Simba_FF", "Dounia_X", 2, 0], ["Amine.Booyah", "Rayan_212", 1, 2],
+         ["Kenza_GG", "Omar_Sniper", 2, 1], ["Hakim_FF", "Lina.Fire", 0, 2]],
+        [["Simba_FF", "Rayan_212", 2, 1], ["Kenza_GG", "Lina.Fire", 1, 2]],
+        [["Simba_FF", "Lina.Fire", 2, 1]]
+      ]
+    }
+  },
+
+  /* ---- Poules de la Ligue eFootball du Royaume (t03, S02-03) ----
+     Barème : victoire 3, nul 1, défaite 0. 2 qualifiés par poule.
+     critere : critère de départage affiché quand deux joueurs ont les mêmes points (S06-04). */
+  poules: {
+    t03: [
+      { nom: "Poule A", joueurs: [
+        { pseudo: "Zizou10", j: 3, v: 2, n: 1, d: 0, diff: 5, pts: 7 },
+        { pseudo: "Mouad_FC", j: 3, v: 2, n: 0, d: 1, diff: 2, pts: 6, critere: "Confrontation directe" },
+        { pseudo: "Ayoub.R", j: 3, v: 2, n: 0, d: 1, diff: 3, pts: 6 },
+        { pseudo: "Soufiane_7", j: 3, v: 0, n: 1, d: 2, diff: -10, pts: 1 }
+      ] },
+      { nom: "Poule B", joueurs: [
+        { pseudo: "Reda_KAC", j: 3, v: 3, n: 0, d: 0, diff: 7, pts: 9 },
+        { pseudo: "Imane_GG", j: 3, v: 1, n: 1, d: 1, diff: 1, pts: 4, critere: "Différence de buts" },
+        { pseudo: "Walid.MAS", j: 3, v: 1, n: 1, d: 1, diff: -1, pts: 4 },
+        { pseudo: "Ghita_10", j: 3, v: 0, n: 0, d: 3, diff: -7, pts: 0 }
+      ] },
+      { nom: "Poule C", joueurs: [
+        { pseudo: "Badr_Pro", j: 2, v: 2, n: 0, d: 0, diff: 4, pts: 6 },
+        { pseudo: "Othmane_FUT", j: 2, v: 1, n: 0, d: 1, diff: 0, pts: 3 },
+        { pseudo: "Fatima.Z", j: 2, v: 0, n: 1, d: 1, diff: -1, pts: 1 },
+        { pseudo: "Adil_RSB", j: 2, v: 0, n: 1, d: 1, diff: -3, pts: 1, critere: "Nombre de victoires puis tirage au sort" }
+      ] },
+      { nom: "Poule D", joueurs: [
+        { pseudo: "Hicham.M", j: 2, v: 1, n: 1, d: 0, diff: 2, pts: 4 },
+        { pseudo: "Sara_Goal", j: 2, v: 1, n: 1, d: 0, diff: 1, pts: 4, critere: "Différence de buts" },
+        { pseudo: "Nabil_10", j: 2, v: 0, n: 1, d: 1, diff: -1, pts: 1 },
+        { pseudo: "Khalid.T", j: 2, v: 0, n: 1, d: 1, diff: -2, pts: 1, critere: "Confrontation directe" }
+      ] }
+    ]
+  },
+
+  /* Pseudos utilisés pour générer les longs classements (t10 : 128 joueurs) */
+  pseudosClassement: [
+    "Simba_FF", "Lina.Fire", "Rayan_212", "Kenza_GG", "Dounia_X", "Amine.Booyah", "Omar_Sniper", "Hakim_FF",
+    "Ali_Headshot", "Meryem.FF", "Driss_Rush", "Jihane_GG", "Saad.Booyah", "Houda_FF", "Ismail_Pro", "Nadia.X",
+    "Taha_Sniper", "Rania_212", "Yahya_FF", "Asmae.G", "Bilal_Rush", "Chaimae_FF", "Hassan.Pro", "Leila_GG"
+  ],
+
+  /* ---- Contenus (articles et vidéos) ----
+     acces : "tous" ou "abonnes" ; bandeAnnonce : extrait lisible par tous (S11-01) */
+  contenus: [
+    { id: "c01", type: "video", jeu: "freefire", titre: "Les 5 meilleures rotations sur Bermuda", duree: "8:42", acces: "tous" },
+    { id: "c02", type: "video", jeu: "efootball", titre: "Finale Masters Casablanca : le résumé", duree: "12:15", acces: "abonnes", bandeAnnonce: true },
+    { id: "c03", type: "article", jeu: "pubg", titre: "PUBG Solo Night : tout savoir avant de s'inscrire", resume: "Dates, format et dotations de la soirée.", acces: "tous" },
+    { id: "c04", type: "article", jeu: "efootball", titre: "Défendre en 4-2-3-1 : le guide complet", resume: "Placement, pressing et transitions expliqués par un pro.", acces: "abonnes" },
+    { id: "c05", type: "video", jeu: "codm", titre: "Réglages manette pour CODM", duree: "6:30", acces: "abonnes", bandeAnnonce: true },
+    { id: "c06", type: "article", jeu: "freefire", titre: "Coupe Atlas : comment inscrire son escouade", resume: "Créer son équipe, inviter ses amis, valider l'inscription.", acces: "tous" },
+    { id: "c07", type: "video", jeu: "pubg", titre: "Interview : l'équipe championne d'Abidjan", duree: "9:05", acces: "tous" },
+    { id: "c08", type: "article", jeu: "freefire", titre: "Les armes les plus fortes de la saison", resume: "Notre classement après la dernière mise à jour.", acces: "abonnes" }
+  ],
+
+  /* ---- Fonctionnalités activées par pays (S08-02) ---- */
+  fonctions: {
+    MA: { video: true, sms: true },
+    SN: { video: true, sms: false },
+    CI: { video: false, sms: true }
+  }
+};

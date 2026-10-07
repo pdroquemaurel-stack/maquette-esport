@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<!-- Écran 12 — Arbre, poules et classement d'un tournoi (12-arbre.html?id=t05).
+     US : S05-03 (consultable par tous, mise à jour sans rechargement), S02-02 (élimination simple),
+     S02-03 (poules, barème, qualifiés), S06-01 (le vainqueur passe seul au tour suivant),
+     S06-04 (critère de départage affiché), S05-04 (classement : 100 premiers puis ma position,
+     mis à jour en direct, recalculé après arbitrage).
+     Exemples : t05 élimination à 16 en cours · t03 poules en cours · t10 terminé (128 joueurs). -->
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Arbre du tournoi</title>
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .sous-entete { padding: 0 var(--page-gutter) var(--space-3); display: flex; align-items: center; gap: var(--space-2); font-size: var(--font-size-sm); color: var(--color-text-secondary); }
+    .sous-entete .lien-tournoi { margin-left: auto; color: var(--color-primary); font-weight: var(--font-weight-bold); min-height: var(--touch-target); display: inline-flex; align-items: center; }
+    .maj { display: inline-flex; align-items: center; gap: var(--space-1); }
+    .maj i { width: 8px; height: 8px; border-radius: var(--radius-round); background: var(--color-success); }
+    .maj.flash i { background: var(--color-primary); }
+    .encart-recalcul { margin-top: var(--space-3); }
+    .panneau { padding-top: var(--space-4); }
+
+    /* ---- Arbre à élimination : une colonne par tour, défilement horizontal ---- */
+    .arbre { display: flex; gap: var(--space-3); overflow-x: auto; padding: 0 var(--page-gutter) var(--space-4); scrollbar-width: none; }
+    .arbre::-webkit-scrollbar { display: none; }
+    .tour { width: 168px; flex-shrink: 0; display: flex; flex-direction: column; }
+    .tour h3 { font-size: var(--font-size-xs); text-transform: uppercase; letter-spacing: .04em; color: var(--color-text-secondary); margin-bottom: var(--space-2); }
+    .tour .matchs { flex: 1; display: flex; flex-direction: column; justify-content: space-around; gap: var(--space-2); }
+    .match { background: var(--color-surface); border-radius: var(--radius-sm); box-shadow: var(--shadow-card); overflow: hidden; font-size: var(--font-size-sm); transition: box-shadow .3s; }
+    .match .j { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); min-height: 32px; padding: 0 var(--space-3); }
+    .match .j + .j { border-top: 1px solid var(--color-border); }
+    .match .j .nom { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .match .j.gagnant { font-weight: var(--font-weight-bold); }
+    .match .j.perdant { color: var(--color-text-muted); }
+    .match .j.a-venir { color: var(--color-text-muted); font-style: italic; }
+    .match .j.moi .nom { color: var(--color-primary); }
+    .match .score { font-weight: var(--font-weight-bold); }
+    .match .etiquette-match { display: flex; align-items: center; justify-content: space-between; padding: var(--space-1) var(--space-3); font-size: var(--font-size-xs); font-weight: var(--font-weight-bold); background: var(--color-primary-soft); color: var(--color-primary); }
+    .match .etiquette-direct { background: var(--color-surface); color: var(--color-alert); }
+    .match.mien { box-shadow: 0 0 0 2px var(--color-primary); }
+    .match.vient-de-finir { box-shadow: 0 0 0 2px var(--color-success); }
+    .legende { font-size: var(--font-size-xs); color: var(--color-text-secondary); padding: 0 var(--page-gutter); }
+
+    /* ---- Poules ---- */
+    .bareme { margin-bottom: var(--space-4); }
+    .poule { margin: 0 var(--page-gutter) var(--space-4); background: var(--color-surface); border-radius: var(--radius-md); box-shadow: var(--shadow-card); padding: var(--space-3) 0 var(--space-1); }
+    .poule h3 { font-size: var(--font-size-md); padding: 0 var(--space-4) var(--space-2); }
+
+    /* ---- Tableaux (poules et classement) ---- */
+    .tableau { width: 100%; border-collapse: collapse; font-size: var(--font-size-sm); }
+    .tableau th { font-size: var(--font-size-xs); font-weight: var(--font-weight-medium); color: var(--color-text-muted); text-align: right; padding: var(--space-1) var(--space-2); }
+    .tableau td { text-align: right; padding: var(--space-2); border-top: 1px solid var(--color-border); }
+    .tableau th:first-child, .tableau td:first-child { padding-left: var(--space-4); width: 40px; text-align: left; }
+    .tableau th:nth-child(2), .tableau td:nth-child(2) { text-align: left; }
+    .tableau th:last-child, .tableau td:last-child { padding-right: var(--space-4); }
+    .tableau td.joueur a { font-weight: var(--font-weight-bold); }
+    .tableau td.joueur small { display: block; font-size: var(--font-size-xs); color: var(--color-primary); font-weight: var(--font-weight-medium); }
+    .tableau tr.qualifie td:first-child { box-shadow: inset 3px 0 0 var(--color-success); }
+    .tableau tr.moi td { background: var(--color-primary-soft); }
+    .tableau tr.moi td.joueur a { color: var(--color-primary); }
+    .tableau tr.coupure td { text-align: center; color: var(--color-text-muted); border-top: 0; padding: var(--space-1); }
+    .tableau .pts { font-weight: var(--font-weight-bold); }
+    .puce-qualifie { color: var(--color-success-dark); font-weight: var(--font-weight-bold); font-size: var(--font-size-xs); }
+    .classement-carte { margin: 0 var(--page-gutter); background: var(--color-surface); border-radius: var(--radius-md); box-shadow: var(--shadow-card); padding: var(--space-1) 0; }
+    /* Ma position épinglée sous le top 100 (S05-04) */
+    .ma-position { position: sticky; bottom: 0; }
+  </style>
+</head>
+<body data-zone="esport">
+<div class="cadre">
+  <div class="telephone">
+    <div class="barre-etat" data-heure="21:10"></div>
+    <header class="entete-esport" data-titre="Arbre" data-repli="06"></header>
+
+    <main class="contenu">
+      <div class="sous-entete" id="sous-entete"></div>
+      <div class="onglets" role="tablist" id="onglets"></div>
+      <div class="panneau" id="panneau"></div>
+      <div class="fin-contenu"></div>
+    </main>
+
+    <nav class="nav-bas" data-onglet="04"></nav>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/esport.js"></script>
+<script src="js/demo.js"></script>
+<script>
+  const t = Esport.tournoi(Nav.param("id")) || Esport.tournoi("t05");
+  const arbreDonnees = DONNEES.arbres[t.id];
+  const poules = DONNEES.poules[t.id];
+  document.querySelector(".entete-esport").dataset.titre = t.nom;
+  document.title = t.nom;
+
+  // Copie de l'arbre : le résultat « en direct » y est ajouté pendant la démo
+  const arbre = arbreDonnees ? JSON.parse(JSON.stringify(arbreDonnees)) : null;
+  let derniereMaj = "il y a quelques secondes";
+  let matchQuiVientDeFinir = null;
+
+  /* Pseudo affiché : mon ancien pseudo est remplacé par le pseudo courant (S01-02) */
+  function nomAffiche(pseudo) {
+    return pseudo === DONNEES.joueur.pseudo ? Esport.pseudo() : pseudo;
+  }
+  function estMoi(pseudo) { return pseudo === DONNEES.joueur.pseudo; }
+
+  /* ---------- Élimination : vainqueurs et progression automatique (S06-01) ---------- */
+  /* Match : [joueur A, joueur B, score A, score B, vainqueur en cas d'égalité, état] */
+  function vainqueur(m) {
+    if (!m[0] || !m[1] || m[2] === null || m[3] === null) return null;
+    if (m[2] === m[3]) return m[4] || null;
+    return m[2] > m[3] ? m[0] : m[1];
+  }
+
+  /* Les vainqueurs d'un tour remplissent le tour suivant, sans action humaine */
+  function propager() {
+    for (let r = 1; r < arbre.matchs.length; r++) {
+      arbre.matchs[r].forEach((m, i) => {
+        // Tant qu'un match précédent n'est pas joué, la place reste « À déterminer »
+        m[0] = vainqueur(arbre.matchs[r - 1][i * 2]);
+        m[1] = vainqueur(arbre.matchs[r - 1][i * 2 + 1]);
+      });
+    }
+  }
+
+  function ligneJoueur(m, cote) {
+    const pseudo = m[cote];
+    const score = m[2 + cote];
+    const gagnant = vainqueur(m);
+    if (!pseudo) return '<div class="j a-venir"><span class="nom">À déterminer</span></div>';
+    const classe = gagnant ? (gagnant === pseudo ? "gagnant" : "perdant") : "";
+    return '<div class="j ' + classe + (estMoi(pseudo) ? " moi" : "") + '">' +
+      '<a href="#" class="nom" data-ecran="17" data-pseudo="' + nomAffiche(pseudo) + '">' + nomAffiche(pseudo) + "</a>" +
+      '<span class="score">' + (score === null ? "" : score) + "</span></div>";
+  }
+
+  function rendreArbre() {
+    propager();
+    // Hauteur commune : celle du premier tour, pour aligner les tours suivants
+    const hauteur = arbre.matchs[0].length * 76;
+    let html = '<div class="arbre">';
+    arbre.matchs.forEach((tourMatchs, r) => {
+      html += '<div class="tour"><h3>' + arbre.tours[r] + '</h3><div class="matchs" style="height:' + hauteur + 'px">';
+      tourMatchs.forEach((m, i) => {
+        const mien = m[5] === "a-jouer" && (estMoi(m[0]) || estMoi(m[1]));
+        const direct = m[5] === "en-direct";
+        const finit = matchQuiVientDeFinir === r + "-" + i;
+        html += '<div class="match' + (mien ? " mien" : "") + (finit ? " vient-de-finir" : "") + '">';
+        if (mien) {
+          html += '<a href="#" class="etiquette-match" data-ecran="11">Ton match · ' + arbre.monMatch + " <span>Salle de match ›</span></a>";
+        } else if (direct) {
+          html += '<div class="etiquette-match etiquette-direct"><span class="puce-direct puce-etat"><i></i>En direct</span></div>';
+        }
+        html += ligneJoueur(m, 0) + ligneJoueur(m, 1) + "</div>";
+      });
+      html += "</div></div>";
+    });
+    html += "</div>";
+    html += '<p class="legende">Touchez un pseudo pour voir le profil public du joueur. Le vainqueur de chaque match passe automatiquement au tour suivant.</p>';
+    return html;
+  }
+
+  /* ---------- Poules (S02-03, S06-04) ---------- */
+  function rendrePoules() {
+    let html = '<div class="encart bareme">' + Esport.icone("trophee", "f-primary") +
+      "<div><strong>Barème et qualification</strong>" +
+      "<p>Victoire 3 pts · nul 1 · défaite 0. Les 2 premiers de chaque poule vont en phase finale.</p>" +
+      "<p>Égalité : confrontation directe, puis différence de buts, puis nombre de victoires, puis tirage au sort.</p></div></div>";
+    poules.forEach((p) => {
+      html += '<section class="poule"><h3>' + p.nom + "</h3>" +
+        '<table class="tableau"><thead><tr><th>#</th><th>Joueur</th><th>J</th><th>Diff.</th><th>Pts</th></tr></thead><tbody>';
+      p.joueurs.forEach((j, i) => {
+        html += '<tr class="' + (i < 2 ? "qualifie" : "") + '">' +
+          "<td>" + (i + 1) + "</td>" +
+          '<td class="joueur"><a href="#" data-ecran="17" data-pseudo="' + j.pseudo + '">' + j.pseudo + "</a>" +
+          (j.critere ? "<small>Départagé : " + j.critere.toLowerCase() + "</small>" : "") + "</td>" +
+          "<td>" + j.j + "</td><td>" + (j.diff > 0 ? "+" : "") + j.diff + '</td><td class="pts">' + j.pts + "</td></tr>";
+      });
+      html += "</tbody></table></section>";
+    });
+    html += '<p class="legende"><span class="puce-qualifie">▌</span> Qualifié pour la phase finale à élimination directe.</p>';
+    return html;
+  }
+
+  /* ---------- Classement du tournoi (S05-04) ---------- */
+
+  /* Élimination en cours : place selon le tour d'élimination, « En lice » sinon */
+  function classementElimination() {
+    const nbTours = arbre.matchs.length;
+    const lignes = [];
+    arbre.matchs[0].forEach((m) => { lignes.push({ pseudo: m[0] }); lignes.push({ pseudo: m[1] }); });
+    lignes.forEach((l) => {
+      l.place = null;
+      arbre.matchs.forEach((tourMatchs, r) => {
+        tourMatchs.forEach((m) => {
+          const g = vainqueur(m);
+          if (g && (m[0] === l.pseudo || m[1] === l.pseudo) && g !== l.pseudo) l.place = Math.pow(2, nbTours - 1 - r) + 1;
+          if (g === l.pseudo && r === nbTours - 1) l.place = 1;
+        });
+      });
+    });
+    lignes.sort((a, b) => (a.place || 0) - (b.place || 0) || a.pseudo.localeCompare(b.pseudo));
+    return lignes.map((l) => ({
+      rang: l.place ? l.place + (l.place === 1 ? "er" : "e") : "—",
+      pseudo: l.pseudo,
+      valeur: l.place ? "Éliminé" : "En lice"
+    }));
+  }
+
+  /* Tournoi terminé à 128 joueurs : points cumulés, rang unique ; je suis 117e */
+  function classementTermine() {
+    const noms = [];
+    const suffixes = ["", "_2", "7", ".MA", "_212", "X"];
+    for (let i = 0; noms.length < 127; i++) {
+      noms.push(DONNEES.pseudosClassement[i % DONNEES.pseudosClassement.length] + suffixes[Math.floor(i / DONNEES.pseudosClassement.length)]);
+    }
+    noms.splice(116, 0, DONNEES.joueur.pseudo);
+    return noms.map((pseudo, i) => ({ rang: i + 1 + (i ? "e" : "er"), pseudo, valeur: (2480 - i * 17 - (i % 3) * 3) + " pts" }));
+  }
+
+  /* Poules : tous les joueurs, aux points puis à la différence */
+  function classementPoules() {
+    const tous = [];
+    poules.forEach((p) => p.joueurs.forEach((j) => tous.push(j)));
+    tous.sort((a, b) => b.pts - a.pts || b.diff - a.diff);
+    return tous.map((j, i) => ({ rang: i + 1 + (i ? "e" : "er"), pseudo: j.pseudo, valeur: j.pts + " pts" }));
+  }
+
+  function rendreClassement() {
+    const lignes = poules ? classementPoules() : (t.etat === "termine" ? classementTermine() : classementElimination());
+    const LIMITE = 100;
+    let html = "";
+    if (t.recalcul) html += '<div class="encart encart-recalcul" style="margin-bottom:var(--space-4)">' + Esport.icone("alerte", "f-primary") + "<div><p>" + t.recalcul + "</p></div></div>";
+    html += '<div class="classement-carte"><table class="tableau"><thead><tr><th>Rang</th><th>Joueur</th><th>' +
+      (poules || t.etat === "termine" ? "Points" : "Statut") + "</th></tr></thead><tbody>";
+    const ligneHtml = (l, classe) =>
+      '<tr class="' + (estMoi(l.pseudo) ? "moi " : "") + (classe || "") + '"><td>' + l.rang + "</td>" +
+      '<td class="joueur"><a href="#" data-ecran="17" data-pseudo="' + nomAffiche(l.pseudo) + '">' + nomAffiche(l.pseudo) + (estMoi(l.pseudo) ? " (toi)" : "") + "</a></td>" +
+      '<td class="pts">' + l.valeur + "</td></tr>";
+    lignes.slice(0, LIMITE).forEach((l) => { html += ligneHtml(l); });
+    // Au-delà du top 100 : seule ma position est affichée, épinglée
+    const maLigne = lignes.findIndex((l) => estMoi(l.pseudo));
+    if (maLigne >= LIMITE) {
+      html += '<tr class="coupure"><td colspan="3">· · ·</td></tr>' + ligneHtml(lignes[maLigne], "ma-position");
+    }
+    html += "</tbody></table></div>";
+    html += '<p class="legende" style="margin-top:var(--space-3)">' + (lignes.length > LIMITE
+      ? "Les 100 premiers sur " + lignes.length + " joueurs, puis ta position."
+      : lignes.length + " joueurs.") + " Recalculé après chaque décision d'arbitrage.</p>";
+    return html;
+  }
+
+  /* ---------- Onglets ---------- */
+  const ONGLETS = [];
+  if (poules) ONGLETS.push({ id: "poules", libelle: "Poules", rendre: rendrePoules });
+  if (arbre) ONGLETS.push({ id: "arbre", libelle: t.etat === "termine" ? "Phase finale" : "Arbre", rendre: rendreArbre });
+  if (poules || arbre) ONGLETS.push({ id: "classement", libelle: "Classement", rendre: rendreClassement });
+  let ongletActif = ONGLETS.length ? ONGLETS[0].id : null;
+
+  function rendreSousEntete() {
+    const statut = t.etat === "termine"
+      ? "Tournoi terminé · classement final"
+      : '<span class="maj" id="maj"><i></i>Mis à jour ' + derniereMaj + "</span>";
+    document.getElementById("sous-entete").innerHTML = statut +
+      '<a href="#" class="lien-tournoi" data-ecran="06" data-id="' + t.id + '">Fiche</a>';
+  }
+
+  function rendre() {
+    rendreSousEntete();
+    if (!ONGLETS.length) {
+      // Tournoi sans arbre : il est généré à la clôture des inscriptions (S02-02)
+      document.getElementById("onglets").style.display = "none";
+      document.getElementById("panneau").innerHTML = '<div class="vide"><strong>Arbre pas encore généré</strong>' +
+        "Il sera publié à la clôture des inscriptions, le " + Esport.jourCourt(t.cloture) + ".<br>" +
+        '<a href="#" class="bouton bouton-secondaire" data-ecran="06" data-id="' + t.id + '">Retour au tournoi</a></div>';
+      return;
+    }
+    document.getElementById("onglets").innerHTML = ONGLETS.map((o) =>
+      '<button role="tab" data-onglet="' + o.id + '" aria-selected="' + (o.id === ongletActif) + '" class="' + (o.id === ongletActif ? "actif" : "") + '">' + o.libelle + "</button>"
+    ).join("");
+    document.getElementById("panneau").innerHTML = ONGLETS.find((o) => o.id === ongletActif).rendre();
+  }
+
+  document.getElementById("onglets").addEventListener("click", (e) => {
+    const bouton = e.target.closest("[data-onglet]");
+    if (!bouton) return;
+    ongletActif = bouton.dataset.onglet;
+    rendre();
+  });
+
+  Esport.monter(rendre);
+
+  /* ---------- Résultat qui arrive pendant la démo (S05-03, S06-01) ----------
+     Après quelques secondes, le quart « en direct » se termine : l'arbre et le classement
+     se mettent à jour sans rechargement, le vainqueur passe au tour suivant. */
+  if (arbre && arbre.resultatLive && t.etat === "en-cours") {
+    setTimeout(() => {
+      const r = arbre.resultatLive;
+      const m = arbre.matchs[r.tour][r.match];
+      m[2] = r.scoreA;
+      m[3] = r.scoreB;
+      m[5] = null;
+      matchQuiVientDeFinir = r.tour + "-" + r.match;
+      derniereMaj = "à l'instant";
+      rendre();
+      document.getElementById("maj").classList.add("flash");
+      Nav.toast("Résultat : " + m[0] + " " + r.scoreA + "–" + r.scoreB + " " + m[1] + ". " + vainqueur(m) + " passe en demi-finale.");
+      setTimeout(() => { derniereMaj = "il y a quelques secondes"; matchQuiVientDeFinir = null; rendre(); }, 8000);
+    }, 4000);
+  }
+</script>
+</body>
+</html>

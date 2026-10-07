@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<!-- Écran 07 — Règlement d'un tournoi et son acceptation (07-reglement.html?id=t09).
+     US : S03-03 (acceptation explicite obligatoire avant l'inscription, version acceptée enregistrée ;
+     règlement modifié après inscription : accepter, ou refuser et être désinscrit).
+     Après acceptation : 08 (tournoi solo) ou 09 (tournoi en équipe). -->
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Règlement</title>
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .tete { padding: 0 var(--page-gutter) var(--space-4); }
+    .tete h1 { font-size: var(--font-size-xxl); line-height: var(--line-height-tight); }
+    .tete p { color: var(--color-text-secondary); font-size: var(--font-size-sm); margin-top: var(--space-1); }
+    .changements { margin-bottom: var(--space-4); }
+    .changements ul { margin: var(--space-2) 0 0 var(--space-4); color: var(--color-text); }
+    .changements li + li { margin-top: var(--space-1); }
+
+    /* Articles dépliables */
+    .articles { margin: 0 var(--page-gutter); background: var(--color-surface); border-radius: var(--radius-md); box-shadow: var(--shadow-card); }
+    .article { border-bottom: 1px solid var(--color-border); }
+    .article:last-child { border-bottom: 0; }
+    .article summary {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      min-height: 52px;
+      padding: var(--space-2) var(--space-4);
+      font-weight: var(--font-weight-bold);
+      cursor: pointer;
+      list-style: none;
+    }
+    .article summary::-webkit-details-marker { display: none; }
+    .article summary .titre-article { flex: 1; }
+    .article summary svg { width: 18px; height: 18px; transition: transform .15s; }
+    .article[open] summary svg { transform: rotate(90deg); }
+    .article .texte { padding: 0 var(--space-4) var(--space-4); font-size: var(--font-size-sm); color: var(--color-text-secondary); }
+    .article .texte p + p { margin-top: var(--space-2); }
+    .puce-modifie { background: var(--color-primary-soft); color: var(--color-primary); }
+
+    .case {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      min-height: var(--touch-target);
+      font-weight: var(--font-weight-bold);
+      margin-bottom: var(--space-2);
+      cursor: pointer;
+    }
+    .case input { width: 22px; height: 22px; accent-color: var(--color-primary); flex-shrink: 0; }
+    .actions-duo { display: flex; gap: var(--space-2); }
+    .actions-duo .bouton { flex: 1; padding: 0 var(--space-3); }
+  </style>
+</head>
+<body data-zone="esport">
+<div class="cadre">
+  <div class="telephone">
+    <div class="barre-etat" data-heure="21:10"></div>
+    <header class="entete-esport" data-titre="Règlement" data-repli="06"></header>
+
+    <main class="contenu">
+      <div class="tete">
+        <h1 id="nom-tournoi"></h1>
+        <p id="version"></p>
+      </div>
+      <div id="changements"></div>
+      <div class="articles" id="articles"></div>
+      <div class="fin-contenu"></div>
+    </main>
+
+    <div class="barre-action" id="action"></div>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/esport.js"></script>
+<script src="js/demo.js"></script>
+<script>
+  const t = Esport.tournoi(Nav.param("id")) || Esport.tournoi("t09");
+  const jeu = Esport.jeu(t.jeu);
+  const v2 = t.reglement.version >= 2;
+
+  /* Articles du règlement, construits à partir de la fiche du tournoi.
+     modifie : article changé dans la dernière version. */
+  function articles() {
+    return [
+      { titre: "1. Inscription", texte: [
+        "Inscriptions du " + Esport.jourCourt(t.ouverture) + " au " + Esport.jourCourt(t.cloture) + ". " +
+        (t.acces === "abonnes" ? "Tournoi réservé aux joueurs abonnés." : "Tournoi ouvert à tous les joueurs.") +
+        (t.portee === "MEA" ? " Ouvert aux joueurs de : " + t.pays.map((p) => DONNEES.pays[p].nom).join(", ") + "." : ""),
+        "Un même compte Max it et un même identifiant de jeu ne peuvent être inscrits qu'une fois dans ce tournoi."
+      ] },
+      { titre: "2. Format", texte: [
+        Esport.libelleFormat(t) + ", " + Esport.libelleMode(t).toLowerCase() + ", sur " + jeu.nom + ". " + t.places + " places au maximum ; au-delà, liste d'attente.",
+        t.mode === "equipe" ? "L'équipe est inscrite automatiquement dès qu'elle compte " + jeu.equipe + " joueurs. Une équipe incomplète à la clôture n'est pas inscrite." : "L'arbre est publié à la clôture des inscriptions."
+      ] },
+      { titre: "3. Présence", modifie: v2, texte: [
+        "Confirme ta présence dans la salle de match à partir de " + (v2 ? 10 : 5) + " minutes avant l'heure du match. Sans confirmation à l'heure, tu es déclaré forfait.",
+        "Trois forfaits en 30 jours entraînent 7 jours sans inscription possible."
+      ] },
+      { titre: "4. Résultats et litiges", texte: [
+        "Chaque joueur déclare le score dans les 30 minutes qui suivent le match.",
+        "En cas de désaccord, chacun peut envoyer jusqu'à 3 captures d'écran. Le responsable local tranche."
+      ] },
+      { titre: "5. Comportement", texte: [
+        "Triche, insultes ou usage d'un compte prêté entraînent l'exclusion du tournoi, voire de la plateforme. Toute exclusion peut être contestée."
+      ] },
+      { titre: "6. Dotations", modifie: v2, texte: [
+        t.dotations.map((d, i) => (i + 1) + (i ? "e" : "er") + " : " + d).join(" · ") + ".",
+        "Les dotations sont versées sur le numéro Max it du gagnant. Une seule dotation par personne et par tournoi."
+      ] }
+    ];
+  }
+
+  function rendreArticles(modeModif) {
+    const chevron = Esport.icone("chevron", "f-muted");
+    document.getElementById("articles").innerHTML = articles().map((a, i) =>
+      '<details class="article"' + (i === 0 || (modeModif && a.modifie) ? " open" : "") + ">" +
+      '<summary><span class="titre-article">' + a.titre + "</span>" +
+      (modeModif && a.modifie ? '<span class="puce-etat puce-modifie">Modifié</span>' : "") + chevron + "</summary>" +
+      '<div class="texte">' + a.texte.map((p) => "<p>" + p + "</p>").join("") + "</div></details>"
+    ).join("");
+  }
+
+  function rendre() {
+    const modeModif = Esport.reglementAAccepter(t);
+    const etat = Esport.etatBouton(t);
+    document.getElementById("nom-tournoi").textContent = t.nom;
+    document.getElementById("version").textContent = "Version " + t.reglement.version +
+      (t.reglement.date ? " · mise à jour le " + Esport.jourCourt(t.reglement.date) : "") + " · rédigé par le responsable local";
+    rendreArticles(modeModif);
+
+    // Règlement modifié après l'inscription : ce qui a changé
+    document.getElementById("changements").innerHTML = modeModif
+      ? '<div class="encart encart-alerte changements">' + Esport.icone("alerte", "f-primary") +
+        "<div><strong>Ce qui change dans la version " + t.reglement.version + "</strong><ul>" +
+        t.reglement.changements.map((c) => "<li>" + c + "</li>").join("") + "</ul></div></div>"
+      : "";
+
+    const zone = document.getElementById("action");
+    if (modeModif) {
+      zone.innerHTML = '<div class="actions-duo">' +
+        '<button class="bouton bouton-secondaire" id="refuser">Refuser et me désinscrire</button>' +
+        '<button class="bouton bouton-primaire" id="accepter">Accepter</button></div>' +
+        '<p class="aide-action">Sans acceptation, tu ne pourras pas jouer ce tournoi.</p>';
+    } else if (etat === "inscrire" || etat === "complet") {
+      const libelle = t.mode === "equipe" ? "Accepter et choisir mon équipe"
+        : etat === "complet" ? "Accepter et rejoindre la liste d'attente" : "Accepter et m'inscrire";
+      zone.innerHTML = '<label class="case"><input type="checkbox" id="j-accepte"> J\'accepte le règlement</label>' +
+        '<button class="bouton bouton-primaire bouton-pleine-largeur" id="inscrire" disabled>' + libelle + "</button>";
+    } else if (etat === "abonner") {
+      zone.innerHTML = '<a href="#" class="bouton bouton-primaire bouton-pleine-largeur" data-ecran="21" data-origine>' +
+        Esport.icone("cadenas", "f-white") + "S'abonner pour s'inscrire</a>";
+    } else {
+      // Simple lecture : déjà inscrit, inscriptions closes, tournoi terminé…
+      zone.innerHTML = '<a href="#" class="bouton bouton-secondaire bouton-pleine-largeur" data-ecran="06" data-id="' + t.id + '">Retour au tournoi</a>' +
+        (etat === "inscrit" ? '<p class="aide-action">Tu as accepté la version ' + t.reglement.version + " de ce règlement.</p>" : "");
+    }
+    brancherActions();
+  }
+
+  function brancherActions() {
+    const caseAccepte = document.getElementById("j-accepte");
+    const inscrire = document.getElementById("inscrire");
+    // La case est obligatoire : sans elle, le bouton reste inactif (S03-03)
+    if (caseAccepte) caseAccepte.addEventListener("change", () => { inscrire.disabled = !caseAccepte.checked; });
+    if (inscrire) {
+      inscrire.addEventListener("click", () => {
+        if (!caseAccepte.checked) return;
+        Esport.accepterReglement(t);
+        Nav.aller(t.mode === "equipe" ? "09" : "08", null, { id: t.id });
+      });
+    }
+
+    const accepter = document.getElementById("accepter");
+    if (accepter) {
+      accepter.addEventListener("click", () => {
+        Esport.accepterReglement(t);
+        Nav.aller("06", null, { id: t.id, message: "accepte" });
+      });
+    }
+
+    const refuser = document.getElementById("refuser");
+    if (refuser) {
+      refuser.addEventListener("click", () => {
+        Nav.dialogue({
+          titre: "Refuser le nouveau règlement ?",
+          texte: "Tu seras désinscrit de " + t.nom + (t.mode === "equipe" ? " et tu quitteras ton équipe" : "") + ". Ta place ira au premier de la liste d'attente.",
+          boutons: [
+            { libelle: "Refuser et me désinscrire", primaire: true, action: () => {
+              Esport.changerInscription(t.id, null);
+              if (t.mode === "equipe") Esport.changerEquipe(t.id, null);
+              Nav.aller("06", null, { id: t.id, message: "desinscrit" });
+            } },
+            { libelle: "Annuler" }
+          ]
+        });
+      });
+    }
+  }
+
+  Esport.monter(rendre);
+</script>
+</body>
+</html>

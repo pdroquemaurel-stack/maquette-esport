@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<!-- Écran 02 — Choix du pseudonyme au premier accès.
+     US : S01-01 (entrée dans la plateforme), S01-02 (pseudo unique, refus avec proposition),
+     S01-05 (historique repris de l'ancienne plateforme, possibilité de ne pas le reprendre). -->
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Choix du pseudo</title>
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .pseudo { padding: var(--space-2) var(--page-gutter) var(--space-6); }
+
+    /* Pictogramme d'accueil : manette orange sur pastille */
+    .picto {
+      width: 72px;
+      height: 72px;
+      border-radius: var(--radius-lg);
+      background: var(--color-primary-soft);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: var(--space-5);
+    }
+    .picto svg { width: 40px; height: 40px; }
+
+    .pseudo h1 {
+      font-size: var(--font-size-xxl);
+      line-height: var(--line-height-tight);
+      margin-bottom: var(--space-2);
+    }
+    .pseudo .intro { color: var(--color-text-secondary); margin-bottom: var(--space-6); }
+
+    .etiquette { display: block; font-weight: var(--font-weight-bold); font-size: var(--font-size-sm); margin-bottom: var(--space-2); }
+    .aide { font-size: var(--font-size-xs); color: var(--color-text-muted); margin: var(--space-2) var(--space-4) 0; }
+
+    /* Message de refus sous le champ */
+    .refus { display: none; margin-top: var(--space-3); }
+    .refus.visible { display: block; }
+    .refus .message {
+      display: flex;
+      gap: var(--space-2);
+      align-items: flex-start;
+      color: var(--color-alert);
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-medium);
+      margin-bottom: var(--space-3);
+    }
+    .refus .message svg { width: 18px; height: 18px; }
+    .refus p.libelle-suggestions { font-size: var(--font-size-sm); color: var(--color-text-secondary); margin-bottom: var(--space-2); }
+
+    /* Historique repris (ancien joueur) */
+    .historique { margin: var(--space-6) 0 0; }
+    .historique .chiffres { display: flex; gap: var(--space-6); margin: var(--space-3) 0; }
+    .historique .chiffres b { display: block; font-size: var(--font-size-xl); color: var(--color-text); }
+    .historique.barre .chiffres { opacity: .4; text-decoration: line-through; }
+
+    .case {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      min-height: var(--touch-target);
+      font-size: var(--font-size-sm);
+      color: var(--color-text);
+      cursor: pointer;
+    }
+    .case input { width: 20px; height: 20px; accent-color: var(--color-primary); flex-shrink: 0; }
+
+    .pied { padding: var(--space-3) var(--page-gutter) var(--space-6); flex-shrink: 0; }
+    .pied .mention { font-size: var(--font-size-xs); color: var(--color-text-muted); text-align: center; margin-top: var(--space-3); }
+  </style>
+</head>
+<body data-zone="esport">
+<div class="cadre">
+  <div class="telephone">
+    <div class="barre-etat" data-heure="21:10"></div>
+
+    <header class="entete-esport">
+      <button class="bouton-icone" data-action="retour" data-repli="00c" aria-label="Retour au Game corner">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path class="f-text" d="M10.6 5.3 12 6.7 7.7 11H20v2H7.7l4.3 4.3-1.4 1.4L3.9 12z"/></svg>
+      </button>
+    </header>
+
+    <main class="contenu">
+      <div class="pseudo">
+        <div class="picto" id="picto"></div>
+        <h1>Choisis ton pseudo</h1>
+        <p class="intro">C'est ton nom dans les tournois. Il est visible par tous les joueurs, dans tous les pays.</p>
+
+        <label class="etiquette" for="saisie">Pseudo</label>
+        <div class="champ" id="champ">
+          <input id="saisie" type="text" maxlength="16" autocomplete="off" spellcheck="false" placeholder="Ex. : Atlas_Gamer">
+        </div>
+        <p class="aide">3 à 16 caractères : lettres, chiffres, « _ » et « . ». Modifiable une fois tous les 30 jours.</p>
+
+        <!-- Refus « pseudo déjà pris » avec proposition de rechange (S01-02) -->
+        <div class="refus" id="refus" role="alert">
+          <p class="message" id="message-refus"></p>
+          <p class="libelle-suggestions" id="libelle-suggestions">Disponibles :</p>
+          <div class="puces puces-retour" id="suggestions"></div>
+        </div>
+
+        <!-- Ancien joueur : historique repris (S01-05) -->
+        <section class="encart historique" id="historique" aria-labelledby="titre-historique">
+          <div>
+            <strong id="titre-historique">Bon retour, <span id="prenom"></span> !</strong>
+            <p>Ton historique de l'ancienne plateforme a été repris.</p>
+            <p class="chiffres">
+              <span><b id="nb-tournois"></b>tournois joués</span>
+              <span><b id="nb-victoires"></b>victoires</span>
+            </p>
+            <label class="case">
+              <input type="checkbox" id="ne-pas-reprendre">
+              Ne pas reprendre mon historique
+            </label>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <div class="pied">
+      <button class="bouton bouton-primaire bouton-pleine-largeur" id="valider">Valider mon pseudo</button>
+      <p class="mention">Seuls ton pseudo et tes résultats sont visibles des autres joueurs.</p>
+    </div>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/esport.js"></script>
+<script src="js/demo.js"></script>
+<script>
+  const saisie = document.getElementById("saisie");
+  const champ = document.getElementById("champ");
+  const refus = document.getElementById("refus");
+  const historique = DONNEES.joueur.historiqueRepris;
+
+  document.getElementById("picto").innerHTML = Esport.icone("manette", "f-primary");
+  document.getElementById("prenom").textContent = DONNEES.joueur.prenom;
+  document.getElementById("nb-tournois").textContent = historique.tournois;
+  document.getElementById("nb-victoires").textContent = historique.victoires;
+
+  // L'ancien pseudo est proposé d'office : il est déjà pris sur la nouvelle plateforme (S01-05)
+  saisie.value = DONNEES.joueur.pseudo;
+
+  /* Le pseudo est-il déjà pris ? (comparaison sans tenir compte des majuscules) */
+  function estPris(pseudo) {
+    return DONNEES.pseudosPris.some((p) => p.toLowerCase() === pseudo.toLowerCase());
+  }
+
+  /* Trois propositions de rechange libres, construites à partir du pseudo saisi */
+  function suggestions(base) {
+    const racine = base.replace(/[^A-Za-z0-9_.]/g, "").slice(0, 12) || "Joueur";
+    return [racine + "_212", racine + ".MA", racine + "7"].filter((p) => !estPris(p));
+  }
+
+  function afficherRefus(message, propositions) {
+    champ.classList.add("erreur");
+    document.getElementById("message-refus").innerHTML = Esport.icone("alerte", "f-alert") + "<span>" + message + "</span>";
+    document.getElementById("libelle-suggestions").style.display = propositions.length ? "" : "none";
+    document.getElementById("suggestions").innerHTML = propositions
+      .map((p) => '<button class="puce" data-suggestion="' + p + '">' + p + "</button>").join("");
+    refus.classList.add("visible");
+  }
+
+  function masquerRefus() {
+    champ.classList.remove("erreur");
+    refus.classList.remove("visible");
+  }
+
+  // Toucher une proposition la place dans le champ
+  document.getElementById("suggestions").addEventListener("click", (e) => {
+    const bouton = e.target.closest("[data-suggestion]");
+    if (!bouton) return;
+    saisie.value = bouton.dataset.suggestion;
+    masquerRefus();
+    saisie.focus();
+  });
+
+  saisie.addEventListener("input", masquerRefus);
+
+  // Cocher « Ne pas reprendre » barre les chiffres repris
+  document.getElementById("ne-pas-reprendre").addEventListener("change", (e) => {
+    document.getElementById("historique").classList.toggle("barre", e.target.checked);
+  });
+
+  document.getElementById("valider").addEventListener("click", () => {
+    const pseudo = saisie.value.trim();
+    if (!/^[A-Za-z0-9_.]{3,16}$/.test(pseudo)) {
+      afficherRefus("Ton pseudo doit faire de 3 à 16 caractères : lettres, chiffres, « _ » ou « . ».", []);
+      return;
+    }
+    if (estPris(pseudo)) {
+      afficherRefus("« " + pseudo + " » est déjà pris. Choisis-en un autre.", suggestions(pseudo));
+      return;
+    }
+    // Pseudo accepté : premier accès terminé, on entre dans la plateforme
+    Etat.set("pseudo", pseudo);
+    Etat.set("historiqueNonRepris", document.getElementById("ne-pas-reprendre").checked);
+    Etat.set("premierAcces", false);
+    Nav.aller("03", null, { bienvenue: "1" });
+  });
+
+  saisie.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") document.getElementById("valider").click();
+  });
+</script>
+</body>
+</html>

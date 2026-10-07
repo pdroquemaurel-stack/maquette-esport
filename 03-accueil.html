@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<!-- Écran 03 — Accueil e-sport.
+     US : S05-01 (prochaine échéance de mes tournois), S05-02 (tournois réservés visibles avec leur condition),
+     S11-01 (ce que débloque l'abonnement, sans jamais s'imposer), S10-02 (contenus réservés verrouillés),
+     S08-02 (rubrique vidéo masquée si la fonction est désactivée dans le pays). -->
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Accueil e-sport</title>
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    /* En-tête façon Max it : avatar, salutation, notifications */
+    .entete-accueil { padding-right: var(--space-2); }
+    .entete-accueil .avatar { margin-right: var(--space-2); }
+    .salutation { flex: 1; min-width: 0; line-height: var(--line-height-tight); }
+    .salutation small { display: block; font-size: var(--font-size-sm); color: var(--color-text-secondary); }
+    .salutation b { font-size: var(--font-size-lg); }
+
+    /* Carte « prochaine échéance » sombre, en écho à l'univers Gaming */
+    .echeance {
+      position: relative;
+      overflow: hidden;
+      margin: var(--space-2) var(--page-gutter) 0;
+      padding: var(--space-5) var(--space-4) var(--space-4);
+      border-radius: var(--radius-lg);
+      background: var(--color-bg-dark);
+      color: var(--color-text-on-dark);
+    }
+    .echeance .flamme {
+      position: absolute;
+      right: -40px;
+      top: -30px;
+      width: 150px;
+      height: 220px;
+      transform: rotate(28deg);
+      background: linear-gradient(180deg, var(--color-gaming-flame-dark), var(--color-primary));
+      opacity: .75;
+    }
+    .echeance > * { position: relative; }
+    .echeance .surtitre { font-size: var(--font-size-xs); font-weight: var(--font-weight-bold); text-transform: uppercase; letter-spacing: .05em; color: var(--color-primary); }
+    .echeance h2 { font-size: var(--font-size-lg); margin: var(--space-1) 0 var(--space-4); }
+    .duel { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-4); }
+    .duel .joueur { flex: 1; display: flex; flex-direction: column; align-items: center; gap: var(--space-1); font-weight: var(--font-weight-bold); font-size: var(--font-size-sm); text-align: center; }
+    .duel .joueur .avatar { width: 48px; height: 48px; font-size: var(--font-size-lg); }
+    .duel .vs { font-size: var(--font-size-xs); color: var(--color-text-muted); font-weight: var(--font-weight-bold); }
+    .echeance .quand { text-align: center; font-size: var(--font-size-sm); margin-bottom: var(--space-4); }
+    .echeance .quand b { color: var(--color-primary); }
+    .echeance .actions { display: flex; gap: var(--space-2); }
+    .echeance .actions .bouton { flex: 1; padding: 0 var(--space-3); }
+    .bouton-verre { background: var(--color-glass-dark); color: var(--color-text-on-dark); }
+
+    /* Lignes d'échéances secondaires */
+    .autres-echeances { margin: var(--space-3) var(--page-gutter) 0; display: flex; flex-direction: column; gap: var(--space-2); }
+    .echeance-ligne {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      padding: var(--space-3);
+      border-radius: var(--radius-md);
+      background: var(--color-surface-warm);
+      font-size: var(--font-size-sm);
+    }
+    .echeance-ligne.alerte { background: var(--color-primary-soft); }
+    .echeance-ligne .ligne-corps b { font-size: var(--font-size-md); }
+    .echeance-ligne > svg { width: 20px; height: 20px; }
+
+    /* Tuiles des jeux */
+    .tuile-jeu { width: 104px; display: flex; flex-direction: column; gap: var(--space-2); font-size: var(--font-size-sm); font-weight: var(--font-weight-bold); text-align: center; line-height: var(--line-height-tight); }
+    .tuile-jeu .visuel-jeu { width: 104px; height: 104px; }
+    .tuile-jeu .visuel-jeu svg { width: 44px; height: 44px; }
+
+    /* Encart abonnement (joueur gratuit) : discret, dans le fil, jamais en surimpression */
+    .encart-offre { margin: var(--space-6) var(--page-gutter) 0; padding: var(--space-4); border-radius: var(--radius-lg); background: var(--color-surface-warm); }
+    .encart-offre h2 { font-size: var(--font-size-lg); margin-bottom: var(--space-3); }
+    .encart-offre ul { list-style: none; display: flex; flex-direction: column; gap: var(--space-2); margin-bottom: var(--space-4); font-size: var(--font-size-sm); }
+    .encart-offre li { display: flex; gap: var(--space-2); align-items: center; }
+    .encart-offre li svg { width: 18px; height: 18px; }
+    .encart-offre .pied-offre { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+    .encart-offre .prix-des { font-size: var(--font-size-sm); color: var(--color-text-secondary); }
+    .encart-offre .prix-des b { display: block; font-size: var(--font-size-lg); color: var(--color-text); }
+
+    /* Abonné : rappel compact de l'abonnement */
+    .rappel-abonnement { margin-top: var(--space-6); }
+  </style>
+</head>
+<body data-zone="esport">
+<div class="cadre">
+  <div class="telephone">
+    <div class="barre-etat" data-heure="21:10"></div>
+
+    <header class="entete-esport entete-accueil">
+      <a href="00c-maxit-gaming.html" class="bouton-icone" aria-label="Retour au Game corner">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path class="f-text" d="M10.6 5.3 12 6.7 7.7 11H20v2H7.7l4.3 4.3-1.4 1.4L3.9 12z"/></svg>
+      </a>
+      <span class="avatar avatar-moi" id="initiale"></span>
+      <span class="salutation"><small>E-sport · <span id="nom-pays"></span></small><b>Salut <span id="pseudo"></span></b></span>
+      <button class="bouton-icone" data-ecran="25" aria-label="Notifications, 3 nouvelles">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path class="f-text" d="M12 2a6 6 0 0 1 6 6v5l2 3v1H4v-1l2-3V8a6 6 0 0 1 6-6zm0 2a4 4 0 0 0-4 4v5.6L6.9 15h10.2L16 13.6V8a4 4 0 0 0-4-4zm-2 15h4a2 2 0 0 1-4 0z"/></svg>
+        <span class="pastille">3</span>
+      </button>
+    </header>
+
+    <main class="contenu">
+      <!-- Prochaine échéance (S05-01) -->
+      <section aria-label="Ta prochaine échéance" id="echeances"></section>
+
+      <h2 class="titre-section">À la une
+        <a href="#" class="voir-tout" data-ecran="04">Calendrier</a>
+      </h2>
+      <div class="carrousel" id="une"></div>
+
+      <h2 class="titre-section">Jeux</h2>
+      <div class="carrousel" id="jeux"></div>
+
+      <!-- Ce que débloque l'abonnement (S11-01) : joueur gratuit seulement -->
+      <div id="abonnement"></div>
+
+      <h2 class="titre-section">Derniers contenus
+        <a href="#" class="voir-tout" data-ecran="20">Voir tout</a>
+      </h2>
+      <div id="contenus"></div>
+      <div class="fin-contenu"></div>
+    </main>
+
+    <nav class="nav-bas" data-onglet="03"></nav>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/esport.js"></script>
+<script src="js/demo.js"></script>
+<script>
+  /* Minutes entre « maintenant » (data.js) et une heure du même jour, ex. "21:30" */
+  function minutesAvant(heure) {
+    const maintenant = Esport.maintenant();
+    const [h, m] = heure.split(":").map(Number);
+    return h * 60 + m - (maintenant.getHours() * 60 + maintenant.getMinutes());
+  }
+
+  /* ---- Prochaine échéance : mon prochain match, puis les autres tournois où je suis inscrit ---- */
+  function rendreEcheances() {
+    const moi = Esport.pseudo();
+    let html = "";
+    let lignes = "";
+
+    DONNEES.tournois.forEach((t) => {
+      const ins = Esport.inscription(t.id);
+      const eq = t.mode === "equipe" ? Esport.equipe(t.id) : null;
+      if (!ins) {
+        // Équipe en constitution : pas encore inscrite (S04-03)
+        if (eq && t.etat === "ouvert") {
+          lignes += '<a href="#" class="echeance-ligne" data-ecran="10" data-id="' + t.id + '">' +
+            Esport.icone("groupe", "f-text") +
+            '<span class="ligne-corps"><b>' + eq.nom + " · " + eq.membres.length + "/" + Esport.tailleEquipe(t) + "</b>" +
+            "À compléter avant le " + Esport.jourCourt(t.cloture) + " pour " + t.nom + "</span>" +
+            Esport.icone("chevron", "f-muted") + "</a>";
+        }
+        return;
+      }
+      const arbre = DONNEES.arbres[t.id];
+
+      // Match à jouer dans un tournoi en cours : grande carte
+      if (ins.etat === "inscrit" && t.etat === "en-cours" && arbre && arbre.monMatch) {
+        const tour = arbre.matchs.findIndex((tourMatchs) => tourMatchs.some((m) => m[5] === "a-jouer"));
+        const match = arbre.matchs[tour].find((m) => m[5] === "a-jouer");
+        const adversaire = match[0] === DONNEES.joueur.pseudo ? match[1] : match[0];
+        html +=
+          '<div class="echeance"><span class="flamme"></span>' +
+          '<p class="surtitre">Ton prochain match</p>' +
+          "<h2>" + arbre.tours[tour] + " · " + t.nom + "</h2>" +
+          '<div class="duel">' +
+          '<span class="joueur"><span class="avatar avatar-moi">' + moi[0] + "</span>" + moi + "</span>" +
+          '<span class="vs">VS</span>' +
+          '<a href="#" class="joueur" data-ecran="17" data-pseudo="' + adversaire + '"><span class="avatar">' + adversaire[0] + "</span>" + adversaire + "</a>" +
+          "</div>" +
+          '<p class="quand">Aujourd\'hui à ' + arbre.monMatch + " · <b>dans " + minutesAvant(arbre.monMatch) + " min</b></p>" +
+          '<div class="actions">' +
+          '<a href="#" class="bouton bouton-primaire" data-ecran="11">Salle de match</a>' +
+          '<a href="#" class="bouton bouton-verre" data-ecran="12" data-id="' + t.id + '">Voir l\'arbre</a>' +
+          "</div></div>";
+        return;
+      }
+      if (t.etat === "termine") return;
+
+      // Autres échéances : règlement à réaccepter, début du tournoi, rang en liste d'attente
+      if (Esport.reglementAAccepter(t)) {
+        lignes += '<a href="#" class="echeance-ligne alerte" data-ecran="06" data-id="' + t.id + '">' +
+          Esport.icone("alerte", "f-primary") +
+          '<span class="ligne-corps"><b>' + t.nom + "</b>Règlement modifié : nouvelle acceptation requise</span>" +
+          Esport.icone("chevron", "f-muted") + "</a>";
+      } else if (ins.etat === "inscrit") {
+        lignes += '<a href="#" class="echeance-ligne" data-ecran="06" data-id="' + t.id + '">' +
+          Esport.icone("calendrier", "f-text") +
+          '<span class="ligne-corps"><b>' + t.nom + "</b>Début " + Esport.jourLong(t.debut) + " à " + Esport.heure(t.debut) + "</span>" +
+          Esport.icone("chevron", "f-muted") + "</a>";
+      } else if (ins.etat === "attente") {
+        lignes += '<a href="#" class="echeance-ligne" data-ecran="06" data-id="' + t.id + '">' +
+          Esport.icone("groupe", "f-text") +
+          '<span class="ligne-corps"><b>' + t.nom + "</b>Liste d'attente : tu es " + ins.rang + "e</span>" +
+          Esport.icone("chevron", "f-muted") + "</a>";
+      }
+    });
+
+    // Aucun tournoi : invitation à parcourir le calendrier
+    if (!html && !lignes) {
+      html = '<div class="echeance"><span class="flamme"></span>' +
+        '<p class="surtitre">Ta prochaine échéance</p>' +
+        "<h2>Aucun tournoi en vue pour l'instant</h2>" +
+        '<div class="actions"><a href="#" class="bouton bouton-primaire" data-ecran="04">Trouver un tournoi</a></div></div>';
+    }
+    document.getElementById("echeances").innerHTML =
+      html + (lignes ? '<div class="autres-echeances">' + lignes + "</div>" : "");
+  }
+
+  /* ---- Tournois à la une : à venir, réservés aux abonnés et MEA en premier (S05-02, S03-07) ---- */
+  function rendreUne() {
+    const ordre = (t) => (t.portee === "MEA" ? 0 : 1) + (t.acces === "abonnes" ? 0 : 1);
+    const tournois = Esport.tournoisDuPays()
+      .filter((t) => t.etat === "ouvert")
+      .sort((a, b) => ordre(a) - ordre(b) || a.debut.localeCompare(b.debut))
+      .slice(0, 5);
+    document.getElementById("une").innerHTML = tournois.map(Esport.carteUne).join("");
+  }
+
+  /* ---- Carrousel des 4 jeux ---- */
+  function rendreJeux() {
+    document.getElementById("jeux").innerHTML = DONNEES.jeux.map((j) =>
+      '<a href="#" class="tuile-jeu" data-ecran="13" data-id="' + j.id + '">' + Esport.visuelJeu(j.id) + j.nom + "</a>"
+    ).join("");
+  }
+
+  /* ---- Abonnement : encart pour le joueur gratuit, rappel pour l'abonné ---- */
+  function rendreAbonnement() {
+    const zone = document.getElementById("abonnement");
+    if (Esport.abonne()) {
+      const a = DONNEES.joueur.abonnement;
+      zone.innerHTML = '<a href="#" class="encart rappel-abonnement" data-ecran="24">' +
+        Esport.icone("coche", "f-success-dark") +
+        "<div><strong>Abonnement " + a.offre + " actif</strong><p>Jusqu'au " + Esport.jourCourt(a.echeance) + " · tous les tournois et contenus sont ouverts</p></div></a>";
+      return;
+    }
+    const offres = DONNEES.offres[DONNEES.joueur.pays];
+    const moinsCher = offres[0];
+    const essai = offres.find((o) => o.essai);
+    const coche = Esport.icone("coche", "f-primary");
+    zone.innerHTML =
+      '<section class="encart-offre" aria-labelledby="titre-offre">' +
+      '<h2 id="titre-offre">Ce que débloque l\'abonnement</h2><ul>' +
+      "<li>" + coche + "Les tournois réservés aux abonnés, dont les tournois MEA</li>" +
+      "<li>" + coche + "Toutes les vidéos et analyses exclusives</li>" +
+      "<li>" + coche + "Les dotations des tournois abonnés</li>" +
+      "</ul>" +
+      '<div class="pied-offre"><span class="prix-des">À partir de<b>' + Esport.prix(moinsCher.prix) + " / " + moinsCher.libelle.toLowerCase() + "</b>" +
+      (essai ? essai.essai + " sur l'offre au " + essai.libelle.toLowerCase() : "") + "</span>" +
+      '<a href="#" class="bouton bouton-secondaire" data-ecran="21" data-origine>Voir les offres</a></div>' +
+      "</section>";
+  }
+
+  /* ---- Derniers contenus : verrou pour le joueur gratuit, vidéos masquées si désactivées (S08-02) ---- */
+  function rendreContenus() {
+    document.getElementById("contenus").innerHTML =
+      Esport.contenusVisibles().slice(0, 4).map(Esport.ligneContenu).join("");
+  }
+
+  function rendre() {
+    const pseudo = Esport.pseudo();
+    document.getElementById("pseudo").textContent = pseudo;
+    document.getElementById("initiale").textContent = pseudo[0];
+    document.getElementById("nom-pays").textContent = Esport.pays().nom;
+    rendreEcheances();
+    rendreUne();
+    rendreJeux();
+    rendreAbonnement();
+    rendreContenus();
+  }
+  Esport.monter(rendre);
+
+  // Arrivée depuis le choix du pseudo (02)
+  document.addEventListener("DOMContentLoaded", () => {
+    if (Nav.param("bienvenue")) Nav.toast("Bienvenue " + Esport.pseudo() + " !");
+  });
+</script>
+</body>
+</html>
