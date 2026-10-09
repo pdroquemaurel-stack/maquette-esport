@@ -1808,3 +1808,89 @@ svg { display: block; flex-shrink: 0; }
 .bouton-activation { margin-top: var(--space-3); }
 .actions-doubles { display: flex; gap: var(--space-2); margin-top: var(--space-1); }
 .actions-doubles .bouton { flex: 1; }
+
+/* ============ Mes achats, détail d'une commande, réclamation (lot S3) ============ */
+.liste-achats { margin-top: 0; }
+.ligne-achat { align-items: flex-start; }
+.ligne-achat .visuel-jeu { margin-top: 2px; }
+.ligne-achat .carte-badges { margin-top: var(--space-1); }
+.ligne-achat > svg:last-child { align-self: center; }
+.statut-commande { margin-top: var(--space-3); }
+.detail-commande dd small { color: var(--color-text-secondary); font-weight: var(--font-weight-regular); }
+.detail-commande dd { overflow-wrap: anywhere; }
+.zone-texte-shop {
+  width: 100%;
+  min-height: 96px;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font: inherit;
+  color: var(--color-text);
+  background: var(--color-surface);
+  resize: none;
+}
+.zone-texte-shop:focus { outline: 0; border-color: var(--color-primary); }
+.zone-texte-shop::placeholder { color: var(--color-text-muted); }
+
+/* ============ Aide : questions dépliables (s11) ============ */
+.liste-faq { margin: var(--space-4) var(--page-gutter) 0; border-top: 1px solid var(--color-border); }
+.faq-shop { border-bottom: 1px solid var(--color-border); }
+.faq-shop > summary {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 56px;
+  font-weight: var(--font-weight-bold);
+  cursor: pointer;
+}
+.faq-shop > summary::-webkit-details-marker { display: none; }
+.faq-shop > summary svg { width: 20px; height: 20px; margin-left: auto; transition: transform .2s; }
+.faq-shop[open] > summary svg { transform: rotate(90deg); }
+.faq-reponse { display: flex; flex-direction: column; gap: var(--space-2); padding-bottom: var(--space-4); font-size: var(--font-size-sm); color: var(--color-text-secondary); }
+.faq-reponse b { color: var(--color-text); }
+.faq-jeu { border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 0 var(--space-3); background: var(--color-surface); }
+.faq-jeu > summary { list-style: none; display: flex; align-items: center; gap: var(--space-3); min-height: 56px; cursor: pointer; color: var(--color-text); font-weight: var(--font-weight-bold); }
+.faq-jeu > summary::-webkit-details-marker { display: none; }
+.faq-jeu > summary small { display: block; font-weight: var(--font-weight-regular); color: var(--color-text-secondary); font-size: var(--font-size-xs); }
+.faq-jeu[open] { border-color: var(--color-primary); }
+.faq-jeu p { padding-bottom: var(--space-3); }
+
+/* ============ Notification Max it simulée (S08-03, S09-04) ============ */
+.notif-maxit {
+  position: absolute;
+  top: calc(var(--status-bar-height) + var(--space-1));
+  left: var(--space-2);
+  /* Un bouton en position absolue ne s'étire pas entre left et right : largeur explicite */
+  width: calc(100% - 2 * var(--space-2));
+  z-index: 70;
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: var(--shadow-raised);
+  text-align: left;
+  opacity: 0;
+  transform: translateY(-12px);
+  transition: opacity .25s, transform .25s;
+}
+.notif-maxit.visible { opacity: 1; transform: none; }
+.notif-app {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: var(--radius-sm);
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  font-weight: var(--font-weight-bold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.notif-corps { display: flex; flex-direction: column; gap: 2px; min-width: 0; font-size: var(--font-size-sm); }
+.notif-corps small { font-size: var(--font-size-xs); color: var(--color-text-muted); }
+.notif-corps b { font-size: var(--font-size-md); line-height: var(--line-height-tight); }
+.notif-corps span { color: var(--color-text-secondary); }

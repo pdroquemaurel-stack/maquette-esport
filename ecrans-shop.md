@@ -53,22 +53,22 @@ Pas de maquette Figma (`reference/figma-shop/` absent) : composants Max it et e-
 - Éléments : paiement en cours, livraison en cours, livré ; voucher : code unique, expiration, instructions, lien d'activation, « Copier » ; top-up : montant crédité ; pass : date de fin et reconduction ; « Code envoyé par SMS » si activé ; refusé ; livraison échouée puis remboursement engagé ; « Vérification en cours » et lien vers la commande.
 - Liens : Voir ma commande → s09 ; Retour au Shop → s01 ; Retour au jeu → s03.
 
-### s08 `s08-achats.html` — Mes achats (lot S3)
+### s08 `s08-achats.html` — Mes achats
 - US : S10-01.
 - Éléments : commandes de la plus récente à la plus ancienne, statut simple (Livré, En cours, Remboursé, Échec) ; aucun achat : message et lien vers l'accueil.
 - Liens : commande → s09 ; retour.
 
-### s09 `s09-commande.html?id=…` — Détail d'une commande (lot S3)
+### s09 `s09-commande.html?id=…` — Détail d'une commande
 - US : S10-02, S06-10, S09-02, S09-04.
 - Éléments : référence, date, produit, compte de jeu, moyen de paiement, montant ; code et instructions avec « Copier », ou statut de livraison ; pass : date de fin, reconduction, bandeau « Expire dans 3 jours » et « Me réabonner » ; date du remboursement.
 - Liens : Signaler un problème → s10 ; Me réabonner → s04 ; aide → s11 ; retour → s08.
 
-### s10 `s10-signaler.html?commande=…` — Signaler un problème (lot S3)
+### s10 `s10-signaler.html?commande=…` — Signaler un problème
 - US : S10-04.
 - Éléments : commande rattachée (résumé), motif (non reçu, code invalide, mauvais compte, autre), commentaire facultatif, puis « Réclamation n° … enregistrée ».
 - Liens : retour à la commande → s09.
 
-### s11 `s11-aide.html` — Aide (lot S3)
+### s11 `s11-aide.html` — Aide
 - US : S10-05, S05-02.
 - Éléments : questions fréquentes dépliables ; « Où trouver mon identifiant ? » renvoie à l'aide de chaque jeu (`#jeu-…`).
 - Liens : conditions → s12 ; Mes achats → s08 ; retour.
@@ -78,7 +78,7 @@ Pas de maquette Figma (`reference/figma-shop/` absent) : composants Max it et e-
 - Éléments : texte du pays, version et date, clause de non-remboursement.
 - Liens : retour vers l'écran d'origine (s06, s04 ou s11).
 
-### Notifications Max it simulées (lot S3)
+### Notifications Max it simulées
 - US : S08-03, S09-04.
 - Bannière de notification déclenchée par le menu de démo, aussi hors du Shop (00c) : « Ton crédit est arrivé » → s09 ; « Ton pass expire dans 3 jours » → s04 ; « Pass renouvelé » → s09.
 
@@ -105,9 +105,11 @@ Pas de maquette Figma (`reference/figma-shop/` absent) : composants Max it et e-
 | Montant hors plafond DCB | S2 | Orange Money seul en s06 (aussi sans démo au-delà de 100 MAD). |
 | Paiement sans réponse | S2 | « Vérification en cours » en s07, nouveau paiement bloqué en s06, confirmation et livraison au bout de 20 s. |
 | Produit épuisé pendant l'achat | S2 | « Payer » en s06 : message, aucun débit, produit « Épuisé » ensuite. |
-| Livraison en échec puis remboursement | S2 | s07 : livraison échouée, remboursement engagé (détail en s09 au lot S3). |
-| Pass qui expire dans 3 jours | S3 | Notification → s04. |
-| Envoi du code par SMS | S3 | Mention « Code envoyé par SMS » en s07 et s09. |
+| Livraison en échec puis remboursement | S2 | s07 : livraison échouée, remboursement engagé (détail en s09). |
+| Pass qui expire dans 3 jours | S3 | Notification Max it (aussi hors du Shop) → s04 pour se réabonner ; la commande (s09) affiche « Expire dans 3 jours » et « Me réabonner ». |
+| Notification : crédit arrivé | S3 | Notification Max it → s09 de la commande Free Fire. |
+| Notification : pass renouvelé | S3 | Notification Max it → s09 de Roblox Premium (dernier renouvellement). |
+| Envoi du code par SMS désactivé | S3 | Bascule : sans SMS, plus de mention « Envoyé par SMS » en s04, s07 et s09. |
 
 ## Schéma de navigation
 
@@ -141,9 +143,9 @@ Notification Max it (démo) ─► s09 (livraison, renouvellement) ou s04 (éch�
 |---|---|---|
 | S1 | `js/data-shop.js`, `js/shop.js`, section « Shop » de style.css, s01 à s04, 00c, 13, groupe « Shop » du menu de démo (premier achat, liens directs), page de contrôle, fichier unique | terminé |
 | S2 | s05, s06, mode Shop de 22, s07, s12 ; états de démo du tunnel ; page de contrôle et fichier unique | terminé |
-| S3 | s08 à s11, notifications Max it simulées, états de démo restants | à faire |
+| S3 | s08 à s11, notifications Max it simulées, bascule SMS ; page de contrôle et fichier unique | terminé |
 
-Après le lot S2, les liens vers les écrans du lot S3 (Mes achats, Voir ma commande, aide) affichent « … : arrive au prochain lot ».
+Tous les écrans du Shop sont prêts : plus aucun lien « arrive au prochain lot ».
 
 ## Couverture des US
 
@@ -151,7 +153,7 @@ Après le lot S2, les liens vers les écrans du lot S3 (Mes achats, Voir ma comm
 |---|---|---|---|
 | S02-04 | Couverte | s03, s04, s06, 22 | Produits « Épuisé » affichés, non achetables (choix du 2026-10-09). Réservation au paiement simulée : commande créée à « Payer », supprimée si le paiement est abandonné ; « Produit épuisé pendant l'achat ». |
 | S05-01 | Couverte | s01 | Aucun identifiant à saisir ; pays et numéro simulés. |
-| S05-02 | Couverte | s05 | Format contrôlé jeu par jeu ; aide « où trouver mon identifiant » en feuille (l'aide complète arrive en s11, lot S3). |
+| S05-02 | Couverte | s05 | Format contrôlé jeu par jeu ; aide « où trouver mon identifiant » en feuille, et aide de chaque jeu en s11. |
 | S05-03 | Couverte | s05, s06 | Pseudo simulé (liste fictive) ; vérification impossible pour Konami et Supercell : double saisie. |
 | S05-04 | Couverte | s05, s06 | Comptes mémorisés dans le navigateur, pas sur le compte Max it ; le dernier utilisé est proposé en premier. |
 | S06-01 | Couverte | 00c, 13, s01, s03, s04 | Lien direct simulé par le menu de démo. |
@@ -165,10 +167,14 @@ Après le lot S2, les liens vers les écrans du lot S3 (Mes achats, Voir ma comm
 | S06-11 | Couverte | 22, s07, s06 | « 2 minutes » sans réponse simulées ; confirmation au bout de 20 s. |
 | S07-01 à S07-03 | Couvertes | s06, 22 | Réponses du module de paiement simulées : plafond DCB 100 MAD, crédit de la ligne 80 MAD. |
 | S08-01, S08-02 | Couvertes | 22, s07 | Livraison après confirmation ; les nouvelles tentatives pendant 30 minutes sont seulement mentionnées. |
-| S08-03 | À venir (S3) | notifications | — |
+| S08-03 | Couverte (simulée) | notification, s09 | Notification déclenchée par le menu de démo, pas par une vraie livraison différée. |
 | S09-01 | Couverte | s07 | Code tiré de la référence de commande, donc unique. |
-| S09-02 | En partie | s07 | Mention « Envoyé aussi par SMS » ; la bascule SMS du menu de démo arrive au lot S3. |
-| S09-04, E10 | À venir (S3) | s08 à s11 | — |
+| S09-02 | Couverte | s04, s07, s09 | SMS non montré lui-même : seulement la mention « Envoyé aussi par SMS » ; bascule pays sans SMS. |
+| S09-04 | Couverte | notification, s09, s04 | Délai de 3 jours fixe (réglable par produit dans le back-office). |
+| S10-01 | Couverte | s08 | — |
+| S10-02 | Couverte | s09 | Code « visible seulement depuis ton compte » : simple mention. |
+| S10-04 | Couverte | s09, s10 | Réclamation mémorisée dans le navigateur ; son traitement relève du back-office (E11). |
+| S10-05 | Couverte | s11 | Contenu en français seulement. |
 
 ### US non maquettées
 - V2 (CLAUDE.md) : S06-04, S06-09, S06-12, S10-03.

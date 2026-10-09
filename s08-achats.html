@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<!-- Écran s08 — Mes achats (s08-achats.html?depuis=…).
+     US : S10-01 (commandes de la plus récente à la plus ancienne, statut formulé simplement :
+     Livré, En cours, Remboursement en cours, Remboursé, Paiement refusé).
+     État de démonstration : « Premier achat » → aucun achat, message et lien vers les jeux. -->
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mes achats</title>
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-zone="shop">
+<div class="cadre">
+  <div class="telephone">
+    <div class="barre-etat" data-heure="21:10"></div>
+    <div id="entete"></div>
+    <main class="contenu" id="page"></main>
+  </div>
+</div>
+
+<script src="js/data-shop.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/shop.js"></script>
+<script src="js/demo.js"></script>
+<script>
+  /* « 2026-10-08T19:42 » → « 08/10/2026 à 19:42 » */
+  function dateHeure(iso) { return Shop.dateCourte(iso) + " à " + iso.slice(11, 16); }
+
+  function rendre() {
+    document.getElementById("entete").innerHTML = Shop.entete("Mes achats", Shop.depuis());
+    const liste = Shop.commandes();
+    let html = "";
+
+    if (!liste.length) {
+      html = '<div class="vide"><strong>Aucun achat pour l\'instant</strong>Tes achats et tes codes apparaîtront ici.' +
+        '<a href="s01-accueil.html" class="bouton bouton-primaire">Découvrir les jeux</a></div>';
+    } else {
+      html += '<p class="resultats-shop">' + liste.length + " commande" + (liste.length > 1 ? "s" : "") + ", de la plus récente à la plus ancienne</p>";
+      html += '<div class="liens-shop liste-achats">' + liste.map((c) => {
+        const p = Shop.produit(c.produit);
+        const j = Shop.jeu(p.jeu);
+        const statut = Shop.statutCommande(c);
+        return '<a href="' + Shop.url("s09-commande.html", { id: c.id, depuis: Shop.ici() }) + '" class="ligne ligne-achat">' + Shop.visuel(j, "petit") +
+          '<span class="ligne-corps"><span class="ligne-titre">' + p.nom + "</span>" +
+          '<span class="ligne-sous-titre">' + j.nom + " · " + dateHeure(c.date) + "</span>" +
+          '<span class="carte-badges"><span class="puce-etat ' + statut.classe + '">' + statut.libelle + "</span>" +
+          (Shop.expireBientot(c) ? '<span class="puce-etat puce-promo">Expire dans ' + Shop.joursRestants(c) + " j</span>" : "") + "</span></span>" +
+          '<span class="prix-shop"><b>' + Shop.prix(c.montant) + "</b></span>" + Shop.icone("chevron", "f-muted") + "</a>";
+      }).join("") + "</div>";
+    }
+    html += '<div class="fin-contenu"></div>';
+    document.getElementById("page").innerHTML = html;
+  }
+  // Une commande en vérification peut se confirmer pendant que la liste est affichée
+  setInterval(() => Shop.paiementEnAttente(), 2000);
+  Shop.monter(rendre);
+</script>
+</body>
+</html>

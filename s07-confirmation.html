@@ -54,7 +54,7 @@
         '<div class="code-ligne"><code id="code">' + c.code + "</code>" +
         '<button class="bouton bouton-secondaire" id="copier">' + Shop.icone("copier") + "Copier</button></div>" +
         '<p class="note-carte">' + (p.expiration ? "À utiliser avant le " + Shop.dateCourte(p.expiration) + ". " : "") +
-        (SHOP.smsActif ? "Envoyé aussi par SMS au " + Shop.numeroMasque() + "." : "Tu le retrouves dans « Mes achats ».") + "</p></div>" +
+        (Shop.smsActif() ? "Envoyé aussi par SMS au " + Shop.numeroMasque() + "." : "Tu le retrouves dans « Mes achats ».") + "</p></div>" +
         '<section class="bloc-shop"><h2>Comment l\'utiliser</h2><p>' + p.activation + "</p>" +
         '<button class="bouton bouton-secondaire bouton-pleine-largeur bouton-activation" data-hors="La page d\'activation de l\'éditeur">Ouvrir la page d\'activation</button></section>';
     }
@@ -108,7 +108,7 @@
     // Sorties : la commande, le jeu, l'accueil du Shop ; récapitulatif après un refus
     document.getElementById("action").innerHTML = c.statut === "refuse"
       ? '<a href="' + Shop.url("s06-recapitulatif.html", { produit: p.id }) + '" class="bouton bouton-primaire bouton-pleine-largeur">Retour au récapitulatif</a>'
-      : '<a href="#" class="bouton bouton-primaire bouton-pleine-largeur" data-ecran="s09" data-id="' + c.id + '">Voir ma commande</a>' +
+      : '<a href="' + Shop.url("s09-commande.html", { id: c.id, depuis: Shop.ici() }) + '" class="bouton bouton-primaire bouton-pleine-largeur">Voir ma commande</a>' +
         '<div class="actions-doubles"><a href="' + Shop.lienJeu(jeu.id, "s01-accueil.html") + '" class="bouton bouton-lien">Retour au jeu</a>' +
         '<a href="s01-accueil.html" class="bouton bouton-lien">Retour au Shop</a></div>';
   }

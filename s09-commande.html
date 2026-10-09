@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<!-- Écran s09 — Détail d'une commande (s09-commande.html?id=SH-…&depuis=…).
+     US : S10-02 (référence, date, produit, compte de jeu, moyen de paiement, montant, code ou statut de livraison ;
+     code visible seulement par l'acheteur ; pass : date de fin et reconduction ; date du remboursement),
+     S06-10 (code avec « Copier » et instructions), S09-02 (rappel de l'envoi par SMS),
+     S09-04 (pass sans reconduction qui expire dans 3 jours : « Me réabonner » ; pass reconduit : date du renouvellement),
+     S10-04 (accès à « Signaler un problème », réclamation déjà envoyée).
+     Commande inconnue (ou masquée par « Premier achat ») → Mes achats. -->
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Commande</title>
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-zone="shop">
+<div class="cadre">
+  <div class="telephone">
+    <div class="barre-etat" data-heure="21:10"></div>
+    <div id="entete"></div>
+    <main class="contenu" id="page"></main>
+    <div class="barre-action" id="action"></div>
+  </div>
+</div>
+
+<script src="js/data-shop.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/shop.js"></script>
+<script src="js/demo.js"></script>
+<script>
+  const idCommande = Nav.param("id");
+  if (!Shop.commande(idCommande)) ouvrirPage("s08-achats.html");
+
+  /* Ligne du détail */
+  function ligne(terme, valeur) { return "<dt>" + terme + "</dt><dd>" + valeur + "</dd>"; }
+
+  function rendre() {
+    const c = Shop.commande(idCommande);
+    if (!c) return;
+    const p = Shop.produit(c.produit);
+    const jeu = Shop.jeu(p.jeu);
+    const statut = Shop.statutCommande(c);
+    const ici = Shop.ici();
+    document.getElementById("entete").innerHTML = Shop.entete("Commande", Shop.depuis("s08-achats.html"));
+
+    let html = '<div class="bloc-shop">' + Shop.resumeProduit(p) +
+      '<div class="carte-badges statut-commande"><span class="puce-etat ' + statut.classe + '">' + statut.libelle + "</span></div></div>";
+
+    // Pass sans reconduction qui expire bientôt : se réabonner (S09-04)
+    if (Shop.expireBientot(c)) {
+      const jours = Shop.joursRestants(c);
+      html += '<div class="encart encart-alerte encart-shop">' + Shop.icone("horloge", "f-primary") + "<div><strong>" +
+        (jours === 0 ? "Ton pass expire aujourd'hui" : "Ton pass expire dans " + jours + " jour" + (jours > 1 ? "s" : "")) + "</strong>" +
+        "<p>Il prend fin le " + Shop.dateCourte(c.fin) + ". Réabonne-toi pour garder l'accès.</p>" +
+        '<a href="' + Shop.lienProduit(p.id, ici) + '" class="lien-encart">Me réabonner · ' + Shop.prix(p.prix) + "</a></div></div>";
+    }
+
+    // Code et instructions, visibles seulement dans le compte de l'acheteur (S10-02, S06-10)
+    if (c.statut === "livre" && c.code) {
+      html += '<div class="carte-recap code-shop encart-shop"><span class="etiquette-shop">Ton code</span>' +
+        '<div class="code-ligne"><code id="code">' + c.code + "</code>" +
+        '<button class="bouton bouton-secondaire" id="copier">' + Shop.icone("copier") + "Copier</button></div>" +
+        '<p class="note-carte">Visible seulement depuis ton compte Max it.' + (p.expiration ? " À utiliser avant le " + Shop.dateCourte(p.expiration) + "." : "") +
+        (Shop.smsActif() ? " Aussi envoyé par SMS au " + Shop.numeroMasque() + "." : "") + "</p></div>" +
+        '<section class="bloc-shop"><h2>Comment l\'utiliser</h2><p>' + p.activation + "</p></section>";
+    }
+
+    // Paiement ou livraison pas encore terminés : suivi en s07 (S06-11)
+    if (["paiement", "livraison", "verification"].includes(c.statut)) {
+      html += '<div class="encart encart-shop">' + Shop.icone("horloge", "f-primary") + "<div><strong>" +
+        (c.statut === "verification" ? "Paiement en cours de vérification" : "Livraison en cours") + "</strong>" +
+        "<p>Tu seras prévenu dès que ton achat est livré.</p>" +
+        '<a href="' + Shop.url("s07-confirmation.html", { commande: c.id }) + '" class="lien-encart">Suivre ma commande</a></div></div>';
+    }
+
+    // Détail de la commande (S10-02)
+    let detail = ligne("Référence", c.id) + ligne("Date", Shop.dateCourte(c.date) + " à " + c.date.slice(11, 16)) +
+      ligne("Produit", p.nom) + ligne("Jeu", jeu.nom) + ligne("Livraison", Shop.mention(p));
+    if (c.compte) {
+      detail += ligne("Compte de jeu", c.compte.libelle + (c.compte.pseudo ? " · " + c.compte.pseudo : "") + "<br><small>" + jeu.identifiant.libelle + " " + c.compte.identifiant + "</small>");
+    }
+    detail += ligne("Payé avec", Shop.nomMoyen(c.moyen)) + ligne("Montant TTC", "<b>" + Shop.prix(c.montant) + "</b>");
+    if (p.type === "pass" && c.fin) {
+      detail += ligne(p.reconduction ? "Renouvellement" : "Fin de validité", Shop.dateCourte(c.fin));
+      if (c.renouvele) detail += ligne("Dernier renouvellement", Shop.dateCourte(c.renouvele) + " · " + Shop.prix(p.prix));
+    }
+    if (c.statut === "echec") detail += ligne("Remboursement", "Engagé le " + Shop.dateCourte(c.remboursement || Shop.aujourdhui()) + ", sous 48 h");
+    if (c.statut === "rembourse") detail += ligne("Remboursé le", Shop.dateCourte(c.remboursement));
+    html += '<h2 class="titre-section">Détail</h2><dl class="recap-shop detail-commande">' + detail + "</dl>";
+
+    if (p.type === "pass") {
+      html += '<p class="note-shop">' + (p.reconduction
+        ? "Reconduit automatiquement à chaque échéance au même prix : tu es prévenu à chaque renouvellement."
+        : "Sans reconduction : tu es prévenu 3 jours avant la fin.") + "</p>";
+    }
+
+    // Réclamation déjà envoyée pour cette commande (S10-04)
+    const r = Shop.reclamation(c.id);
+    if (r) {
+      html += '<div class="encart encart-shop">' + Shop.icone("info", "f-primary") + "<div><strong>Réclamation n° " + r.numero + "</strong>" +
+        "<p>Envoyée le " + Shop.dateCourte(r.date) + " · " + r.motif + ". En cours de traitement : réponse par notification Max it.</p></div></div>";
+    }
+    html += '<div class="fin-contenu"></div>';
+    document.getElementById("page").innerHTML = html;
+
+    // Sorties : signaler un problème, aide
+    document.getElementById("action").innerHTML =
+      '<a href="' + Shop.url("s10-signaler.html", { commande: c.id, depuis: ici }) + '" class="bouton bouton-secondaire bouton-pleine-largeur">' +
+      (r ? "Voir ma réclamation" : "Signaler un problème") + "</a>" +
+      '<a href="' + Shop.url("s11-aide.html", { depuis: ici }) + '" class="bouton bouton-lien bouton-pleine-largeur">Aide et questions fréquentes</a>';
+  }
+
+  document.querySelector(".telephone").addEventListener("click", (e) => {
+    if (!e.target.closest("#copier")) return;
+    const code = document.getElementById("code").textContent;
+    try { navigator.clipboard.writeText(code); } catch (erreur) { /* presse-papiers indisponible : la maquette continue */ }
+    Nav.toast("Code copié");
+  });
+  setInterval(() => Shop.commande(idCommande), 2000);
+  Shop.monter(rendre);
+</script>
+</body>
+</html>

@@ -54,6 +54,18 @@ Total : 16 min 30 avec l'étape 10 bis. Pour finir : menu de démo → « Réini
 | 4 | p03 → p07 → p03 → p06 | Avis : « Parking Pro », jamais lancé, ne peut pas être noté. « Bloc Mania » : « Donner mon avis », 4 étoiles et un commentaire → publié tout de suite sous `Youss_KZ`, la moyenne et le nombre d'avis changent. « Voir tout » : liste complète, « Modifier », « Supprimer », « Signaler » un avis (motif obligatoire). | — |
 | 5 | p01 | Jeu indisponible : « Bloc Mania » disparaît de partout, y compris des favoris, et y revient quand on coupe la bascule. | « Jeu momentanément indisponible », « Lien vers un jeu indisponible », « Ouverture par lien partagé ». |
 
+## Shop (boutique de jeux) — 8 minutes
+
+| # | Écrans | Ce qu'on montre | Menu de démo |
+|---|---|---|---|
+| 1 | 00c → s01 → s02 | Tuile « Boutique » : bannières, derniers achats, jeux à la une, populaires. Recherche tolérante : « frifire », « mlbb », filtre « Promo ». | Variante : « Premier achat ». |
+| 2 | 13 → s03 → s04 | Page e-sport de Free Fire → « Ouvrir la boutique Max it » : une seule liste, Top-up ou Voucher, promo, « Épuisé ». Fiche « 520 diamants » : prix TTC, livraison, conditions. Call of Duty: Mobile n'a pas de lien boutique. | — |
+| 3 | s05 → s06 → 22 → s07 | « Acheter » : « Un autre compte », ID 600123456, libellé « Ma sœur » → pseudo affiché. Récapitulatif « Pour : Ma sœur » → Orange Money (4 chiffres) → livré. | « Identifiant de jeu introuvable ». |
+| 4 | s04 → s06 → 22 → s07 | « Carte 400 Robux » : pas d'identifiant, récapitulatif direct, paiement par crédit mobile → code unique, « Copier », instructions. | « Envoi du code par SMS désactivé ». |
+| 5 | s06 → 22 → s07 | Cas d'erreur : solde Orange Money insuffisant (montant manquant, crédit mobile proposé), paiement sans réponse (« Vérification en cours », nouveau paiement bloqué, livré après 20 s), livraison en échec (remboursement engagé), produit épuisé pendant l'achat. | Les raccourcis du groupe « Shop ». |
+| 6 | s08 → s09 → s10 | Mes achats : statuts simples. Pass Gameloft « Expire dans 3 j » → « Me réabonner ». Carte Robux → « Signaler un problème » → numéro de réclamation. | « Pass qui expire dans 3 jours », « Notification : crédit arrivé », « Notification : pass renouvelé » : bandeau Max it, même sur 00c. |
+| 7 | s11, s12 | Aide : « Où trouver mon identifiant ? » jeu par jeu. Conditions de vente : version acceptée. | « Conditions de vente modifiées » : à réaccepter au prochain achat. |
+
 ## Bon à savoir
 
 - Le temps accéléré (×30) ne concerne que la salle de match, la déclaration du résultat et le litige.

@@ -60,7 +60,7 @@
       ? ["Crédit direct sur ton compte " + jeu.nom + ", juste après le paiement.",
          "Ton " + jeu.identifiant.libelle + " te sera demandé à l'étape suivante" + (Shop.editeur(jeu).verification ? " ; ton pseudo s'affichera pour vérifier le compte." : ".")]
       : ["Un code unique s'affiche dès le paiement confirmé, avec un bouton pour le copier.",
-         (SHOP.smsActif ? "Tu le reçois aussi par SMS et tu le retrouves dans « Mes achats »." : "Tu le retrouves dans « Mes achats »."),
+         (Shop.smsActif() ? "Tu le reçois aussi par SMS et tu le retrouves dans « Mes achats »." : "Tu le retrouves dans « Mes achats »."),
          p.activation];
     html += '<section class="bloc-shop"><h2>Livraison · ' + Shop.modeLivraison(p) + '</h2><ul class="liste-shop">' +
       livraison.filter(Boolean).map((l) => "<li>" + Shop.icone(p.livraison === "credit" ? "topup" : "voucher", "f-primary") + "<span>" + l + "</span></li>").join("") +

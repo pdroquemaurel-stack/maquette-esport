@@ -90,7 +90,19 @@
     ["s07-confirmation.html?commande=SH-TEST-verification", () => ({ shopCommandes: [commandeTest("verification", "ff-520", { debut: Date.now() })] })],
     ["s07-confirmation.html?commande=SH-TEST-echec", { shopCommandes: [commandeTest("echec", "ff-520", { remboursement: "2026-10-09" })] }],
     ["s07-confirmation.html?commande=SH-TEST-refuse", { shopCommandes: [commandeTest("refuse", "ff-520")] }],
-    "s12-conditions.html?depuis=s01-accueil.html", ["s12-conditions.html", { shopCgvModifiees: true }], ["s12-conditions.html", { shopPremierAchat: true }]
+    "s12-conditions.html?depuis=s01-accueil.html", ["s12-conditions.html", { shopCgvModifiees: true }], ["s12-conditions.html", { shopPremierAchat: true }],
+    // Shop (lot S3) : mes achats, détail d'une commande, signaler un problème, aide
+    "s08-achats.html", ["s08-achats.html", { shopPremierAchat: true }],
+    ["s08-achats.html", () => ({ shopCommandes: [commandeTest("verification", "ff-520", { debut: Date.now() }), commandeTest("echec", "mlbb-86", { remboursement: "2026-10-09" })] })],
+    "s09-commande.html?id=SH-26100819-4821", "s09-commande.html?id=SH-26100517-3307", "s09-commande.html?id=SH-26100312-2954",
+    "s09-commande.html?id=SH-26091518-0730", "s09-commande.html?id=SH-26090920-0417", "s09-commande.html?id=SH-26092021-1180",
+    ["s09-commande.html?id=SH-26100312-2954", { shopSansSms: true, shopReclamations: [{ numero: "RC-004217", commande: "SH-26100312-2954", motif: "Le code ne fonctionne pas", commentaire: "", date: "2026-10-09" }] }],
+    ["s09-commande.html?id=SH-TEST-echec", { shopCommandes: [commandeTest("echec", "ff-520", { remboursement: "2026-10-09" })] }],
+    ["s09-commande.html?id=SH-TEST-verification", () => ({ shopCommandes: [commandeTest("verification", "ff-520", { debut: Date.now() })] })],
+    "s09-commande.html?id=inconnue",
+    "s10-signaler.html?commande=SH-26100312-2954",
+    ["s10-signaler.html?commande=SH-26100312-2954", { shopReclamations: [{ numero: "RC-004217", commande: "SH-26100312-2954", motif: "Le code ne fonctionne pas", commentaire: "", date: "2026-10-09" }] }],
+    "s11-aide.html", "s11-aide.html?jeu=efootball&depuis=s01-accueil.html"
   ];
   const abonne = location.hash === "#abonne";
   const sortie = document.getElementById("sortie");

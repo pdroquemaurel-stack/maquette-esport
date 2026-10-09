@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<!-- Écran s10 — Signaler un problème (s10-signaler.html?commande=SH-…&depuis=…).
+     US : S10-04 (motif : non reçu, code invalide, mauvais compte, autre ; réclamation rattachée automatiquement
+     à la commande, sans ressaisie ; numéro de réclamation donné à l'envoi).
+     Réclamation déjà envoyée pour la commande : elle est affichée, sans nouveau formulaire. -->
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Signaler un problème</title>
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-zone="shop">
+<div class="cadre">
+  <div class="telephone">
+    <div class="barre-etat" data-heure="21:10"></div>
+    <div id="entete"></div>
+    <main class="contenu" id="page"></main>
+    <div class="barre-action" id="action"></div>
+  </div>
+</div>
+
+<script src="js/data-shop.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/shop.js"></script>
+<script src="js/demo.js"></script>
+<script>
+  const c = Shop.commande(Nav.param("commande"));
+  if (!c) ouvrirPage("s08-achats.html");
+  const retourCommande = c ? Shop.depuis(Shop.url("s09-commande.html", { id: c.id })) : "s08-achats.html";
+
+  // Les quatre motifs du backlog (S10-04)
+  const p = c && Shop.produit(c.produit);
+  const MOTIFS = [
+    { id: "non-recu", libelle: "Je n'ai rien reçu" },
+    { id: "code-invalide", libelle: "Le code ne fonctionne pas" },
+    { id: "mauvais-compte", libelle: "Crédité sur le mauvais compte" },
+    { id: "autre", libelle: "Autre problème" }
+  ];
+  let motif = null;
+  let envoyee = null;   // réclamation enregistrée pendant cette visite
+
+  function rendre() {
+    if (!c) return;
+    document.getElementById("entete").innerHTML = Shop.entete("Signaler un problème", retourCommande);
+    const existante = envoyee || Shop.reclamation(c.id);
+
+    // Commande rattachée automatiquement (S10-04)
+    let html = '<div class="bloc-shop">' + Shop.resumeProduit(p) +
+      '<p class="note-carte">Commande ' + c.id + " du " + Shop.dateCourte(c.date) + " · " + Shop.prix(c.montant) + "</p></div>";
+
+    if (existante) {
+      html += '<div class="resultat-shop"><span class="pictogramme-shop succes">' + Shop.icone("coche", "f-white") + "</span>" +
+        "<h1>Réclamation enregistrée</h1><p>Numéro <b>" + existante.numero + "</b> · " + existante.motif + "</p>" +
+        '<p class="reference-shop">Envoyée le ' + Shop.dateCourte(existante.date) + ", rattachée à la commande " + c.id + "</p></div>" +
+        '<p class="note-shop">L\'équipe Max it de ton pays te répond sous 48 h par notification. Garde ce numéro si tu contactes le service client.</p>';
+      document.getElementById("action").innerHTML = '<a href="' + retourCommande + '" class="bouton bouton-primaire bouton-pleine-largeur">Retour à la commande</a>';
+    } else {
+      html += '<h2 class="titre-section">Quel est le problème ?</h2><div class="choix-liste">' + MOTIFS.map((m) =>
+        '<label class="choix-shop' + (motif === m.id ? " actif" : "") + '"><input type="radio" name="motif" value="' + m.id + '"' + (motif === m.id ? " checked" : "") + ">" +
+        '<span class="choix-corps"><span class="ligne-titre">' + m.libelle + "</span></span></label>").join("") + "</div>" +
+        '<div class="formulaire-shop bloc-shop"><label class="etiquette-shop" for="commentaire">Précisions (facultatif)</label>' +
+        '<textarea id="commentaire" class="zone-texte-shop" maxlength="300" rows="4" placeholder="Ex. : le jeu affiche « code déjà utilisé »"></textarea>' +
+        '<p class="aide-champ">Pas besoin de redonner ta commande ni ton compte : ils sont déjà joints.</p></div>';
+      document.getElementById("action").innerHTML =
+        '<button class="bouton bouton-primaire bouton-pleine-largeur" id="envoyer"' + (motif ? "" : " disabled") + ">Envoyer</button>" +
+        '<p class="aide-action">' + (motif ? "Tu recevras un numéro de réclamation" : "Choisis un motif pour continuer") + "</p>";
+    }
+    html += '<div class="fin-contenu"></div>';
+    // Le commentaire saisi est conservé quand l'écran se redessine (choix du motif)
+    const saisi = document.getElementById("commentaire") ? document.getElementById("commentaire").value : "";
+    document.getElementById("page").innerHTML = html;
+    if (document.getElementById("commentaire")) document.getElementById("commentaire").value = saisi;
+  }
+
+  const telephone = document.querySelector(".telephone");
+  telephone.addEventListener("change", (e) => {
+    if (e.target.name === "motif") { motif = e.target.value; rendre(); }
+  });
+  telephone.addEventListener("click", (e) => {
+    const bouton = e.target.closest("#envoyer");
+    if (!bouton || bouton.disabled) return;
+    const libelle = MOTIFS.find((m) => m.id === motif).libelle;
+    const commentaire = document.getElementById("commentaire").value.trim();
+    envoyee = Shop.signaler(c.id, libelle, commentaire);
+    rendre();
+  });
+  Shop.monter(rendre);
+</script>
+</body>
+</html>

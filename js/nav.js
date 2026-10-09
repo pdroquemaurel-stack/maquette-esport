@@ -51,10 +51,10 @@ const ECRANS = {
   "s05": { fichier: "s05-compte-jeu.html", titre: "Compte de jeu", pret: true },
   "s06": { fichier: "s06-recapitulatif.html", titre: "Récapitulatif", pret: true },
   "s07": { fichier: "s07-confirmation.html", titre: "Confirmation", pret: true },
-  "s08": { fichier: "s08-achats.html", titre: "Mes achats", pret: false },
-  "s09": { fichier: "s09-commande.html", titre: "Détail d'une commande", pret: false },
-  "s10": { fichier: "s10-signaler.html", titre: "Signaler un problème", pret: false },
-  "s11": { fichier: "s11-aide.html", titre: "Aide", pret: false },
+  "s08": { fichier: "s08-achats.html", titre: "Mes achats", pret: true },
+  "s09": { fichier: "s09-commande.html", titre: "Détail d'une commande", pret: true },
+  "s10": { fichier: "s10-signaler.html", titre: "Signaler un problème", pret: true },
+  "s11": { fichier: "s11-aide.html", titre: "Aide", pret: true },
   "s12": { fichier: "s12-conditions.html", titre: "Conditions de vente", pret: true }
 };
 
@@ -154,6 +154,8 @@ const Etat = (function () {
     shopTunnel: null,       // achat en cours : { produit, compte } choisi en s05 (S06-07)
     shopScenario: null,     // état de démo du tunnel : id-introuvable, om-insuffisant, hors-plafond, sans-reponse…
     shopEpuises: null,      // produits épuisés pendant la démo (S02-04)
+    shopSansSms: false,     // pays sans envoi du code par SMS (S09-02)
+    shopReclamations: null, // réclamations envoyées depuis une commande (S10-04)
     scenario: null,         // état alternatif forcé pour l'écran visé
     origine: null           // écran à retrouver après le paiement (S11-03)
   };
@@ -238,6 +240,22 @@ const Nav = {
     Etat.set("origine", null);
     if (message) Etat.set("toastSuivant", message);
     ouvrirPage(origine || ECRANS["03"].fichier);
+  },
+
+  /* Notification Max it simulée (Shop : S08-03, S09-04) : bandeau en haut de l'écran, sur n'importe quelle page.
+     Le toucher ouvre « lien » ; il disparaît seul après 8 secondes. */
+  notificationMaxit({ titre, texte, lien }) {
+    const telephone = document.querySelector(".telephone");
+    if (!telephone) return;
+    const bandeau = document.createElement("button");
+    bandeau.className = "notif-maxit";
+    bandeau.setAttribute("role", "status");
+    bandeau.innerHTML = '<span class="notif-app" aria-hidden="true">M</span>' +
+      '<span class="notif-corps"><small>Max it · maintenant</small><b>' + titre + "</b><span>" + texte + "</span></span>";
+    bandeau.addEventListener("click", () => { bandeau.remove(); ouvrirPage(lien); });
+    telephone.appendChild(bandeau);
+    setTimeout(() => bandeau.classList.add("visible"), 30);
+    setTimeout(() => bandeau.remove(), 8000);
   },
 
   /* Message éphémère en bas de l'écran */

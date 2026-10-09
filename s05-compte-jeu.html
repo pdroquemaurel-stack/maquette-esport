@@ -174,7 +174,9 @@
     Shop.feuille('<p class="demo-titre">Où trouver mon ' + ident.libelle + " ?</p>" +
       '<p class="aide-feuille">' + ident.ouTrouver + "</p>" +
       '<p class="aide-feuille">Format attendu : ' + ident.regle + ", par exemple <b>" + ident.exemple + "</b>.</p>" +
-      '<button class="bouton bouton-primaire bouton-pleine-largeur" data-fermer>J\'ai compris</button>', "Où trouver mon identifiant");
+      '<button class="bouton bouton-primaire bouton-pleine-largeur" data-fermer>J\'ai compris</button>' +
+      '<a href="' + Shop.url("s11-aide.html", { jeu: jeu.id, depuis: Shop.ici() }) + '" class="bouton bouton-lien bouton-pleine-largeur">Voir l\'aide ' + jeu.nom + "</a>",
+      "Où trouver mon identifiant");
   }
 
   /* Suppression d'un compte mémorisé (S05-04) */

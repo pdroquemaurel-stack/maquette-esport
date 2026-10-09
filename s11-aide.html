@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<!-- Écran s11 — Aide et questions fréquentes (s11-aide.html?jeu=freefire&depuis=…).
+     US : S10-05 (aide pour résoudre seul les problèmes courants ; « Où trouver mon identifiant ? » renvoie
+     à l'aide propre à chaque jeu), S05-02 (aide accessible depuis la saisie de l'identifiant).
+     Avec ?jeu=… : la question sur l'identifiant est ouverte sur ce jeu. Texte en français seulement
+     (contenu adapté pays par pays par le responsable local). -->
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Aide</title>
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-zone="shop">
+<div class="cadre">
+  <div class="telephone">
+    <div class="barre-etat" data-heure="21:10"></div>
+    <div id="entete"></div>
+    <main class="contenu" id="page"></main>
+  </div>
+</div>
+
+<script src="js/data-shop.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/shop.js"></script>
+<script src="js/demo.js"></script>
+<script>
+  const jeuDemande = Shop.jeu(Nav.param("jeu"));
+
+  /* Une question dépliable */
+  function question(titre, contenu, ouverte, id) {
+    return '<details class="faq-shop"' + (ouverte ? " open" : "") + (id ? ' id="' + id + '"' : "") + "><summary>" + titre +
+      Shop.icone("chevron", "f-muted") + '</summary><div class="faq-reponse">' + contenu + "</div></details>";
+  }
+
+  function rendre() {
+    const ici = Shop.ici();
+    document.getElementById("entete").innerHTML = Shop.entete("Aide", Shop.depuis());
+    const achats = '<a href="' + Shop.url("s08-achats.html", { depuis: ici }) + '" class="lien-encart">Mes achats</a>';
+
+    // Aide de chaque jeu : où trouver l'identifiant, format attendu (S10-05)
+    const aideJeux = SHOP.jeux.filter((j) => j.identifiant).map((j) =>
+      '<details class="faq-jeu"' + (jeuDemande && jeuDemande.id === j.id ? " open" : "") + ' id="jeu-' + j.id + '"><summary>' + Shop.visuel(j, "petit") +
+      "<span>" + j.nom + "<small>" + j.identifiant.libelle + "</small></span></summary>" +
+      "<p>" + j.identifiant.ouTrouver + "</p><p>Format : " + j.identifiant.regle + ", par exemple <b>" + j.identifiant.exemple + "</b>.</p></details>").join("") +
+      "<p>Roblox et Asphalt Legends sont livrés par code : aucun identifiant n'est demandé.</p>";
+
+    let html = '<div class="tete-produit"><h1>Comment pouvons-nous t\'aider ?</h1>' +
+      '<p class="note-carte">Les réponses aux questions les plus fréquentes sur le Shop.</p></div><div class="liste-faq">';
+    html += question("Où trouver mon identifiant de jeu ?", aideJeux, !!jeuDemande, "identifiant");
+    html += question("Je n'ai pas reçu mon achat",
+      "<p>Un top-up arrive en quelques secondes. Si ta commande est « En cours », attends quelques minutes : tu seras prévenu par une notification Max it.</p>" +
+      "<p>Si rien n'arrive, ouvre la commande dans " + achats + " et touche « Signaler un problème ».</p>");
+    html += question("Mon code ne fonctionne pas",
+      "<p>Vérifie la date limite du code et suis les instructions de la commande : chaque jeu a sa page d'activation. Copie le code plutôt que de le recopier à la main.</p>" +
+      "<p>Si le code est refusé, signale-le depuis la commande dans " + achats + ".</p>");
+    html += question("J'ai été débité mais rien n'a été livré",
+      "<p>Si la livraison échoue, le remboursement est demandé automatiquement sur le moyen de paiement utilisé : il arrive sous 48 h. Tu n'as rien à faire.</p>" +
+      "<p>Un paiement « en cours de vérification » ne doit pas être refait : tu ne seras jamais débité deux fois.</p>");
+    html += question("Comment payer ?",
+      "<p>Avec Orange Money, ou sur le crédit ou la facture de ta ligne mobile. Le paiement par crédit ou facture n'est proposé que jusqu'à " +
+      Shop.prix(SHOP.paiement.plafondDcb) + ".</p>");
+    html += question("Puis-je être remboursé ?",
+      "<p>Un contenu livré n'est ni repris ni remboursé. Seul un achat non livré est remboursé, automatiquement.</p>" +
+      '<p><a href="' + Shop.url("s12-conditions.html", { depuis: ici }) + '" class="lien-encart">Lire les conditions de vente</a></p>');
+    html += question("Comment fonctionne un pass ?",
+      "<p>Un pass donne accès à un contenu pendant une durée limitée. S'il est reconduit automatiquement, tu es prévenu à chaque renouvellement ; sinon, 3 jours avant la fin, avec un lien pour te réabonner.</p>");
+    html += question("Puis-je acheter pour un proche ?",
+      "<p>Oui : au moment de l'achat, ajoute son compte de jeu avec un nom (« Mon frère »…). Son pseudo s'affiche avant le paiement quand le jeu le permet. Tu peux mémoriser ses comptes pour la prochaine fois.</p>");
+    html += "</div>";
+
+    // Toujours une suite : une commande à signaler, ou retour au Shop
+    html += '<div class="encart encart-shop">' + Shop.icone("achats", "f-primary") +
+      "<div><strong>Un problème avec une commande ?</strong><p>Ouvre-la dans « Mes achats » et touche « Signaler un problème » : elle est jointe automatiquement.</p>" +
+      achats + "</div></div>";
+    html += '<div class="fin-contenu"></div>';
+    document.getElementById("page").innerHTML = html;
+
+    // Aide propre à un jeu : affichée directement
+    if (jeuDemande) {
+      const bloc = document.getElementById("jeu-" + jeuDemande.id);
+      if (bloc) bloc.scrollIntoView({ block: "center" });
+    }
+  }
+  Shop.monter(rendre);
+</script>
+</body>
+</html>

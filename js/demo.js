@@ -56,7 +56,8 @@ const Demo = (function () {
   /* Shop (boutique de jeux) : bascules et raccourcis propres à la mini app */
   const BASCULES_SHOP = [
     { cle: "shopPremierAchat", libelle: "Premier achat", aide: "Aucun achat passé, conditions de vente à accepter" },
-    { cle: "shopCgvModifiees", libelle: "Conditions de vente modifiées", aide: "Version 2.2 à accepter au prochain achat" }
+    { cle: "shopCgvModifiees", libelle: "Conditions de vente modifiées", aide: "Version 2.2 à accepter au prochain achat" },
+    { cle: "shopSansSms", libelle: "Envoi du code par SMS désactivé", aide: "Pays sans SMS : le code reste dans « Mes achats »" }
   ];
   /* scenario : état du tunnel appliqué une fois (Shop.consommerScenario) ;
      tunnel : achat préparé jusqu'au récapitulatif (compte « Mon compte » Free Fire) */
@@ -70,7 +71,17 @@ const Demo = (function () {
     { libelle: "Montant hors plafond DCB", ecran: "s06", params: { produit: "ff-520" }, scenario: "hors-plafond", tunnel: true },
     { libelle: "Paiement sans réponse", ecran: "s06", params: { produit: "ff-520" }, scenario: "sans-reponse", tunnel: true },
     { libelle: "Produit épuisé pendant l'achat", ecran: "s06", params: { produit: "ff-310" }, scenario: "epuise-pendant", tunnel: true },
-    { libelle: "Livraison en échec puis remboursement", ecran: "s06", params: { produit: "ff-520" }, scenario: "livraison-echec", tunnel: true }
+    { libelle: "Livraison en échec puis remboursement", ecran: "s06", params: { produit: "ff-520" }, scenario: "livraison-echec", tunnel: true },
+    // Notifications Max it (S08-03, S09-04) : elles arrivent sur l'écran affiché, même hors du Shop
+    { libelle: "Notification : crédit arrivé", aide: "Après la fermeture du Shop · ouvre la commande",
+      notification: { titre: "Ton crédit est arrivé", texte: "520 diamants crédités sur ton compte Free Fire (Youss_KZ).",
+        lien: "s09-commande.html?id=SH-26100819-4821" } },
+    { libelle: "Pass qui expire dans 3 jours", aide: "Notification et SMS · ouvre le produit pour se réabonner",
+      notification: { titre: "Ton Pass Gameloft 7 jours expire dans 3 jours", texte: "Il prend fin le 12/10. Réabonne-toi pour garder l'accès. Aussi envoyé par SMS.",
+        lien: "s04-produit.html?produit=gl-semaine" } },
+    { libelle: "Notification : pass renouvelé", aide: "Reconduction automatique · ouvre la commande",
+      notification: { titre: "Roblox Premium 450 renouvelé", texte: "59 MAD payés avec Orange Money aujourd'hui. Prochain renouvellement le 08/11.",
+        lien: "s09-commande.html?id=SH-26090920-0417" } }
   ];
 
   const ICONE_REGLAGES =
@@ -125,7 +136,7 @@ const Demo = (function () {
     BASCULES_SHOP.forEach(bascule);
     RACCOURCIS_SHOP.forEach((r, i) => {
       html += '<button class="demo-ligne" data-raccourci-shop="' + i + '">' +
-        "<span>" + r.libelle + "<small>Écran " + r.ecran + " · " + ECRANS[r.ecran].titre + "</small></span>" + ICONE_FLECHE + "</button>";
+        "<span>" + r.libelle + "<small>" + (r.notification ? r.aide : "Écran " + r.ecran + " · " + ECRANS[r.ecran].titre) + "</small></span>" + ICONE_FLECHE + "</button>";
     });
 
     html += '<p class="demo-groupe">États alternatifs</p>';
@@ -197,6 +208,12 @@ const Demo = (function () {
     const raccourciShop = cible.closest("[data-raccourci-shop]");
     if (raccourciShop) {
       const r = RACCOURCIS_SHOP[Number(raccourciShop.dataset.raccourciShop)];
+      // Notification Max it : elle arrive 2 secondes après, sur l'écran affiché
+      if (r.notification) {
+        fermer();
+        setTimeout(() => Nav.notificationMaxit(r.notification), 2000);
+        return;
+      }
       Etat.set("shopScenario", r.scenario || null);
       if (r.tunnel) Etat.set("shopTunnel", { produit: r.params.produit, compte: COMPTE_DEMO });
       // Le produit redevient disponible pour rejouer la démo « épuisé pendant l'achat »

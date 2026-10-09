@@ -238,7 +238,13 @@ const SHOP = {
     { id: "SH-26100312-2954", date: "2026-10-03T12:08", produit: "rbx-400", moyen: "orange-money", montant: 55, statut: "livre",
       code: "RBX4-7KQM-2TZL-91PA" },
     { id: "SH-26092021-1180", date: "2026-09-20T21:30", produit: "efoot-550", compte: { libelle: "Mon frère", identifiant: "AMIN-482-117-930", pseudo: null },
-      moyen: "dcb", montant: 59, statut: "livre" }
+      moyen: "dcb", montant: 59, statut: "livre" },
+    // Livraison impossible : remboursement effectué (S08-02, S10-02)
+    { id: "SH-26091518-0730", date: "2026-09-15T18:20", produit: "mlbb-257", compte: { libelle: "Mon compte", identifiant: "84120395", pseudo: "Youss_KZ" },
+      moyen: "dcb", montant: 35, statut: "rembourse", remboursement: "2026-09-16" },
+    // Pass reconduit automatiquement : renouvelé aujourd'hui (S09-04)
+    { id: "SH-26090920-0417", date: "2026-09-09T20:05", produit: "rbx-premium", moyen: "orange-money", montant: 59, statut: "livre",
+      code: "ROB-PR3M-45KQ", fin: "2026-11-08", renouvele: "2026-10-09" }
   ],
 
   /* ---- Comptes de jeu mémorisés, par jeu (S05-04) ---- */

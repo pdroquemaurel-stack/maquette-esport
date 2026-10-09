@@ -113,6 +113,43 @@ const Shop = (function () {
   /* Paiement précédent encore sans résultat : un nouveau paiement est bloqué (S06-11) */
   function paiementEnAttente() { return commandes().find((c) => c.statut === "verification") || null; }
 
+  /* Statut formulé simplement pour le joueur (S10-01) : libellé et classe de puce */
+  function statutCommande(c) {
+    const statuts = {
+      livre: { libelle: "Livré", classe: "puce-inscrit" },
+      paiement: { libelle: "En cours", classe: "puce-attente" },
+      livraison: { libelle: "En cours", classe: "puce-attente" },
+      verification: { libelle: "En cours", classe: "puce-attente" },
+      echec: { libelle: "Remboursement en cours", classe: "puce-attente" },
+      rembourse: { libelle: "Remboursé", classe: "puce-mea" },
+      refuse: { libelle: "Paiement refusé", classe: "puce-clos" }
+    };
+    return statuts[c.statut] || statuts.paiement;
+  }
+
+  /* Pass : jours restants avant la fin ; « expire bientôt » à 3 jours pour un pass sans reconduction (S09-04) */
+  function joursRestants(c) {
+    return c.fin ? Math.round((new Date(c.fin + "T12:00") - new Date(aujourdhui() + "T12:00")) / 86400000) : null;
+  }
+  function expireBientot(c) {
+    const p = produit(c.produit);
+    const jours = joursRestants(c);
+    return c.statut === "livre" && p.type === "pass" && !p.reconduction && jours !== null && jours >= 0 && jours <= 3;
+  }
+
+  /* Envoi du code par SMS : activé pays par pays (S09-02) ; le menu de démo peut le couper */
+  function smsActif() { return SHOP.smsActif && !Etat.get("shopSansSms"); }
+
+  /* Réclamations du joueur (S10-04), rattachées à une commande */
+  function reclamations() { return (Etat.get("shopReclamations") || []).slice(); }
+  function reclamation(idCommande) { return reclamations().find((r) => r.commande === idCommande) || null; }
+  function signaler(idCommande, motif, commentaire) {
+    const r = { numero: "RC-" + String(graine(idCommande + motif)).slice(-6).padStart(6, "0"), commande: idCommande,
+      motif: motif, commentaire: commentaire, date: aujourdhui() };
+    Etat.set("shopReclamations", reclamations().filter((x) => x.commande !== idCommande).concat(r));
+    return r;
+  }
+
   /* Paiement abandonné dans la brique Max it : la commande disparaît, le produit réservé est libéré */
   function supprimerCommande(id) {
     Etat.set("shopCommandes", (Etat.get("shopCommandes") || []).filter((c) => c.id !== id));
@@ -387,10 +424,13 @@ const Shop = (function () {
   function entete(titre, retour, libelleRetour) {
     return '<header class="entete-esport entete-shop">' +
       '<a href="' + retour + '" class="bouton-icone" aria-label="' + (libelleRetour || "Retour") + '">' + icone("retour") + "</a>" +
-      '<h1 class="entete-titre">' + titre + "</h1>" +
-      '<a href="#" class="bouton-icone" data-ecran="s08" aria-label="Mes achats">' + icone("achats") + "</a>" +
-      '<a href="#" class="bouton-icone" data-ecran="s11" aria-label="Aide">' + icone("aide") + "</a>" +
-      "</header>";
+      '<h1 class="entete-titre">' + titre + "</h1>" + boutonsEntete("f-text") + "</header>";
+  }
+  /* « Mes achats » et aide ; on n'y renvoie pas depuis l'écran lui-même. Le retour ramène ici. */
+  function boutonsEntete(classe) {
+    const page = pageCourante();
+    return (page === "s08-achats.html" ? "" : '<a href="' + url("s08-achats.html", { depuis: ici() }) + '" class="bouton-icone" aria-label="Mes achats">' + icone("achats", classe) + "</a>") +
+      (page === "s11-aide.html" ? "" : '<a href="' + url("s11-aide.html", { depuis: ici() }) + '" class="bouton-icone" aria-label="Aide">' + icone("aide", classe) + "</a>");
   }
 
   /* Tuile d'un jeu : visuel carré, nom, prix le plus bas */
@@ -455,6 +495,7 @@ const Shop = (function () {
     feuille, resumeProduit,
     jeu, produit, editeur, produitsDuJeu, achetable, prixMin, prix, remise,
     modeLivraison, explicationLivraison, mention, tagsProduit, aLeTag, libelleTag, parPopularite,
+    statutCommande, joursRestants, expireBientot, smsActif, reclamations, reclamation, signaler, boutonsEntete,
     commandes, commande, creerCommande, majCommande, livrer, paiementEnAttente, supprimerCommande, derniersJeux, normaliser, rechercher,
     comptes, memoriserCompte, supprimerCompte, formatValide, pseudoPour,
     conditionsEnVigueur, conditionsAcceptees, conditionsAJour, accepterConditions,
