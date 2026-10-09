@@ -1021,9 +1021,10 @@ svg { display: block; flex-shrink: 0; }
   inset: 0;
   background: linear-gradient(180deg, transparent 45%, var(--play-shade));
 }
-.carte-une-texte { position: absolute; left: var(--space-4); right: var(--space-4); bottom: var(--space-5); z-index: 1; }
-.carte-une-texte h3 { font-size: var(--play-font-title); line-height: var(--line-height-tight); }
-.carte-une-texte p { margin-top: var(--space-2); font-size: var(--font-size-md); }
+/* Limité à la carte de Play : la carte « à la une » de l'e-sport (03) et du Shop garde son texte sous le visuel */
+.carte-une-play .carte-une-texte { position: absolute; left: var(--space-4); right: var(--space-4); bottom: var(--space-5); z-index: 1; }
+.carte-une-play .carte-une-texte h3 { font-size: var(--play-font-title); line-height: var(--line-height-tight); }
+.carte-une-play .carte-une-texte p { margin-top: var(--space-2); font-size: var(--font-size-md); }
 
 /* ============ Grille des genres (S06-03) ============ */
 .grille-genres {
@@ -1522,3 +1523,147 @@ svg { display: block; flex-shrink: 0; }
 .compteur { text-align: right; font-size: var(--font-size-xs); color: var(--play-text-muted); margin-top: var(--space-1); }
 .lien-supprimer { margin-top: var(--space-4); color: var(--color-primary); }
 .formulaire-avis + .message-play, .jeu-avis + .message-play { margin-top: var(--space-5); }
+
+/* =====================================================================
+   Shop — boutique de jeux de Max it (3e chantier)
+   Pas de maquette Figma : composants Max it et e-sport, thème clair, couleurs de tokens.css.
+   ===================================================================== */
+
+/* ============ En-tête de la mini app : retour, titre, Mes achats, aide ============ */
+.entete-shop { border-bottom: 1px solid var(--color-border); }
+.entete-shop .entete-titre { padding-left: var(--space-1); }
+
+/* ============ Visuels des jeux sans image (dégradé et pictogramme, comme l'e-sport) ============ */
+.jeu-mlbb { background: linear-gradient(135deg, var(--illu-purple-dark), var(--color-game-purple)); }
+.jeu-roblox { background: linear-gradient(135deg, var(--illu-black), var(--illu-car-red)); }
+.jeu-clash-of-clans { background: linear-gradient(135deg, var(--illu-hair), var(--illu-gold)); }
+.jeu-genshin { background: linear-gradient(135deg, var(--color-game-blue-bg), var(--illu-gold-light)); }
+.jeu-asphalt { background: linear-gradient(135deg, var(--illu-purple-deep), var(--illu-neon-pink)); }
+.visuel-tuile-shop { width: 100%; height: auto; aspect-ratio: 1; }
+.visuel-tuile-shop svg { width: 40%; height: 40%; }
+
+/* ============ Champ de recherche de l'accueil (lien vers s02) ============ */
+.recherche-shop { margin: var(--space-3) var(--page-gutter) 0; color: var(--color-text-muted); }
+
+/* ============ Bannières (S04-04) : carrousel de cartes 300 × 150 ============ */
+.banniere-shop {
+  position: relative;
+  width: 300px;
+  height: 150px;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  display: block;
+  color: var(--color-text-on-dark);
+}
+.banniere-shop .visuel-jeu { position: absolute; inset: 0; width: 100%; height: 100%; border-radius: 0; }
+.banniere-shop .visuel-jeu svg { width: 64px; height: 64px; position: absolute; right: var(--space-5); top: var(--space-4); }
+.banniere-shop .texte-banniere {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: var(--space-8) var(--space-4) var(--space-3);
+  background: linear-gradient(180deg, transparent, var(--play-shade));
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.banniere-shop strong { font-size: var(--font-size-lg); line-height: var(--line-height-tight); }
+.banniere-shop small { font-size: var(--font-size-xs); }
+
+/* ============ Tuiles de jeu : grille de 2 colonnes, ou rangée de petites tuiles ============ */
+.grille-shop {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4) var(--space-3);
+  padding: 0 var(--page-gutter);
+}
+.tuile-shop { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
+.tuile-shop .visuel-jeu { margin-bottom: var(--space-1); }
+.tuile-shop-nom { font-weight: var(--font-weight-bold); line-height: var(--line-height-tight); overflow-wrap: anywhere; }
+.tuile-shop-prix { font-size: var(--font-size-sm); color: var(--color-text-secondary); }
+.rangee-shop .tuile-shop { width: 96px; }
+.rangee-shop .tuile-shop-nom { font-size: var(--font-size-sm); }
+
+/* ============ Jeux mis en avant (S04-02) : grandes cartes ============ */
+.carte-une-shop { width: 260px; overflow: hidden; }
+.carte-une-shop .visuel-jeu { width: 100%; height: 130px; border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
+.carte-une-shop .visuel-jeu svg { width: 56px; height: 56px; }
+
+/* ============ Page d'un jeu (s03) ============ */
+.hero-shop { position: relative; height: 180px; flex-shrink: 0; }
+.hero-shop .visuel-grand { position: absolute; inset: 0; }
+.hero-shop .boutons-hero {
+  position: absolute;
+  top: var(--space-2);
+  left: var(--space-3);
+  right: var(--space-3);
+  display: flex;
+  gap: var(--space-2);
+}
+.hero-shop .boutons-hero .bouton-icone { background: var(--color-glass-dark); }
+.hero-shop .boutons-hero .bouton-icone:first-child { margin-right: auto; }
+.tete-shop { padding: var(--space-4) var(--page-gutter) 0; }
+.tete-shop h1 { font-size: var(--font-size-xxl); line-height: var(--line-height-tight); }
+.tete-shop p { color: var(--color-text-secondary); font-size: var(--font-size-sm); }
+.tete-shop .carte-badges { margin-top: var(--space-2); }
+.note-ttc { padding: 0 var(--page-gutter); margin: calc(-1 * var(--space-2)) 0 var(--space-3); font-size: var(--font-size-xs); color: var(--color-text-muted); }
+
+/* Carte d'un produit : type, nom, mode de livraison, prix (S06-03) */
+.carte-produit {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  margin: 0 var(--page-gutter) var(--space-2);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+.carte-produit.epuise { background: var(--color-bg-muted); color: var(--color-text-muted); }
+.carte-produit.epuise .icone-produit svg { fill: var(--color-text-muted); }
+.icone-produit {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-warm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.icone-produit svg { width: 22px; height: 22px; }
+.mention-livraison { font-size: var(--font-size-xs); color: var(--color-text-secondary); }
+.epuise .mention-livraison { color: var(--color-text-muted); }
+.prix-shop { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; flex-shrink: 0; text-align: right; }
+.prix-shop b { font-size: var(--font-size-md); white-space: nowrap; }
+.prix-shop s { font-size: var(--font-size-xs); color: var(--color-text-muted); white-space: nowrap; }
+.puce-promo { background: var(--color-primary); color: var(--color-on-primary); }
+
+/* ============ Fiche produit (s04) ============ */
+.tete-produit { padding: var(--space-4) var(--page-gutter) 0; }
+.tete-produit .jeu-produit { display: flex; align-items: center; gap: var(--space-2); font-size: var(--font-size-sm); color: var(--color-text-secondary); }
+.tete-produit h1 { font-size: var(--font-size-xxl); line-height: var(--line-height-tight); margin: var(--space-3) 0 var(--space-2); }
+.prix-produit { display: flex; align-items: baseline; gap: var(--space-2); flex-wrap: wrap; margin-top: var(--space-3); }
+.prix-produit b { font-size: var(--font-size-display); line-height: 1.1; }
+.prix-produit s { color: var(--color-text-muted); }
+.prix-produit small { color: var(--color-text-secondary); font-size: var(--font-size-sm); }
+.bloc-shop { margin: var(--space-5) var(--page-gutter) 0; }
+.bloc-shop h2 { font-size: var(--font-size-lg); margin-bottom: var(--space-2); }
+.bloc-shop p { color: var(--color-text-secondary); font-size: var(--font-size-sm); }
+.liste-shop { list-style: none; display: flex; flex-direction: column; gap: var(--space-2); font-size: var(--font-size-sm); }
+.liste-shop li { display: flex; gap: var(--space-2); align-items: flex-start; }
+.liste-shop li svg { width: 18px; height: 18px; margin-top: 1px; }
+.liste-shop .lien-encart { color: var(--color-primary); font-weight: var(--font-weight-bold); }
+
+/* ============ Recherche (s02) ============ */
+.zone-recherche { padding: var(--space-3) var(--page-gutter) var(--space-3); }
+.recherche-shop-puces { margin-bottom: var(--space-2); }
+.resultats-shop { font-size: var(--font-size-sm); color: var(--color-text-secondary); padding: 0 var(--page-gutter); margin: var(--space-2) 0; }
+.champ .effacer { width: 32px; height: 32px; margin-right: calc(-1 * var(--space-2)); }
+.champ .effacer svg { width: 18px; height: 18px; }
+.encart-shop { margin-top: var(--space-3); }
+.carrousel-bannieres { margin-top: var(--space-4); }
+.liens-shop { margin: var(--space-5) var(--page-gutter) 0; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); overflow: hidden; }
+.liens-shop .ligne { padding: var(--space-2) var(--space-3); }
+.liens-shop .ligne > svg:first-child { width: 22px; height: 22px; }

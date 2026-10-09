@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<!-- Écran s03 — Page d'un jeu (s03-jeu.html?jeu=freefire&depuis=… ; via=lien : ouverture par lien direct).
+     US : S06-03 (tous les produits du jeu dans une seule liste, dans l'ordre défini, chacun marqué
+     Top-up ou Voucher, avec la durée d'un pass), S02-04 (produit non livrable affiché « Épuisé », non achetable),
+     S06-01 (lien direct vers un jeu ; retour vers Max it), entrée depuis la page d'un jeu de l'e-sport (13).
+     Un jeu non vendu dans le Shop (Call of Duty: Mobile) ou inconnu renvoie à l'accueil avec un message. -->
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Jeu</title>
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-zone="shop">
+<div class="cadre">
+  <div class="telephone">
+    <div class="barre-etat" data-heure="21:10"></div>
+    <main class="contenu" id="page"></main>
+  </div>
+</div>
+
+<script src="js/data-shop.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/shop.js"></script>
+<script src="js/demo.js"></script>
+<script>
+  const jeu = Shop.jeu(Nav.param("jeu"));
+  if (!jeu) ouvrirPage("s01-accueil.html?absent=1");
+
+  function rendre() {
+    if (!jeu) return;
+    document.title = jeu.nom;
+    const retour = Shop.depuis();
+    const produits = Shop.produitsDuJeu(jeu.id);
+    const ed = Shop.editeur(jeu);
+    let html = "";
+
+    // Visuel du jeu, retour, Mes achats, aide
+    html += '<div class="hero-shop">' + Shop.visuel(jeu, "grand") +
+      '<div class="boutons-hero">' +
+      '<a href="' + retour + '" class="bouton-icone" aria-label="' + (Nav.param("via") === "lien" ? "Retour à Max it" : "Retour") + '">' + Shop.icone("retour", "f-white") + "</a>" +
+      '<a href="#" class="bouton-icone" data-ecran="s08" aria-label="Mes achats">' + Shop.icone("achats", "f-white") + "</a>" +
+      '<a href="#" class="bouton-icone" data-ecran="s11" aria-label="Aide">' + Shop.icone("aide", "f-white") + "</a>" +
+      "</div></div>";
+
+    html += '<div class="tete-shop"><h1>' + jeu.nom + "</h1><p>" + ed.nom + "</p>" +
+      '<div class="carte-badges">' + jeu.tags.map((t) => '<span class="puce-etat puce-mea">' + Shop.libelleTag(t) + "</span>").join("") + "</div></div>";
+
+    // Ce qui sera demandé à l'achat : identifiant de jeu, vérifié ou non (S05-02, S05-03)
+    let info;
+    if (!jeu.identifiant) info = "<strong>Livré par code</strong><p>Pas d'identifiant à donner : le code s'affiche après le paiement.</p>";
+    else if (ed.verification) info = "<strong>Compte vérifié avant paiement</strong><p>Pour un top-up, ton pseudo " + jeu.nom + " s'affiche avant de payer.</p>";
+    else info = "<strong>Identifiant à saisir deux fois</strong><p>" + ed.nom + " ne permet pas de vérifier le compte : pour un top-up, tu saisiras ton " +
+      jeu.identifiant.libelle + " deux fois.</p>";
+    html += '<div class="encart encart-shop">' + Shop.icone(jeu.identifiant ? "bouclier" : "voucher", "f-primary") + "<div>" + info + "</div></div>";
+
+    // Une seule liste de produits, dans l'ordre défini (S06-03)
+    html += '<h2 class="titre-section">Produits</h2><p class="note-ttc">Prix TTC en ' + SHOP.pays.monnaie + "</p>";
+    html += produits.map((p) => Shop.carteProduit(p)).join("");
+
+    // Aide propre au jeu (S05-02, S10-05)
+    if (jeu.identifiant) {
+      html += '<div class="liens-shop"><a href="#" class="ligne" data-ecran="s11">' + Shop.icone("aide", "f-primary") +
+        '<span class="ligne-corps"><span class="ligne-titre">Où trouver mon ' + jeu.identifiant.libelle + " ?</span>" +
+        '<span class="ligne-sous-titre">Aide ' + jeu.nom + "</span></span>" + Shop.icone("chevron", "f-muted") + "</a></div>";
+    }
+
+    html += '<div class="fin-contenu"></div>';
+    document.getElementById("page").innerHTML = html;
+  }
+  Shop.monter(rendre);
+</script>
+</body>
+</html>

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<!-- Écran s02 — Recherche et filtres (s02-recherche.html?q=free&tag=promo).
+     US : S06-06 (recherche d'un jeu par son nom, tolérante aux fautes de frappe et aux accents ;
+     filtres sur les tags des jeux et des produits). La saisie et le filtre sont gardés dans l'adresse
+     transmise aux pages suivantes : le retour depuis un jeu retrouve la même recherche. -->
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Recherche</title>
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-zone="shop">
+<div class="cadre">
+  <div class="telephone">
+    <div class="barre-etat" data-heure="21:10"></div>
+    <div id="entete"></div>
+    <main class="contenu">
+      <div class="zone-recherche">
+        <label class="champ" for="saisie">
+          <span id="icone-recherche"></span>
+          <input id="saisie" type="search" placeholder="Nom du jeu" autocomplete="off" aria-describedby="nombre">
+          <button class="bouton-icone effacer" id="effacer" aria-label="Effacer la recherche" hidden></button>
+        </label>
+      </div>
+      <div class="puces recherche-shop-puces" id="puces" role="group" aria-label="Filtrer par tag"></div>
+      <p class="resultats-shop" id="nombre" role="status"></p>
+      <div id="resultats"></div>
+      <div class="fin-contenu"></div>
+    </main>
+  </div>
+</div>
+
+<script src="js/data-shop.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/shop.js"></script>
+<script src="js/demo.js"></script>
+<script>
+  document.getElementById("entete").innerHTML = Shop.entete("Rechercher", Shop.depuis(), "Retour");
+  document.getElementById("icone-recherche").innerHTML = Shop.icone("recherche", "f-muted");
+  document.getElementById("effacer").innerHTML = Shop.icone("fermer", "f-muted");
+
+  const saisie = document.getElementById("saisie");
+  saisie.value = Nav.param("q") || "";
+  let tag = Nav.param("tag") || "";
+
+  // Filtres : tags des produits, puis tags des jeux (S01-04)
+  const TAGS = Object.keys(SHOP.tagsProduits).concat(Object.keys(SHOP.tagsJeux));
+
+  /* Adresse de cette recherche, pour y revenir depuis la page d'un jeu */
+  function adresse() {
+    const params = {};
+    if (saisie.value.trim()) params.q = saisie.value.trim();
+    if (tag) params.tag = tag;
+    return Object.keys(params).length ? Shop.url("s02-recherche.html", params) : "s02-recherche.html";
+  }
+
+  /* Détail d'un résultat filtré par un tag de produit : « 2 produits en promo » */
+  function detail(j) {
+    if (!SHOP.tagsProduits[tag]) return null;
+    const n = Shop.produitsDuJeu(j.id).filter((p) => Shop.tagsProduit(p).includes(tag)).length;
+    const libelles = { topup: "top-up", voucher: "voucher", pass: "pass", promo: "en promo" };
+    return n + " produit" + (n > 1 ? "s" : "") + " " + libelles[tag];
+  }
+
+  function rendre() {
+    document.getElementById("puces").innerHTML =
+      '<button class="puce' + (tag ? "" : " actif") + '" data-tag="" aria-pressed="' + !tag + '">Tous</button>' +
+      TAGS.map((t) => '<button class="puce' + (t === tag ? " actif" : "") + '" data-tag="' + t + '" aria-pressed="' + (t === tag) + '">' +
+        Shop.libelleTag(t) + "</button>").join("");
+
+    const trouves = Shop.rechercher(saisie.value, tag);
+    const retour = adresse();
+    document.getElementById("effacer").hidden = !saisie.value;
+    document.getElementById("nombre").textContent = trouves.length
+      ? trouves.length + " jeu" + (trouves.length > 1 ? "x" : "") + (saisie.value.trim() || tag ? " trouvé" + (trouves.length > 1 ? "s" : "") : " dans le Shop")
+      : "";
+    document.getElementById("resultats").innerHTML = trouves.length
+      ? trouves.map((j) => Shop.ligneJeu(j, retour, detail(j))).join("")
+      : '<div class="vide"><strong>Aucun jeu trouvé</strong>Vérifie l\'orthographe ou essaie un autre filtre.' +
+        '<button class="bouton bouton-secondaire" id="tout-voir">Voir tous les jeux</button></div>';
+  }
+
+  saisie.addEventListener("input", rendre);
+  document.querySelector(".telephone").addEventListener("click", (e) => {
+    const puce = e.target.closest("[data-tag]");
+    if (puce) { tag = puce.dataset.tag; rendre(); }
+    if (e.target.closest("#effacer")) { e.preventDefault(); saisie.value = ""; rendre(); saisie.focus(); }
+    if (e.target.closest("#tout-voir")) { saisie.value = ""; tag = ""; rendre(); }
+  });
+  rendre();
+  // Le clavier s'ouvre tout de suite, sauf au retour d'une recherche déjà saisie
+  if (!saisie.value) saisie.focus();
+</script>
+</body>
+</html>

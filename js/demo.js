@@ -53,6 +53,16 @@ const Demo = (function () {
     { libelle: "Lien vers un jeu indisponible", ecran: "p03", params: { jeu: "bloc-mania", via: "lien" }, etat: { playIndispo: true } }
   ];
 
+  /* Shop (boutique de jeux) : bascules et raccourcis propres à la mini app */
+  const BASCULES_SHOP = [
+    { cle: "shopPremierAchat", libelle: "Premier achat", aide: "Aucun achat passé : pas de « Tes derniers achats »" }
+  ];
+  const RACCOURCIS_SHOP = [
+    { libelle: "Lien direct vers un jeu", ecran: "s03", params: { jeu: "genshin", via: "lien" } },
+    { libelle: "Lien direct vers un produit", ecran: "s04", params: { produit: "gl-illimite", via: "lien" } },
+    { libelle: "Lien vers un jeu non vendu", ecran: "s03", params: { jeu: "codm", via: "lien" } }
+  ];
+
   const ICONE_REGLAGES =
     '<svg viewBox="0 0 24 24" aria-hidden="true"><path class="f-text" d="M4 6h10.2a3 3 0 0 1 5.6 0H20v2h-.2a3 3 0 0 1-5.6 0H4zm13 1a1 1 0 1 0 0 .01zM4 16h.2a3 3 0 0 1 5.6 0H20v2H9.8a3 3 0 0 1-5.6 0H4zm3 1a1 1 0 1 0 0 .01z"/></svg>';
   const ICONE_FLECHE =
@@ -97,6 +107,14 @@ const Demo = (function () {
     BASCULES_PLAY.forEach(bascule);
     RACCOURCIS_PLAY.forEach((r, i) => {
       html += '<button class="demo-ligne" data-raccourci-play="' + i + '">' +
+        "<span>" + r.libelle + "<small>Écran " + r.ecran + " · " + ECRANS[r.ecran].titre + "</small></span>" + ICONE_FLECHE + "</button>";
+    });
+
+    // Shop (boutique de jeux) : premier achat, liens directs
+    html += '<p class="demo-groupe">Shop (boutique de jeux)</p>';
+    BASCULES_SHOP.forEach(bascule);
+    RACCOURCIS_SHOP.forEach((r, i) => {
+      html += '<button class="demo-ligne" data-raccourci-shop="' + i + '">' +
         "<span>" + r.libelle + "<small>Écran " + r.ecran + " · " + ECRANS[r.ecran].titre + "</small></span>" + ICONE_FLECHE + "</button>";
     });
 
@@ -162,6 +180,13 @@ const Demo = (function () {
     if (raccourciPlay) {
       const r = RACCOURCIS_PLAY[Number(raccourciPlay.dataset.raccourciPlay)];
       Object.keys(r.etat || {}).forEach((cle) => Etat.set(cle, r.etat[cle]));
+      fermer();
+      return Nav.aller(r.ecran, null, r.params);
+    }
+
+    const raccourciShop = cible.closest("[data-raccourci-shop]");
+    if (raccourciShop) {
+      const r = RACCOURCIS_SHOP[Number(raccourciShop.dataset.raccourciShop)];
       fermer();
       return Nav.aller(r.ecran, null, r.params);
     }

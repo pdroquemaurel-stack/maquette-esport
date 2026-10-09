@@ -58,7 +58,15 @@
     // Play (lot P2) : avis — fiche d'un jeu noté, d'un jeu jamais lancé, liste complète, formulaire
     "p03-jeu.html?jeu=foot-lions", "p03-jeu.html?jeu=parking-pro",
     "p06-avis.html?jeu=foot-lions&depuis=p01-accueil.html", "p06-avis.html?jeu=parking-pro", ["p06-avis.html?jeu=taxi-brousse", { playSignales: ["taxi-brousse-0"] }],
-    "p07-donner-avis.html?jeu=bloc-mania", "p07-donner-avis.html?jeu=foot-lions&retour=avis", "p07-donner-avis.html?jeu=parking-pro"
+    "p07-donner-avis.html?jeu=bloc-mania", "p07-donner-avis.html?jeu=foot-lions&retour=avis", "p07-donner-avis.html?jeu=parking-pro",
+    // Shop (lot S1) : accueil (avec et sans achats, jeu non vendu), recherche, page d'un jeu, fiche produit
+    "s01-accueil.html", ["s01-accueil.html", { shopPremierAchat: true }], "s01-accueil.html?absent=1",
+    "s02-recherche.html", "s02-recherche.html?q=frifire", "s02-recherche.html?tag=promo", "s02-recherche.html?q=zzz",
+    "s03-jeu.html?jeu=freefire&depuis=s01-accueil.html", "s03-jeu.html?jeu=efootball&depuis=13-jeu.html%3Fid%3Defootball",
+    "s03-jeu.html?jeu=roblox", "s03-jeu.html?jeu=mlbb&via=lien",
+    "s04-produit.html?produit=ff-520", "s04-produit.html?produit=ff-1060", "s04-produit.html?produit=rbx-premium",
+    "s04-produit.html?produit=gl-semaine&via=lien", "s04-produit.html?produit=gi-lune",
+    "13-jeu.html?id=pubg", "13-jeu.html?id=efootball"
   ];
   const abonne = location.hash === "#abonne";
   const sortie = document.getElementById("sortie");

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<!-- Écran s04 — Fiche produit (s04-produit.html?produit=ff-520&depuis=… ; via=lien : ouverture par lien direct).
+     US : S06-05 (contenu, prix TTC en MAD, mode de livraison, conditions : validité et reconduction d'un pass,
+     pays d'utilisation, absence de remboursement), S02-04 (produit épuisé : bouton inactif),
+     S06-07 (étape suivante du tunnel : identifiant de jeu pour un top-up, sinon directement le récapitulatif),
+     S06-01 (lien direct vers un produit ; retour vers Max it). -->
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Produit</title>
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-zone="shop">
+<div class="cadre">
+  <div class="telephone">
+    <div class="barre-etat" data-heure="21:10"></div>
+    <div id="entete"></div>
+    <main class="contenu" id="page"></main>
+    <div class="barre-action" id="action"></div>
+  </div>
+</div>
+
+<script src="js/data-shop.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/shop.js"></script>
+<script src="js/demo.js"></script>
+<script>
+  const p = Shop.produit(Nav.param("produit"));
+  const jeu = p && Shop.jeu(p.jeu);
+  if (!p) ouvrirPage("s01-accueil.html?absent=1");
+
+  /* « 2027-06-30 » → « 30/06/2027 » */
+  function dateCourte(iso) { return iso.split("-").reverse().join("/"); }
+
+  function rendre() {
+    if (!p) return;
+    document.title = p.nom;
+    // Retour : la page d'où l'on vient, sinon la page du jeu ; lien direct : Max it
+    const retour = Shop.depuis(Shop.lienJeu(jeu.id, "s01-accueil.html"));
+    document.getElementById("entete").innerHTML = Shop.entete(jeu.nom, retour, Nav.param("via") === "lien" ? "Retour à Max it" : "Retour");
+
+    let html = '<div class="tete-produit">' +
+      '<a href="' + Shop.lienJeu(jeu.id) + '" class="jeu-produit">' + Shop.visuel(jeu, "petit") + "<span>" + jeu.nom + " · " + Shop.editeur(jeu).nom + "</span></a>" +
+      "<h1>" + p.nom + "</h1>" +
+      '<div class="carte-badges"><span class="puce-etat puce-mea">' + Shop.modeLivraison(p) + "</span>" +
+      (p.type === "pass" ? '<span class="puce-etat puce-mea">Pass ' + p.duree + " jours</span>" : "") +
+      (p.prixBarre && Shop.achetable(p) ? '<span class="puce-etat puce-promo">Promo −' + Shop.remise(p) + " %</span>" : "") +
+      (Shop.achetable(p) ? "" : '<span class="puce-etat puce-clos">Épuisé</span>') + "</div>" +
+      // Prix TTC en devise locale (S06-05)
+      '<div class="prix-produit"><b>' + Shop.prix(p.prix) + "</b>" + (p.prixBarre ? "<s>" + Shop.prix(p.prixBarre) + "</s>" : "") + "<small>TTC</small></div>" +
+      "</div>";
+
+    // Contenu
+    html += '<section class="bloc-shop"><h2>Contenu</h2><p>' + p.contenu + "</p></section>";
+
+    // Mode de livraison
+    const livraison = p.livraison === "credit"
+      ? ["Crédit direct sur ton compte " + jeu.nom + ", juste après le paiement.",
+         "Ton " + jeu.identifiant.libelle + " te sera demandé à l'étape suivante" + (Shop.editeur(jeu).verification ? " ; ton pseudo s'affichera pour vérifier le compte." : ".")]
+      : ["Un code unique s'affiche dès le paiement confirmé, avec un bouton pour le copier.",
+         (SHOP.smsActif ? "Tu le reçois aussi par SMS et tu le retrouves dans « Mes achats »." : "Tu le retrouves dans « Mes achats »."),
+         p.activation];
+    html += '<section class="bloc-shop"><h2>Livraison · ' + Shop.modeLivraison(p) + '</h2><ul class="liste-shop">' +
+      livraison.filter(Boolean).map((l) => "<li>" + Shop.icone(p.livraison === "credit" ? "topup" : "voucher", "f-primary") + "<span>" + l + "</span></li>").join("") +
+      "</ul></section>";
+
+    // Conditions (S06-05)
+    const conditions = [];
+    if (p.type === "pass") {
+      conditions.push("Valable " + p.duree + " jours à partir de l'activation.");
+      conditions.push(p.reconduction
+        ? "Reconduit automatiquement au même prix à chaque échéance, jusqu'à résiliation. Tu es prévenu à chaque renouvellement."
+        : "Sans reconduction automatique : tu es prévenu 3 jours avant la fin pour te réabonner.");
+    }
+    if (p.expiration) conditions.push("Code à utiliser avant le " + dateCourte(p.expiration) + ".");
+    conditions.push("Vendu aux abonnés Max it du " + SHOP.pays.nom + ", prix en " + SHOP.pays.monnaie + " TTC.");
+    conditions.push("Contenu numérique livré immédiatement : il n'est ni repris ni remboursé une fois livré.");
+    html += '<section class="bloc-shop"><h2>Conditions</h2><ul class="liste-shop">' +
+      conditions.map((c) => "<li>" + Shop.icone("info", "f-muted") + "<span>" + c + "</span></li>").join("") +
+      '<li><span></span><a href="#" class="lien-encart" data-ecran="s12">Lire les conditions de vente</a></li></ul></section>';
+
+    html += '<div class="fin-contenu"></div>';
+    document.getElementById("page").innerHTML = html;
+
+    // Acheter : top-up et pass crédités → identifiant de jeu (s05) ; code → récapitulatif (s06) (S06-07)
+    document.getElementById("action").innerHTML = Shop.achetable(p)
+      ? '<button class="bouton bouton-primaire bouton-pleine-largeur" id="acheter">Acheter · ' + Shop.prix(p.prix) + "</button>" +
+        '<p class="aide-action">' + (p.livraison === "credit" ? "Étape suivante : ton compte " + jeu.nom : "Étape suivante : récapitulatif et paiement") + "</p>"
+      : '<button class="bouton bouton-primaire bouton-pleine-largeur" disabled>Épuisé</button>' +
+        '<p class="aide-action">Ce produit sera remis en vente dès qu\'il sera de nouveau disponible.</p>';
+  }
+
+  document.querySelector(".telephone").addEventListener("click", (e) => {
+    if (!e.target.closest("#acheter")) return;
+    Nav.aller(p.livraison === "credit" ? "s05" : "s06", null, { produit: p.id, depuis: Shop.ici() });
+  });
+  Shop.monter(rendre);
+</script>
+</body>
+</html>

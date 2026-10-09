@@ -1,7 +1,9 @@
 <!DOCTYPE html>
 <!-- Écran 13 — Page d'un jeu (13-jeu.html?id=freefire).
      US : S05-05 (tournois à venir et en cours, classement, articles, vidéos, directs ;
-     lien vers la boutique Max it avec les offres du pays en monnaie locale, absent si le jeu n'a pas d'offre). -->
+     lien vers la boutique Max it avec les offres du pays en monnaie locale, absent si le jeu n'a pas d'offre).
+     Boutique Max it = le Shop : offres lues dans js/data-shop.js, le lien ouvre la page du jeu dans le Shop (s03).
+     Call of Duty: Mobile n'est pas vendu dans le Shop : sa page n'a pas de lien boutique. -->
 <html lang="fr">
 <head>
   <meta charset="utf-8">
@@ -47,6 +49,8 @@
 <script src="js/data.js"></script>
 <script src="js/nav.js"></script>
 <script src="js/esport.js"></script>
+<script src="js/data-shop.js"></script>
+<script src="js/shop.js"></script>
 <script src="js/demo.js"></script>
 <script>
   const jeu = Esport.jeu(Nav.param("id")) || Esport.jeu("freefire");
@@ -58,7 +62,9 @@
     const aVenir = tournois.filter((t) => t.etat === "ouvert" || t.etat === "complet").sort((a, b) => a.debut.localeCompare(b.debut));
     const suivis = tournois.filter((t) => DONNEES.arbres[t.id] || DONNEES.poules[t.id]);
     const contenus = Esport.contenusVisibles().filter((c) => c.jeu === jeu.id);
-    const offres = jeu.boutique && jeu.boutique[DONNEES.joueur.pays];
+    // Offres du Shop pour ce jeu : les 3 premiers produits achetables, dans l'ordre du Shop
+    const vendu = Shop.jeu(jeu.id);
+    const offres = vendu ? Shop.produitsDuJeu(jeu.id).filter(Shop.achetable).slice(0, 3) : [];
     let html = "";
 
     // Visuel, retour, notifications
@@ -70,13 +76,13 @@
     html += '<div class="tete"><h1>' + jeu.nom + "</h1><p>" + jeu.genre + " · " +
       (jeu.equipe > 1 ? "équipes de " + jeu.equipe : "un contre un") + "</p></div>";
 
-    // Boutique Max it : seulement si le jeu a des offres activées dans le pays
-    if (offres && offres.length) {
+    // Boutique Max it : seulement si le jeu est vendu dans le Shop du pays ; le lien ouvre sa page dans le Shop
+    if (offres.length) {
       html += '<section class="boutique" aria-label="Boutique Max it">' +
         '<div class="titre-boutique"><span class="icone-boutique">' + Esport.icone("boutique", "f-white") + "</span>" +
         "<span><strong>Boutique Max it</strong><small>Achats intégrés " + jeu.nom + ", payés avec Max it</small></span></div>" +
-        '<div class="offres-jeu">' + offres.map((o) => '<span class="offre-jeu">' + o.libelle + "<b>" + Esport.prix(o.prix) + "</b></span>").join("") + "</div>" +
-        '<a href="#" class="bouton bouton-primaire bouton-pleine-largeur" data-hors="La boutique Max it (offres ' + jeu.nom + ')">Ouvrir la boutique Max it</a>' +
+        '<div class="offres-jeu">' + offres.map((o) => '<span class="offre-jeu">' + o.nom + "<b>" + Shop.prix(o.prix) + "</b></span>").join("") + "</div>" +
+        '<a href="' + Shop.lienJeu(jeu.id, "13-jeu.html?id=" + jeu.id) + '" class="bouton bouton-primaire bouton-pleine-largeur">Ouvrir la boutique Max it</a>' +
         "</section>";
     }
 

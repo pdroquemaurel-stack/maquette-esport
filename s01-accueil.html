@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<!-- Écran s01 — Accueil du Shop (s01-accueil.html ; ?absent=1 : message « jeu non vendu »).
+     US : S05-01 (joueur reconnu par son compte Max it, rien à saisir), S06-01 (ouverture depuis l'univers
+     gaming, retour vers Max it), S06-02 (bannières et jeux mis en avant du pays dans l'ordre défini,
+     derniers jeux achetés s'il en existe, jeux populaires), S06-06 (accès à la recherche).
+     État de démonstration : « Premier achat » → aucun achat, pas de « Tes derniers achats ». -->
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Shop</title>
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-zone="shop">
+<div class="cadre">
+  <div class="telephone">
+    <div class="barre-etat" data-heure="21:10"></div>
+    <div id="entete"></div>
+    <main class="contenu" id="page"></main>
+  </div>
+</div>
+
+<script src="js/data-shop.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/shop.js"></script>
+<script src="js/demo.js"></script>
+<script>
+  // En-tête de la mini app : le retour ramène dans Max it (univers gaming)
+  document.getElementById("entete").innerHTML = Shop.entete("Shop", "00c-maxit-gaming.html", "Retour à Max it");
+
+  function rendre() {
+    let html = "";
+
+    // Lien direct vers un jeu qui n'est pas vendu au Maroc (ou inconnu)
+    if (Nav.param("absent")) {
+      html += '<div class="encart encart-alerte encart-shop">' + Shop.icone("info", "f-primary") +
+        "<div><strong>Ce jeu n'est pas vendu dans le Shop</strong><p>Découvre les jeux disponibles au Maroc.</p></div></div>";
+    }
+
+    // Recherche (S06-06) : ouvre l'écran de recherche
+    html += '<a href="s02-recherche.html" class="champ recherche-shop">' + Shop.icone("recherche", "f-muted") +
+      "<span>Rechercher un jeu</span></a>";
+
+    // Bannières du pays (S04-04) : vers un produit ou vers un jeu
+    html += '<div class="carrousel carrousel-bannieres" aria-label="Bannières">' + SHOP.bannieres.map((b) => {
+      const j = Shop.jeu(b.jeu);
+      const lien = b.produit ? Shop.lienProduit(b.produit) : Shop.lienJeu(b.jeu);
+      return '<a href="' + lien + '" class="banniere-shop">' + Shop.visuel(j, "grand") +
+        '<span class="texte-banniere"><strong>' + b.titre + "</strong><small>" + b.texte + "</small></span></a>";
+    }).join("") + "</div>";
+
+    // Tes derniers achats (S06-02), seulement s'il en existe
+    const derniers = Shop.derniersJeux();
+    if (derniers.length) {
+      html += '<h2 class="titre-section">Tes derniers achats</h2>' +
+        '<div class="carrousel rangee-shop">' + derniers.map((j) => Shop.tuile(j)).join("") + "</div>";
+    }
+
+    // Jeux mis en avant par le pays, dans l'ordre défini (S04-02)
+    html += '<h2 class="titre-section">À la une</h2><div class="carrousel">' + SHOP.misesEnAvant.map(Shop.jeu).map((j) => {
+      const min = Shop.prixMin(j);
+      return '<a href="' + Shop.lienJeu(j.id) + '" class="carte-une carte-une-shop">' + Shop.visuel(j, "grand") +
+        '<span class="carte-une-texte"><span class="carte-titre">' + j.nom + "</span>" +
+        '<span class="carte-sous-titre">' + Shop.produitsDuJeu(j.id).length + " produits" + (min !== null ? " · dès " + Shop.prix(min) : "") + "</span></span></a>";
+    }).join("") + "</div>";
+
+    // Populaires au Maroc : tous les jeux, par ventes
+    html += '<h2 class="titre-section">Populaires au Maroc</h2>' +
+      '<div class="grille-shop">' + Shop.parPopularite(SHOP.jeux).map((j) => Shop.tuile(j)).join("") + "</div>";
+
+    html += '<div class="fin-contenu"></div>';
+    document.getElementById("page").innerHTML = html;
+  }
+  Shop.monter(rendre);
+</script>
+</body>
+</html>

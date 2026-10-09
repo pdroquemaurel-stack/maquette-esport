@@ -58,4 +58,4 @@ Total : 16 min 30 avec l'étape 10 bis. Pour finir : menu de démo → « Réini
 
 - Le temps accéléré (×30) ne concerne que la salle de match, la déclaration du résultat et le litige.
 - L'état de la démo est mémorisé entre les écrans ; si le navigateur refuse le stockage local d'un fichier ouvert directement, il est gardé en mémoire pendant la session.
-- Les liens vers la boutique Max it et les fonctions Max it hors e-sport (envoi d'argent, Plazza…) affichent « hors périmètre de la maquette ».
+- La boutique Max it est le Shop (3e chantier, voir ecrans-shop.md) : tuile « Boutique » de 00c et lien « Ouvrir la boutique Max it » de la page d'un jeu (13). Les fonctions Max it hors gaming (envoi d'argent, Plazza…) affichent « hors périmètre de la maquette ».

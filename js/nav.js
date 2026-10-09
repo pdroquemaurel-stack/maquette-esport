@@ -42,7 +42,20 @@ const ECRANS = {
   "p04": { fichier: "p04-transition.html", titre: "Transition vers le hub", pret: true },
   "p05": { fichier: "p05-partie.html", titre: "Partie", pret: true },
   "p06": { fichier: "p06-avis.html", titre: "Tous les avis", pret: true },
-  "p07": { fichier: "p07-donner-avis.html", titre: "Donner mon avis", pret: true }
+  "p07": { fichier: "p07-donner-avis.html", titre: "Donner mon avis", pret: true },
+  // Shop, la boutique de jeux (3e chantier, voir ecrans-shop.md)
+  "s01": { fichier: "s01-accueil.html", titre: "Accueil du Shop", pret: true },
+  "s02": { fichier: "s02-recherche.html", titre: "Recherche", pret: true },
+  "s03": { fichier: "s03-jeu.html", titre: "Page d'un jeu", pret: true },
+  "s04": { fichier: "s04-produit.html", titre: "Fiche produit", pret: true },
+  "s05": { fichier: "s05-compte-jeu.html", titre: "Compte de jeu", pret: false },
+  "s06": { fichier: "s06-recapitulatif.html", titre: "Récapitulatif", pret: false },
+  "s07": { fichier: "s07-confirmation.html", titre: "Confirmation", pret: false },
+  "s08": { fichier: "s08-achats.html", titre: "Mes achats", pret: false },
+  "s09": { fichier: "s09-commande.html", titre: "Détail d'une commande", pret: false },
+  "s10": { fichier: "s10-signaler.html", titre: "Signaler un problème", pret: false },
+  "s11": { fichier: "s11-aide.html", titre: "Aide", pret: false },
+  "s12": { fichier: "s12-conditions.html", titre: "Conditions de vente", pret: false }
 };
 
 /* ---- Fichier unique (maquette-esport.html) ----
@@ -132,6 +145,8 @@ const Etat = (function () {
     playFavoris: null,      // jeux favoris, le dernier ajouté en premier (S09-01)
     playAvis: null,         // avis du joueur, par jeu : { note, texte, date } (S10-01)
     playSignales: null,     // avis signalés par le joueur (S10-03)
+    // Shop (boutique de jeux)
+    shopPremierAchat: false, // premier achat : aucun achat passé (et, au lot S2, conditions de vente à accepter)
     scenario: null,         // état alternatif forcé pour l'écran visé
     origine: null           // écran à retrouver après le paiement (S11-03)
   };

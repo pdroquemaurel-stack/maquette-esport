@@ -24,7 +24,7 @@ En-tête : cloche → 25 Notifications.
 ### 00c `00c-maxit-gaming.html` — Game corner
 - Référence : `reference/03-gaming.png` (thème sombre).
 - Éléments : retour, recherche ; titre « Game corner » ; tuiles Play, Gameshop, Esport ; « Discover » ; « Continue playing ».
-- Liens : Esport → 02 au premier accès, sinon 03 ; retour → 00b.
+- Liens : Esport → 02 au premier accès, sinon 03 ; Jouer → p01 (Play) ; Gameshop et visuel « Discover » → s01 (Shop, voir ecrans-shop.md) ; retour → 00b.
 - État (menu de démo) : compte Max it suspendu → message « Accès aux tournois impossible » au lieu d'entrer dans la plateforme (S01-01).
 
 ---
@@ -106,8 +106,8 @@ En-tête : cloche → 25 Notifications.
 
 ### 13 `13-jeu.html` — Page d'un jeu
 - US : S05-05
-- Éléments : tournois à venir et en cours ; articles et vidéos du jeu ; lien « Boutique Max it » avec prix en monnaie locale (absent si le jeu n'a pas d'offre).
-- Liens : → 06, 18, 19, boutique Max it (hors maquette).
+- Éléments : tournois à venir et en cours ; articles et vidéos du jeu ; lien « Boutique Max it » avec les 3 premiers produits du Shop en monnaie locale (absent si le jeu n'est pas vendu dans le Shop : Call of Duty: Mobile).
+- Liens : → 06, 18, 19 ; « Ouvrir la boutique Max it » → s03 du jeu dans le Shop (retour → 13).
 
 ### 14 `14-resultat.html` — Déclarer le résultat
 - US : S07-01, S07-02
@@ -317,7 +317,7 @@ Démo des matchs (lot 4) : dans 11, 14 et 15, le temps défile 30 fois plus vite
 | S05-02 | Calendrier, recherche et filtres (gratuit) | Couverte | 04, 06, 21, 22 | — |
 | S05-03 | Page d'un tournoi et arbre consultables par tous | Couverte | 06, 12, 17 | Mise à jour sans rechargement simulée (résultat en direct après 4 s). |
 | S05-04 | Classement d'un tournoi | Couverte | 12 | La correction des MaxPoints après arbitrage (E15) est seulement mentionnée dans le barème (29). |
-| S05-05 | Page d'un jeu et lien vers la boutique | Couverte | 13 | La boutique Max it est hors maquette (message) ; l'attribution des achats relève des rapports. |
+| S05-05 | Page d'un jeu et lien vers la boutique | Couverte | 13 | Le lien ouvre la page du jeu dans le Shop (s03, 3e chantier) ; l'attribution des achats relève des rapports. |
 | S06-01 | Progression du tournoi sans intervention | En partie | 11, 12 | Automatismes sans écran propre ; leurs effets sont visibles dans 11 et 12 (vainqueur au tour suivant, qualification d'office après double absence). |
 | S06-02 | Convocation et confirmation de présence | En partie | 11, 25 | Compte à rebours, présence de -10 min au début, rappel à -5 min, démarrage dès que les deux sont présents (11). La convocation reçue 15 min avant arrive par notification (25). |
 | S06-03 | Absence d'un joueur au début du match | En partie | 11, 12, 08 | Forfait (motif, heure), victoire par forfait, double absence (11, 12). Le compteur de forfaits est fixe (1 sur 30 jours) ; la suspension après 3 forfaits est montrée en 08. Le forfait en poule (défaite au score de la fiche jeu) n'est pas maquetté. |

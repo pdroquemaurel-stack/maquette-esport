@@ -27,7 +27,8 @@ const fichiersEcrans = Object.values(ECRANS).filter((e) => e.pret).map((e) => e.
 const CSS = { tokens: lire("css/tokens.css"), style: lire("css/style.css") };
 const JS = {
   data: lire("js/data.js"), nav: nav, esport: lire("js/esport.js"), demo: lire("js/demo.js"),
-  "data-play": lire("js/data-play.js"), play: lire("js/play.js")
+  "data-play": lire("js/data-play.js"), play: lire("js/play.js"),
+  "data-shop": lire("js/data-shop.js"), shop: lire("js/shop.js")
 };
 
 /* ---- Modèles d'écran : repères à la place des ressources externes ---- */
@@ -50,11 +51,11 @@ fichiersEcrans.forEach((fichier) => {
   PAGES[fichier] = html;
 });
 
-/* ---- Images citées dans js/data.js et js/data-play.js (visuels des jeux) : intégrées une seule fois ----
+/* ---- Images citées dans js/data.js, js/data-play.js et js/data-shop.js (visuels des jeux) : intégrées une seule fois ----
    Les écrans les obtiennent par ressource() (js/nav.js), via le routeur. */
 const IMAGES = {};
 const TYPES_IMAGES = { ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp" };
-((JS.data + JS["data-play"]).match(/"images\/[^"]+\.(?:png|jpe?g|webp)"/g) || []).forEach((guillemets) => {
+((JS.data + JS["data-play"] + JS["data-shop"]).match(/"images\/[^"]+\.(?:png|jpe?g|webp)"/g) || []).forEach((guillemets) => {
   const chemin = guillemets.slice(1, -1);
   if (!fs.existsSync(path.join(RACINE, chemin))) { console.warn("Image absente, ignorée : " + chemin); return; }
   IMAGES[chemin] = "data:" + TYPES_IMAGES[path.extname(chemin).toLowerCase()] + ";base64," + fs.readFileSync(path.join(RACINE, chemin)).toString("base64");
