@@ -33,22 +33,22 @@ Pas de maquette Figma (`reference/figma-shop/` absent) : composants Max it et e-
 - Éléments : jeu et éditeur ; nom ; badges (Top-up ou Voucher, durée du pass, promo, épuisé) ; prix TTC en MAD, prix barré ; contenu ; livraison (crédit direct et identifiant demandé ensuite, ou code affiché, envoyé par SMS et retrouvé dans « Mes achats », avec les instructions d'activation) ; conditions (validité et reconduction d'un pass, date limite d'un code, pays, pas de remboursement une fois livré, lien vers les conditions de vente) ; bouton « Acheter · prix », inactif « Épuisé » sinon.
 - Liens : « Acheter » → s05 (top-up, pass crédité) ou s06 (code) ; jeu → s03 ; retour → page d'origine, ou 00c pour un lien direct ; conditions → s12.
 
-### s05 `s05-compte-jeu.html?produit=…` — Compte de jeu (lot S2)
+### s05 `s05-compte-jeu.html?produit=…` — Compte de jeu
 - US : S05-02, S05-03, S05-04.
 - Éléments : comptes mémorisés avec libellé (« Mon compte », « Mon frère ») et « Supprimer » ; ajout d'un compte : identifiant au format contrôlé (message explicite), libellé ; vérification avec pseudo affiché, ou avertissement et double saisie ; identifiant introuvable refusé.
 - Liens : « Où trouver mon identifiant ? » → s11 ; Continuer → s06.
 
-### s06 `s06-recapitulatif.html?produit=…` — Récapitulatif (lot S2)
+### s06 `s06-recapitulatif.html?produit=…` — Récapitulatif
 - US : S06-07, S07-01, S06-08, S02-04, S06-11.
 - Éléments : jeu, produit, compte de jeu et pseudo (destinataire clairement affiché pour un proche), prix ; choix Orange Money ou crédit / facture mobile (DCB), Orange Money seul au-delà du plafond DCB ; acceptation des conditions de vente au premier achat ou après une nouvelle version ; « Payer » bloqué tant qu'un paiement précédent est en vérification ; état « Produit épuisé pendant l'achat ».
 - Liens : conditions → s12 ; Payer → 22 (mode Shop) ; retour → s04 ou s05.
 
-### 22 `22-paiement-maxit.html?commande=…` — Brique de paiement Max it, mode Shop (lot S2)
+### 22 `22-paiement-maxit.html?commande=…` — Brique de paiement Max it, mode Shop
 - US : S07-02, S07-03.
 - Éléments : marchand « Max it Shop », montant ; Orange Money (code secret) ou DCB (confirmation) ; solde Orange Money insuffisant : montant manquant et « Payer par crédit mobile » ; solde DCB insuffisant : message clair. Le mode e-sport de l'écran 22 ne change pas.
 - Liens : → s07 ; refus → s06.
 
-### s07 `s07-confirmation.html?commande=…` — Confirmation et livraison (lot S2)
+### s07 `s07-confirmation.html?commande=…` — Confirmation et livraison
 - US : S06-10, S06-11, S08-01, S08-02, S09-01, S09-02.
 - Éléments : paiement en cours, livraison en cours, livré ; voucher : code unique, expiration, instructions, lien d'activation, « Copier » ; top-up : montant crédité ; pass : date de fin et reconduction ; « Code envoyé par SMS » si activé ; refusé ; livraison échouée puis remboursement engagé ; « Vérification en cours » et lien vers la commande.
 - Liens : Voir ma commande → s09 ; Retour au Shop → s01 ; Retour au jeu → s03.
@@ -73,7 +73,7 @@ Pas de maquette Figma (`reference/figma-shop/` absent) : composants Max it et e-
 - Éléments : questions fréquentes dépliables ; « Où trouver mon identifiant ? » renvoie à l'aide de chaque jeu (`#jeu-…`).
 - Liens : conditions → s12 ; Mes achats → s08 ; retour.
 
-### s12 `s12-conditions.html` — Conditions de vente (lot S2)
+### s12 `s12-conditions.html` — Conditions de vente
 - US : S06-08.
 - Éléments : texte du pays, version et date, clause de non-remboursement.
 - Liens : retour vers l'écran d'origine (s06, s04 ou s11).
@@ -88,24 +88,24 @@ Pas de maquette Figma (`reference/figma-shop/` absent) : composants Max it et e-
 
 - **00c** : la tuile « Boutique » et le visuel « Les meilleurs jeux au meilleur prix » ouvrent s01. « Jouer » et « E-sport » ne changent pas.
 - **13** : la section « Boutique Max it » affiche les 3 premiers produits achetables du Shop et ouvre s03 du jeu (le retour ramène sur 13). Absente pour Call of Duty: Mobile, qui n'est pas vendu. Les offres de `js/data.js` (`boutique`) sont supprimées : les prix viennent du seul `js/data-shop.js`.
-- **22** (lot S2) : mode Shop, sans changer le mode e-sport.
+- **22** : mode Shop (`?commande=`) dans un bloc de script séparé ; le mode e-sport (`?offre=`) est inchangé.
 - **css/style.css** : section « Shop » ; la règle de texte de la carte « à la une » de Play est limitée à Play (elle déplaçait aussi le texte des cartes « à la une » de l'accueil e-sport, 03).
 
 ## Menu de démonstration — groupe « Shop »
 
 | Réglage | Lot | Effet |
 |---|---|---|
-| Premier achat | S1 (S2 : conditions) | Aucun achat : pas de « Tes derniers achats » ; au lot S2, conditions de vente à accepter. |
+| Premier achat | S1, S2 | Aucun achat : pas de « Tes derniers achats » ; conditions de vente à accepter en s06. |
 | Lien direct vers un jeu | S1 | s03 Genshin Impact ; le retour ramène dans Max it. |
 | Lien direct vers un produit | S1 | s04 Pass Gameloft illimité ; le retour ramène dans Max it. |
 | Lien vers un jeu non vendu | S1 | s01 avec « Ce jeu n'est pas vendu dans le Shop ». |
-| Conditions de vente modifiées | S2 | Nouvelle version à accepter. |
-| Identifiant de jeu introuvable | S2 | Refus en s05. |
-| Solde Orange Money insuffisant | S2 | Montant manquant en 22. |
-| Montant hors plafond DCB | S2 | Orange Money seul en s06. |
-| Paiement sans réponse | S2 | « Vérification en cours » en s07. |
-| Produit épuisé pendant l'achat | S2 | Message en s06. |
-| Livraison en échec puis remboursement | S2 | s07 puis s09. |
+| Conditions de vente modifiées | S2 | Version 2.2 à accepter en s06, avec le changement résumé ; s12 l'indique aussi. |
+| Identifiant de jeu introuvable | S2 | s05 avec l'identifiant 512839040 déjà saisi : refusé tant qu'il n'est pas corrigé. |
+| Solde Orange Money insuffisant | S2 | s06 prêt (Free Fire 520 diamants) ; en 22, montant manquant et « Payer par crédit ou facture mobile ». |
+| Montant hors plafond DCB | S2 | Orange Money seul en s06 (aussi sans démo au-delà de 100 MAD). |
+| Paiement sans réponse | S2 | « Vérification en cours » en s07, nouveau paiement bloqué en s06, confirmation et livraison au bout de 20 s. |
+| Produit épuisé pendant l'achat | S2 | « Payer » en s06 : message, aucun débit, produit « Épuisé » ensuite. |
+| Livraison en échec puis remboursement | S2 | s07 : livraison échouée, remboursement engagé (détail en s09 au lot S3). |
 | Pass qui expire dans 3 jours | S3 | Notification → s04. |
 | Envoi du code par SMS | S3 | Mention « Code envoyé par SMS » en s07 et s09. |
 
@@ -140,25 +140,34 @@ Notification Max it (démo) ─► s09 (livraison, renouvellement) ou s04 (éch�
 | Lot | Écrans | État |
 |---|---|---|
 | S1 | `js/data-shop.js`, `js/shop.js`, section « Shop » de style.css, s01 à s04, 00c, 13, groupe « Shop » du menu de démo (premier achat, liens directs), page de contrôle, fichier unique | terminé |
-| S2 | s05, s06, mode Shop de 22, s07, s12 ; états de démo du tunnel | à faire |
+| S2 | s05, s06, mode Shop de 22, s07, s12 ; états de démo du tunnel ; page de contrôle et fichier unique | terminé |
 | S3 | s08 à s11, notifications Max it simulées, états de démo restants | à faire |
 
-Dans le lot S1, les liens vers des écrans des lots suivants (Acheter, Mes achats, aide, conditions) affichent « … : arrive au prochain lot ».
+Après le lot S2, les liens vers les écrans du lot S3 (Mes achats, Voir ma commande, aide) affichent « … : arrive au prochain lot ».
 
 ## Couverture des US
 
 | US | Couverture | Écrans | Limites et remarques |
 |---|---|---|---|
-| S02-04 | En partie (S1) | s03, s04 | Produits « Épuisé » affichés, non achetables (choix du 2026-10-09). Réservation au paiement : lot S2 (« Produit épuisé pendant l'achat »). |
+| S02-04 | Couverte | s03, s04, s06, 22 | Produits « Épuisé » affichés, non achetables (choix du 2026-10-09). Réservation au paiement simulée : commande créée à « Payer », supprimée si le paiement est abandonné ; « Produit épuisé pendant l'achat ». |
 | S05-01 | Couverte | s01 | Aucun identifiant à saisir ; pays et numéro simulés. |
-| S05-02, S05-03, S05-04 | À venir (S2) | s05 | Formats et aide déjà dans `js/data-shop.js` ; encart sur s03. |
+| S05-02 | Couverte | s05 | Format contrôlé jeu par jeu ; aide « où trouver mon identifiant » en feuille (l'aide complète arrive en s11, lot S3). |
+| S05-03 | Couverte | s05, s06 | Pseudo simulé (liste fictive) ; vérification impossible pour Konami et Supercell : double saisie. |
+| S05-04 | Couverte | s05, s06 | Comptes mémorisés dans le navigateur, pas sur le compte Max it ; le dernier utilisé est proposé en premier. |
 | S06-01 | Couverte | 00c, 13, s01, s03, s04 | Lien direct simulé par le menu de démo. |
 | S06-02 | Couverte | s01 | — |
 | S06-03 | Couverte | s03 | — |
 | S06-05 | Couverte | s04 | — |
 | S06-06 | Couverte | s02 | Recherche sur le nom et les noms courts ; tolérance de 1 faute dès 4 lettres, 2 dès 5. |
-| S06-07 | En partie (S1) | s04 | Bifurcation top-up / code en place ; suite du tunnel au lot S2. |
-| S06-08, S06-10, S06-11, E07, E08, S09-01, S09-02 | À venir (S2) | s06, 22, s07, s12 | — |
+| S06-07 | Couverte | s04 à s07 | — |
+| S06-08 | Couverte | s06, s12 | Texte en français seulement. |
+| S06-10 | Couverte | s07 | Lien d'activation hors maquette (message). |
+| S06-11 | Couverte | 22, s07, s06 | « 2 minutes » sans réponse simulées ; confirmation au bout de 20 s. |
+| S07-01 à S07-03 | Couvertes | s06, 22 | Réponses du module de paiement simulées : plafond DCB 100 MAD, crédit de la ligne 80 MAD. |
+| S08-01, S08-02 | Couvertes | 22, s07 | Livraison après confirmation ; les nouvelles tentatives pendant 30 minutes sont seulement mentionnées. |
+| S08-03 | À venir (S3) | notifications | — |
+| S09-01 | Couverte | s07 | Code tiré de la référence de commande, donc unique. |
+| S09-02 | En partie | s07 | Mention « Envoyé aussi par SMS » ; la bascule SMS du menu de démo arrive au lot S3. |
 | S09-04, E10 | À venir (S3) | s08 à s11 | — |
 
 ### US non maquettées

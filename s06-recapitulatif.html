@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<!-- Écran s06 — Récapitulatif avant paiement (s06-recapitulatif.html?produit=ff-520&moyen=dcb&depuis=…).
+     US : S06-07 (récapitulatif : jeu, produit, compte de jeu et pseudo vérifié, prix, moyen de paiement ; pas de panier),
+     S05-04 (destinataire clairement affiché pour un proche), S07-01 (seuls les moyens utilisables :
+     Orange Money seul au-delà du plafond DCB), S06-08 (conditions de vente à accepter au premier achat
+     et après une nouvelle version), S06-11 (pas de nouveau paiement tant que le précédent est sans résultat),
+     S02-04 (produit réservé au lancement du paiement ; épuisé entre-temps : message, aucun débit).
+     États de démonstration : premier achat, conditions modifiées, montant hors plafond DCB, produit épuisé pendant l'achat. -->
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Récapitulatif</title>
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-zone="shop">
+<div class="cadre">
+  <div class="telephone">
+    <div class="barre-etat" data-heure="21:10"></div>
+    <div id="entete"></div>
+    <main class="contenu" id="page"></main>
+    <div class="barre-action" id="action"></div>
+  </div>
+</div>
+
+<script src="js/data-shop.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/shop.js"></script>
+<script src="js/demo.js"></script>
+<script>
+  const p = Shop.produit(Nav.param("produit"));
+  const jeu = p && Shop.jeu(p.jeu);
+  // Compte de jeu choisi en s05 : obligatoire pour un top-up ou un pass crédité
+  const tunnel = Etat.get("shopTunnel");
+  const compte = p && p.livraison === "credit" && tunnel && tunnel.produit === p.id ? tunnel.compte : null;
+  if (!p) ouvrirPage("s01-accueil.html?absent=1");
+  else if (p.livraison === "credit" && !compte) ouvrirPage(Shop.url("s05-compte-jeu.html", { produit: p.id }));
+
+  let moyen = Nav.param("moyen") === "dcb" ? "dcb" : "orange-money";
+  let cocheConditions = false;
+
+  function rendre() {
+    if (!p || (p.livraison === "credit" && !compte)) return;
+    // Le DCB n'est pas proposé au-delà du plafond (S07-01)
+    const dcb = Shop.dcbUtilisable(p.prix);
+    if (!dcb) moyen = "orange-money";
+    const attente = Shop.paiementEnAttente();
+    const aJour = Shop.conditionsAJour();
+    const retour = Shop.depuis(p.livraison === "credit" ? Shop.url("s05-compte-jeu.html", { produit: p.id }) : Shop.lienProduit(p.id, "s01-accueil.html"));
+    document.getElementById("entete").innerHTML = Shop.entete("Récapitulatif", retour);
+
+    let html = "";
+
+    // Paiement précédent sans résultat : nouveau paiement bloqué (S06-11)
+    if (attente) {
+      html += '<div class="encart encart-alerte encart-shop">' + Shop.icone("horloge", "f-primary") +
+        "<div><strong>Un paiement est en cours de vérification</strong><p>Attends son résultat avant d'en lancer un autre : tu ne seras pas débité deux fois.</p>" +
+        '<a href="' + Shop.url("s07-confirmation.html", { commande: attente.id }) + '" class="lien-encart">Voir où en est ce paiement</a></div></div>';
+    }
+
+    // Ton achat
+    html += '<h2 class="titre-section">Ton achat</h2><div class="carte-recap">' + Shop.resumeProduit(p) + "</div>";
+
+    // Compte de jeu et pseudo (S06-07, S05-04)
+    if (compte) {
+      const proche = compte.libelle !== "Mon compte";
+      html += '<h2 class="titre-section">Compte de jeu <a href="' + Shop.url("s05-compte-jeu.html", { produit: p.id, depuis: Shop.ici() }) + '" class="voir-tout">Modifier</a></h2>' +
+        '<div class="carte-recap"><div class="resume-produit"><span class="icone-produit">' + Shop.icone("compte", "f-primary") + "</span>" +
+        '<span class="ligne-corps"><span class="ligne-titre">' + (proche ? "Pour : " : "") + compte.libelle + "</span>" +
+        '<span class="ligne-sous-titre">' + (compte.pseudo ? "Pseudo <b>" + compte.pseudo + "</b> · " : "") + jeu.identifiant.libelle + " " + compte.identifiant + "</span>" +
+        '<span class="carte-badges">' + (compte.pseudo ? '<span class="puce-etat puce-inscrit">' + Shop.icone("coche", "f-white") + "Compte vérifié</span>"
+          : '<span class="puce-etat puce-mea">Vérification impossible</span>') + "</span></span></div></div>";
+      if (proche) {
+        html += '<p class="note-shop">Tu offres ce produit : il sera crédité sur le compte ' + (compte.pseudo ? "de <b>" + compte.pseudo + "</b>" : "« " + compte.libelle + " »") + ", pas sur le tien.</p>";
+      }
+    }
+
+    // Moyen de paiement (S07-01)
+    html += '<h2 class="titre-section">Payer avec</h2><div class="choix-liste">' +
+      '<label class="choix-shop' + (moyen === "orange-money" ? " actif" : "") + '"><input type="radio" name="moyen" value="orange-money"' + (moyen === "orange-money" ? " checked" : "") + ">" +
+      '<span class="icone-produit">' + Shop.icone("portefeuille", "f-primary") + "</span>" +
+      '<span class="choix-corps"><span class="ligne-titre">Orange Money</span><span class="ligne-sous-titre">Portefeuille ' + Shop.numeroMasque() + "</span></span></label>";
+    if (dcb) {
+      html += '<label class="choix-shop' + (moyen === "dcb" ? " actif" : "") + '"><input type="radio" name="moyen" value="dcb"' + (moyen === "dcb" ? " checked" : "") + ">" +
+        '<span class="icone-produit">' + Shop.icone("mobile", "f-primary") + "</span>" +
+        '<span class="choix-corps"><span class="ligne-titre">Crédit ou facture mobile</span><span class="ligne-sous-titre">Débité sur ta ligne ' + Shop.numeroMasque() + "</span></span></label>";
+    }
+    html += "</div>";
+    if (!dcb) html += '<p class="note-shop">Le paiement par crédit ou facture mobile n\'est pas disponible pour ce montant.</p>';
+
+    // Total TTC
+    html += '<dl class="recap-shop"><dt>Prix TTC</dt><dd>' + (p.prixBarre ? "<s>" + Shop.prix(p.prixBarre) + "</s> " : "") + Shop.prix(p.prix) + "</dd>" +
+      "<dt>Livraison</dt><dd>" + (p.livraison === "credit" ? "Crédit direct, tout de suite" : "Code affiché tout de suite") + "</dd>" +
+      "<dt>Total à payer</dt><dd><b>" + Shop.prix(p.prix) + "</b></dd></dl>";
+
+    // Conditions de vente : au premier achat, et après une nouvelle version (S06-08)
+    if (!aJour) {
+      const enVigueur = Shop.conditionsEnVigueur();
+      const dejaAcceptee = Shop.conditionsAcceptees();
+      html += '<div class="bloc-shop conditions-shop">' +
+        (dejaAcceptee ? '<div class="encart encart-alerte">' + Shop.icone("info", "f-primary") +
+          "<div><strong>Les conditions de vente ont changé</strong><p>" + (enVigueur.changement || "") + "</p></div></div>" : "") +
+        '<label class="case-shop"><input type="checkbox" id="conditions"' + (cocheConditions ? " checked" : "") + ">" +
+        "<span>J'accepte les <a href=\"" + Shop.url("s12-conditions.html", { depuis: Shop.ici() }) + '" class="lien-encart">conditions de vente</a> (version ' + enVigueur.version +
+        " du " + Shop.dateCourte(enVigueur.date) + "), notamment l'absence de remboursement d'un contenu livré.</span></label></div>";
+    } else {
+      html += '<p class="note-shop">En payant, tu confirmes les <a href="' + Shop.url("s12-conditions.html", { depuis: Shop.ici() }) + '" class="lien-encart">conditions de vente</a> acceptées le ' +
+        Shop.dateCourte(Shop.conditionsAcceptees().date) + ".</p>";
+    }
+    html += '<div class="fin-contenu"></div>';
+    document.getElementById("page").innerHTML = html;
+
+    const inactif = !!attente || (!aJour && !cocheConditions) || !Shop.achetable(p);
+    document.getElementById("action").innerHTML =
+      '<button class="bouton bouton-primaire bouton-pleine-largeur" id="payer"' + (inactif ? " disabled" : "") + ">Payer " + Shop.prix(p.prix) + "</button>" +
+      '<p class="aide-action">' + (attente ? "Attends le résultat du paiement en cours"
+        : !aJour && !cocheConditions ? "Accepte les conditions de vente pour continuer" : "Tu valides le paiement dans la brique Max it") + "</p>";
+  }
+
+  /* Payer : le produit est réservé, la commande créée, puis la brique de paiement Max it s'ouvre */
+  function payer() {
+    if (!Shop.conditionsAJour()) Shop.accepterConditions();
+    // Démo : le dernier exemplaire part juste avant (S02-04) ; aucun débit
+    if (Shop.consommerScenario("epuise-pendant")) {
+      Etat.set("shopEpuises", (Etat.get("shopEpuises") || []).concat(p.id));
+      Nav.dialogue({
+        icone: Shop.icone("alerte", "f-primary"),
+        titre: "Ce produit vient d'être épuisé",
+        texte: "Le dernier exemplaire de « " + p.nom + " » a été acheté juste avant toi. Aucun montant n'a été débité.",
+        boutons: [{ libelle: "Voir les autres produits", primaire: true, action: () => ouvrirPage(Shop.lienJeu(jeu.id, "s01-accueil.html")) }]
+      });
+      return;
+    }
+    const c = Shop.creerCommande(p, compte, moyen);
+    // Démo « hors plafond DCB » : valable pour cet achat seulement
+    Shop.consommerScenario("hors-plafond");
+    ouvrirPage(Shop.url("22-paiement-maxit.html", { commande: c.id }));
+  }
+
+  const telephone = document.querySelector(".telephone");
+  telephone.addEventListener("change", (e) => {
+    if (e.target.name === "moyen") { moyen = e.target.value; rendre(); }
+    if (e.target.id === "conditions") { cocheConditions = e.target.checked; rendre(); }
+  });
+  telephone.addEventListener("click", (e) => {
+    const bouton = e.target.closest("#payer");
+    if (bouton && !bouton.disabled) payer();
+  });
+  // Paiement précédent en vérification : son résultat est consulté toutes les 2 secondes ;
+  // dès qu'il arrive, l'écran se met à jour (etat-change) et « Payer » redevient actif.
+  setInterval(() => Shop.paiementEnAttente(), 2000);
+  Shop.monter(rendre);
+</script>
+</body>
+</html>

@@ -1667,3 +1667,144 @@ svg { display: block; flex-shrink: 0; }
 .liens-shop { margin: var(--space-5) var(--page-gutter) 0; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); overflow: hidden; }
 .liens-shop .ligne { padding: var(--space-2) var(--space-3); }
 .liens-shop .ligne > svg:first-child { width: 22px; height: 22px; }
+
+/* ============ Tunnel d'achat (lot S2) : choix, formulaires, récapitulatif ============ */
+/* Résumé d'un produit ou d'un compte : vignette, titre, sous-titre */
+.resume-produit { display: flex; align-items: center; gap: var(--space-3); }
+.resume-produit .ligne-sous-titre b { color: var(--color-text); }
+.carte-recap {
+  margin: 0 var(--page-gutter);
+  padding: var(--space-3);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+.note-shop { padding: 0 var(--page-gutter); margin-top: var(--space-2); font-size: var(--font-size-sm); color: var(--color-text-secondary); }
+.note-shop b { color: var(--color-text); }
+.note-carte { font-size: var(--font-size-sm); color: var(--color-text-secondary); margin-top: var(--space-2); }
+.lien-shop { color: var(--color-primary); font-weight: var(--font-weight-bold); font-size: var(--font-size-sm); min-height: var(--touch-target); }
+
+/* Cartes à choix unique (compte de jeu, moyen de paiement) */
+.choix-liste { display: flex; flex-direction: column; gap: var(--space-2); padding: 0 var(--page-gutter); }
+.choix-shop {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 64px;
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+.choix-shop.actif { border: 2px solid var(--color-primary); background: var(--color-primary-soft); }
+.choix-shop input[type="radio"] { width: 20px; height: 20px; accent-color: var(--color-primary); flex-shrink: 0; }
+.choix-corps { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.choix-corps .ligne-sous-titre { overflow-wrap: anywhere; }
+
+/* Formulaire d'un nouveau compte de jeu (s05) */
+.formulaire-shop { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-3) 0 var(--space-2); }
+.etiquette-shop { font-size: var(--font-size-sm); font-weight: var(--font-weight-bold); margin-top: var(--space-2); }
+.aide-champ { font-size: var(--font-size-xs); color: var(--color-text-secondary); display: flex; align-items: center; flex-wrap: wrap; gap: 0 var(--space-1); }
+.aide-champ .lien-shop { font-size: var(--font-size-xs); }
+.erreur-shop { display: flex; gap: var(--space-2); align-items: flex-start; font-size: var(--font-size-sm); color: var(--color-alert); }
+.erreur-shop svg { width: 18px; height: 18px; margin-top: 1px; }
+.trouve-shop {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  border: 1px solid var(--color-success-dark);
+}
+.trouve-shop svg { width: 22px; height: 22px; }
+.trouve-shop small { display: block; color: var(--color-text-secondary); font-size: var(--font-size-xs); }
+.puces-libelle .puce { min-height: 32px; }
+.case-shop { display: flex; gap: var(--space-2); align-items: flex-start; font-size: var(--font-size-sm); margin-top: var(--space-2); cursor: pointer; }
+.case-shop input { width: 20px; height: 20px; margin-top: 1px; accent-color: var(--color-primary); flex-shrink: 0; }
+.aide-feuille { font-size: var(--font-size-md); color: var(--color-text-secondary); margin-bottom: var(--space-4); }
+.aide-feuille b { color: var(--color-text); }
+
+/* Récapitulatif (s06) : prix, total, conditions de vente */
+.recap-shop {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--space-2) var(--space-4);
+  margin: var(--space-5) var(--page-gutter) 0;
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+  font-size: var(--font-size-sm);
+}
+.recap-shop dt { color: var(--color-text-secondary); }
+.recap-shop dd { text-align: right; font-weight: var(--font-weight-medium); }
+.recap-shop dd s { color: var(--color-text-muted); font-weight: var(--font-weight-regular); }
+.recap-shop dd b { font-size: var(--font-size-lg); }
+.conditions-shop .encart { margin: 0 0 var(--space-2); }
+
+/* ============ Confirmation et livraison (s07) ============ */
+.resultat-shop { display: flex; flex-direction: column; align-items: center; text-align: center; padding: var(--space-6) var(--page-gutter) 0; }
+.pictogramme-shop {
+  width: 72px;
+  height: 72px;
+  border-radius: var(--radius-round);
+  background: var(--color-primary-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: var(--space-3);
+}
+.pictogramme-shop svg { width: 36px; height: 36px; }
+.pictogramme-shop.succes { background: var(--color-success-dark); }
+.resultat-shop h1 { font-size: var(--font-size-xxl); line-height: var(--line-height-tight); margin-bottom: var(--space-1); }
+.resultat-shop p { color: var(--color-text-secondary); }
+.reference-shop { font-size: var(--font-size-xs); color: var(--color-text-muted); margin-top: var(--space-1); }
+
+/* Suivi de la commande : étapes faites, en cours, en échec */
+.etapes-shop { list-style: none; margin: var(--space-5) var(--page-gutter) var(--space-4); display: flex; flex-direction: column; gap: var(--space-3); }
+.etape-shop { display: flex; gap: var(--space-3); align-items: flex-start; font-size: var(--font-size-sm); }
+.etape-shop small { display: block; color: var(--color-text-secondary); }
+.puce-etape {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  border-radius: var(--radius-round);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg-muted);
+}
+.puce-etape svg { width: 16px; height: 16px; }
+.etape-shop.fait .puce-etape { background: var(--color-success-dark); }
+.etape-shop.echec .puce-etape { background: var(--color-alert); }
+.etape-shop.attente { color: var(--color-text-muted); }
+.rond-attente {
+  width: 16px;
+  height: 16px;
+  border-radius: var(--radius-round);
+  border: 3px solid var(--color-primary-soft);
+  border-top-color: var(--color-primary);
+  animation: tourne-shop 1s linear infinite;
+}
+@keyframes tourne-shop { to { transform: rotate(360deg); } }
+
+/* Code d'un voucher, avec « Copier » */
+.code-shop .etiquette-shop { margin-top: 0; display: block; }
+.code-ligne { display: flex; align-items: center; gap: var(--space-2); margin-top: var(--space-2); }
+.code-ligne code {
+  flex: 1;
+  min-width: 0;
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: .06em;
+  overflow-wrap: anywhere;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-warm);
+}
+.code-ligne .bouton { padding: 0 var(--space-4); flex-shrink: 0; }
+.texte-livraison { font-size: var(--font-size-md); }
+.bouton-activation { margin-top: var(--space-3); }
+.actions-doubles { display: flex; gap: var(--space-2); margin-top: var(--space-1); }
+.actions-doubles .bouton { flex: 1; }

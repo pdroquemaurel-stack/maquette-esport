@@ -79,7 +79,7 @@
     conditions.push("Contenu numérique livré immédiatement : il n'est ni repris ni remboursé une fois livré.");
     html += '<section class="bloc-shop"><h2>Conditions</h2><ul class="liste-shop">' +
       conditions.map((c) => "<li>" + Shop.icone("info", "f-muted") + "<span>" + c + "</span></li>").join("") +
-      '<li><span></span><a href="#" class="lien-encart" data-ecran="s12">Lire les conditions de vente</a></li></ul></section>';
+      '<li><span></span><a href="' + Shop.url("s12-conditions.html", { depuis: Shop.ici() }) + '" class="lien-encart">Lire les conditions de vente</a></li></ul></section>';
 
     html += '<div class="fin-contenu"></div>';
     document.getElementById("page").innerHTML = html;

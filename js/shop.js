@@ -16,8 +16,9 @@ const Shop = (function () {
   /* Produits d'un jeu, dans l'ordre défini (S01-03, S06-03) */
   function produitsDuJeu(idJeu) { return SHOP.produits.filter((p) => p.jeu === idJeu); }
 
-  /* Un produit n'est achetable que s'il est livrable (S02-04) */
-  function achetable(p) { return !!p && !p.epuise; }
+  /* Un produit n'est achetable que s'il est livrable (S02-04).
+     shopEpuises : produits épuisés pendant la démo (« Produit épuisé pendant l'achat »). */
+  function achetable(p) { return !!p && !p.epuise && !(Etat.get("shopEpuises") || []).includes(p.id); }
 
   /* Prix le plus bas parmi les produits achetables du jeu (tuiles « dès … ») */
   function prixMin(j) {
@@ -66,11 +67,153 @@ const Shop = (function () {
      Historique du joueur
      ===================================================================== */
 
-  /* Commandes du joueur, de la plus récente à la plus ancienne (vides au premier achat) */
+  /* Commandes du joueur, de la plus récente à la plus ancienne :
+     celles passées pendant la démo (shopCommandes), puis l'historique de départ (vide au premier achat). */
   function commandes() {
-    if (Etat.get("shopPremierAchat")) return [];
-    return SHOP.commandes.slice().sort((a, b) => b.date.localeCompare(a.date));
+    const ajoutees = (Etat.get("shopCommandes") || []).slice().reverse().map(actualiser);
+    const depart = Etat.get("shopPremierAchat") ? [] : SHOP.commandes.slice().sort((a, b) => b.date.localeCompare(a.date));
+    return ajoutees.concat(depart);
   }
+  function commande(id) { return commandes().find((c) => c.id === id) || null; }
+
+  /* Nouvelle commande, au lancement du paiement (S06-07) : le produit est réservé (S02-04) */
+  function creerCommande(p, compte, moyen) {
+    const c = {
+      id: "SH-" + SHOP.maintenant.slice(2, 10).replace(/-/g, "") + SHOP.maintenant.slice(11, 13) + "-" + String(Date.now()).slice(-4),
+      date: SHOP.maintenant, produit: p.id, compte: compte || null, moyen: moyen, montant: p.prix, statut: "paiement"
+    };
+    Etat.set("shopCommandes", (Etat.get("shopCommandes") || []).concat(c));
+    return c;
+  }
+
+  /* Modifie une commande passée pendant la démo */
+  function majCommande(id, changements) {
+    const liste = (Etat.get("shopCommandes") || []).map((c) => c.id === id ? Object.assign({}, c, changements) : c);
+    Etat.set("shopCommandes", liste);
+    return liste.find((c) => c.id === id);
+  }
+
+  /* Livraison réussie (S06-10, S08-01, S09-01) : un code unique pour un voucher ou un pass livré par code,
+     la date de fin pour un pass. Une commande déjà livrée ne l'est jamais une seconde fois. */
+  function livrer(c) {
+    if (c.statut === "livre") return c;
+    const p = produit(c.produit);
+    const changements = { statut: "livre" };
+    if (p.livraison === "code") changements.code = genererCode(c);
+    if (p.type === "pass") changements.fin = ajouterJours(aujourdhui(), p.duree);
+    return majCommande(c.id, changements);
+  }
+
+  /* Paiement sans réponse (S06-11) : « Vérification en cours », puis confirmation au bout de 20 s de démo */
+  const DELAI_VERIFICATION = 20000;
+  function actualiser(c) {
+    if (c.statut === "verification" && Date.now() - c.debut > DELAI_VERIFICATION) return livrer(c);
+    return c;
+  }
+  /* Paiement précédent encore sans résultat : un nouveau paiement est bloqué (S06-11) */
+  function paiementEnAttente() { return commandes().find((c) => c.statut === "verification") || null; }
+
+  /* Paiement abandonné dans la brique Max it : la commande disparaît, le produit réservé est libéré */
+  function supprimerCommande(id) {
+    Etat.set("shopCommandes", (Etat.get("shopCommandes") || []).filter((c) => c.id !== id));
+  }
+
+  /* Code unique tiré de la référence de la commande : « FRE-7K2M-Q9TZ » */
+  function genererCode(c) {
+    const lettres = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    let n = graine(c.id + c.produit);
+    let code = produit(c.produit).jeu.replace(/-/g, "").slice(0, 3).toUpperCase();
+    for (let g = 0; g < 2; g++) {
+      code += "-";
+      for (let i = 0; i < 4; i++) { code += lettres[n % lettres.length]; n = Math.floor(n / lettres.length) + (i + 7) * 131; }
+    }
+    return code;
+  }
+
+  /* =====================================================================
+     Comptes de jeu mémorisés (S05-04) et vérification de l'identifiant (S05-02, S05-03)
+     ===================================================================== */
+
+  function tousLesComptes() { return Etat.get("shopComptes") || SHOP.comptes; }
+  function comptes(idJeu) { return (tousLesComptes()[idJeu] || []).slice(); }
+  function enregistrerComptes(idJeu, liste) {
+    const tous = Object.assign({}, tousLesComptes());
+    tous[idJeu] = liste;
+    Etat.set("shopComptes", tous);
+  }
+  /* Le dernier compte utilisé passe en tête ; un identifiant n'est mémorisé qu'une fois */
+  function memoriserCompte(idJeu, compte) {
+    enregistrerComptes(idJeu, [compte].concat(comptes(idJeu).filter((c) => c.identifiant !== compte.identifiant)));
+  }
+  function supprimerCompte(idJeu, identifiant) {
+    enregistrerComptes(idJeu, comptes(idJeu).filter((c) => c.identifiant !== identifiant));
+  }
+
+  /* Contrôle du format, jeu par jeu (longueur, caractères) */
+  function formatValide(j, identifiant) {
+    return new RegExp(j.identifiant.format, "i").test(identifiant.trim());
+  }
+  /* Pseudo renvoyé par l'éditeur : celui d'un compte déjà connu, sinon un pseudo fictif stable */
+  function pseudoPour(idJeu, identifiant) {
+    const connu = comptes(idJeu).concat(SHOP.comptes[idJeu] || []).find((c) => c.identifiant === identifiant && c.pseudo);
+    return connu ? connu.pseudo : SHOP.pseudos[graine(identifiant) % SHOP.pseudos.length];
+  }
+
+  /* =====================================================================
+     Conditions de vente (S06-08)
+     ===================================================================== */
+
+  function conditionsEnVigueur() { return Etat.get("shopCgvModifiees") ? SHOP.conditions.nouvelle : SHOP.conditions; }
+  /* Version acceptée par le joueur : aucune au premier achat */
+  function conditionsAcceptees() {
+    return Etat.get("shopCgvAcceptee") || (Etat.get("shopPremierAchat") ? null : SHOP.conditions.acceptee);
+  }
+  function conditionsAJour() {
+    const acceptee = conditionsAcceptees();
+    return !!acceptee && acceptee.version === conditionsEnVigueur().version;
+  }
+  /* La date et la version acceptées sont conservées */
+  function accepterConditions() {
+    Etat.set("shopCgvAcceptee", { version: conditionsEnVigueur().version, date: aujourdhui() });
+  }
+
+  /* =====================================================================
+     Paiement (S07-01) et scénarios du menu de démo
+     ===================================================================== */
+
+  /* Le DCB n'est proposé que sous le plafond déclaré par le module de paiement */
+  function dcbUtilisable(montant) {
+    return SHOP.paiement.dcb && montant <= SHOP.paiement.plafondDcb && scenario() !== "hors-plafond";
+  }
+  function nomMoyen(moyen) { return moyen === "dcb" ? "Crédit ou facture mobile" : "Orange Money"; }
+  /* Dans une phrase : « payés avec ton crédit ou ta facture mobile », « remboursés sur ton compte Orange Money » */
+  function moyenEnPhrase(moyen) { return moyen === "dcb" ? "ton crédit ou ta facture mobile" : "ton compte Orange Money"; }
+  /* Numéro masqué : « +212 6 61 •• •• 67 » */
+  function numeroMasque() { return SHOP.joueur.numero.replace(/\d\d \d\d (\d\d)$/, "•• •• $1"); }
+
+  /* Scénario de démo en cours (menu de démo) ; « consommer » l'efface une fois appliqué */
+  function scenario() { return Etat.get("shopScenario"); }
+  function consommerScenario(nom) {
+    if (scenario() !== nom) return false;
+    Etat.set("shopScenario", null);
+    return true;
+  }
+
+  /* =====================================================================
+     Dates
+     ===================================================================== */
+
+  function aujourdhui() { return SHOP.maintenant.slice(0, 10); }
+  function ajouterJours(iso, jours) {
+    const d = new Date(iso + "T12:00");
+    d.setDate(d.getDate() + jours);
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  }
+  /* « 2026-10-09 » → « 09/10/2026 » */
+  function dateCourte(iso) { return iso.slice(0, 10).split("-").reverse().join("/"); }
+
+  /* Nombre tiré d'un texte : résultats stables d'une page à l'autre */
+  function graine(texte) { return texte.split("").reduce((n, c) => (n * 31 + c.charCodeAt(0)) % 999983, 7); }
 
   /* Derniers jeux achetés, sans doublon (S06-02) */
   function derniersJeux() {
@@ -188,6 +331,13 @@ const Shop = (function () {
     topup: '<path d="M13 2 4 14h6l-1 8 9-12h-6z"/>',
     voucher: '<path d="M2 6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v3a3 3 0 0 0 0 6v3a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-3a3 3 0 0 0 0-6zm13 0h-2v2h2zm0 4h-2v4h2zm0 6h-2v2h2z"/>',
     pass: '<path d="M7 2h2v2h6V2h2v2h2a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2zM5 9v10h14V9zm2 2h4v4H7z"/>',
+    // Tunnel d'achat (lot S2)
+    copier: '<path d="M8 3h11a2 2 0 0 1 2 2v11h-2V5H8zM5 7h10a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2zm0 2v11h10V9z"/>',
+    alerte: '<path d="M12 2 1 21h22zm0 4 7.5 13h-15zm-1 4v5h2v-5zm0 6v2h2v-2z"/>',
+    portefeuille: '<path d="M4 5h14a2 2 0 0 1 2 2v1a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2v1a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2zm0 2v11h14v-1h-4a3 3 0 0 1-3-3v-1a3 3 0 0 1 3-3h4V7zm10 5a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1h6v-3zm1 .5a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>',
+    mobile: '<path d="M7 2h10a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm0 2v16h10V4zm3 13h4v2h-4z"/>',
+    horloge: '<path d="M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20zm0 2a8 8 0 1 0 0 16 8 8 0 0 0 0-16zm1 3v5.4l3.6 2.1-1 1.7L11 13.6V7h2z"/>',
+    rembourse: '<path d="M12 3a9 9 0 1 1-8.5 12h2.1A7 7 0 1 0 7 7.1V10H5V4h2v1.4A9 9 0 0 1 12 3zm-1 4h2v1.1c1.3.3 2.3 1.2 2.4 2.4h-2c-.1-.4-.6-.7-1.4-.7-.9 0-1.4.3-1.4.8s.4.7 1.8 1c2 .4 3.1 1.1 3.1 2.6 0 1.3-1 2.2-2.5 2.5V18h-2v-1.3c-1.5-.3-2.5-1.3-2.6-2.6h2c.1.5.7.9 1.6.9 1 0 1.5-.3 1.5-.8s-.4-.7-1.9-1c-1.9-.4-3-1.1-3-2.6 0-1.2.9-2.1 2.4-2.4z"/>',
     compte: '<path d="M12 3a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9zm0 2a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zm0 8.5c4.4 0 8 2.2 8 5.5v2H4v-2c0-3.3 3.6-5.5 8-5.5zm0 2c-3.2 0-5.7 1.4-6 3.5h12c-.3-2.1-2.8-3.5-6-3.5z"/>',
     bouclier: '<path d="M12 2l8 3v6c0 5-3.4 9.4-8 11-4.6-1.6-8-6-8-11V5zm0 2.1L6 6.4V11c0 3.9 2.5 7.4 6 8.9 3.5-1.5 6-5 6-8.9V6.4zm-1 9.7 4.6-4.6 1.4 1.4-6 6-3.4-3.4 1.4-1.4z"/>'
   };
@@ -281,10 +431,34 @@ const Shop = (function () {
     return '<a href="' + lienProduit(p.id, origine) + '" class="carte-produit">' + corps + blocPrix(p) + "</a>";
   }
 
+  /* Feuille du bas (aide « où trouver mon identifiant », confirmations). Renvoie le voile pour la fermer. */
+  function feuille(contenu, etiquette) {
+    const voile = document.createElement("div");
+    voile.className = "voile ouvert";
+    voile.innerHTML = '<div class="feuille" role="dialog" aria-modal="true" aria-label="' + etiquette + '">' +
+      '<div class="poignee"></div>' + contenu + "</div>";
+    voile.addEventListener("click", (e) => {
+      if (e.target === voile || e.target.closest("[data-fermer]")) voile.remove();
+    });
+    document.querySelector(".telephone").appendChild(voile);
+    return voile;
+  }
+
+  /* Résumé d'une commande : visuel du jeu, produit, mention de livraison */
+  function resumeProduit(p) {
+    const j = jeu(p.jeu);
+    return '<div class="resume-produit">' + visuel(j, "petit") +
+      '<span class="ligne-corps"><span class="ligne-titre">' + p.nom + '</span><span class="ligne-sous-titre">' + j.nom + " · " + mention(p) + "</span></span></div>";
+  }
+
   return {
+    feuille, resumeProduit,
     jeu, produit, editeur, produitsDuJeu, achetable, prixMin, prix, remise,
     modeLivraison, explicationLivraison, mention, tagsProduit, aLeTag, libelleTag, parPopularite,
-    commandes, derniersJeux, normaliser, rechercher,
+    commandes, commande, creerCommande, majCommande, livrer, paiementEnAttente, supprimerCommande, derniersJeux, normaliser, rechercher,
+    comptes, memoriserCompte, supprimerCompte, formatValide, pseudoPour,
+    conditionsEnVigueur, conditionsAcceptees, conditionsAJour, accepterConditions,
+    dcbUtilisable, nomMoyen, moyenEnPhrase, numeroMasque, scenario, consommerScenario, aujourdhui, ajouterJours, dateCourte,
     ici, depuis, url, lienJeu, lienProduit, monter,
     icone, visuel, entete, tuile, ligneJeu, blocPrix, carteProduit
   };

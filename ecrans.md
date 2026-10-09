@@ -151,6 +151,7 @@ En-tête : cloche → 25 Notifications.
 - US : S11-02, S11-03
 - Éléments : offre et montant pré-remplis ; issues confirmé / refusé / abandonné.
 - Liens : retour à l'écran d'origine (06, 18, 19, 20, 23 ou 24), déverrouillé si confirmé, toujours verrouillé sinon.
+- Mode Shop (`?commande=…`) : paiement d'un achat du Shop par Orange Money ou crédit / facture mobile, voir ecrans-shop.md.
 
 ### 23 `23-profil.html` — Mon profil
 - US : S01-02, S01-05, S11-04

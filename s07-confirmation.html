@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<!-- Écran s07 — Confirmation et livraison (s07-confirmation.html?commande=SH-…).
+     US : S06-10 (voucher : code, expiration, instructions, lien d'activation, « Copier » ; top-up : statut et montant
+     crédité ; pass : date de fin et reconduction), S06-11 (états distincts : paiement en cours, refusé,
+     livraison en cours, livraison échouée et remboursement engagé ; « Vérification en cours » et lien vers la commande),
+     S08-01 (crédit demandé seulement après confirmation, jamais deux fois), S08-02 (échec : remboursement
+     demandé, joueur informé), S09-01 (code unique), S09-02 (code envoyé par SMS si le pays l'a activé).
+     États de démonstration : paiement sans réponse, livraison en échec puis remboursement. -->
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Confirmation</title>
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-zone="shop">
+<div class="cadre">
+  <div class="telephone">
+    <div class="barre-etat" data-heure="21:10"></div>
+    <div id="entete"></div>
+    <main class="contenu" id="page"></main>
+    <div class="barre-action" id="action"></div>
+  </div>
+</div>
+
+<script src="js/data-shop.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/shop.js"></script>
+<script src="js/demo.js"></script>
+<script>
+  const idCommande = Nav.param("commande");
+  if (!Shop.commande(idCommande)) ouvrirPage("s01-accueil.html");
+
+  /* Étape du suivi : faite, en cours ou en échec */
+  function etape(etat, texte, detail) {
+    const icones = { fait: Shop.icone("coche", "f-white"), cours: '<span class="rond-attente"></span>', echec: Shop.icone("fermer", "f-white") };
+    return '<li class="etape-shop ' + etat + '"><span class="puce-etape">' + icones[etat] + "</span><span><b>" + texte + "</b>" +
+      (detail ? "<small>" + detail + "</small>" : "") + "</span></li>";
+  }
+
+  /* Ce que le joueur a reçu (S06-10) */
+  function livraison(c, p, jeu) {
+    let html = "";
+    const pourQui = c.compte ? "le compte « " + c.compte.libelle + " »" + (c.compte.pseudo ? " (" + c.compte.pseudo + ")" : "") : "";
+    if (p.livraison === "credit") {
+      html += '<div class="carte-recap"><p class="texte-livraison">' +
+        (p.type === "pass" ? "<b>" + p.nom + "</b> est actif sur " + pourQui + " jusqu'au <b>" + Shop.dateCourte(c.fin) + "</b>."
+          : "<b>" + p.nom + "</b> crédités sur " + pourQui + ".") + "</p>" +
+        '<p class="note-carte">Ouvre ' + jeu.nom + " : ton achat t'y attend.</p></div>";
+    } else {
+      // Code unique, bouton Copier, instructions et lien d'activation (S06-10, S09-01)
+      html += '<div class="carte-recap code-shop"><span class="etiquette-shop">Ton code</span>' +
+        '<div class="code-ligne"><code id="code">' + c.code + "</code>" +
+        '<button class="bouton bouton-secondaire" id="copier">' + Shop.icone("copier") + "Copier</button></div>" +
+        '<p class="note-carte">' + (p.expiration ? "À utiliser avant le " + Shop.dateCourte(p.expiration) + ". " : "") +
+        (SHOP.smsActif ? "Envoyé aussi par SMS au " + Shop.numeroMasque() + "." : "Tu le retrouves dans « Mes achats ».") + "</p></div>" +
+        '<section class="bloc-shop"><h2>Comment l\'utiliser</h2><p>' + p.activation + "</p>" +
+        '<button class="bouton bouton-secondaire bouton-pleine-largeur bouton-activation" data-hors="La page d\'activation de l\'éditeur">Ouvrir la page d\'activation</button></section>';
+    }
+    if (p.type === "pass") {
+      html += '<p class="note-shop">' + (p.reconduction
+        ? "Reconduit automatiquement le " + Shop.dateCourte(c.fin) + " au prix de " + Shop.prix(p.prix) + " : tu seras prévenu à chaque renouvellement."
+        : "Sans reconduction : tu seras prévenu 3 jours avant la fin, le " + Shop.dateCourte(Shop.ajouterJours(c.fin, -3)) + ".") + "</p>";
+    }
+    return html;
+  }
+
+  function rendre() {
+    const c = Shop.commande(idCommande);
+    if (!c) return;
+    const p = Shop.produit(c.produit);
+    const jeu = Shop.jeu(p.jeu);
+    // Paiement pas encore validé dans la brique Max it : on y retourne
+    if (c.statut === "paiement") return ouvrirPage(Shop.url("22-paiement-maxit.html", { commande: c.id }));
+
+    document.getElementById("entete").innerHTML = Shop.entete("Ton achat", "s01-accueil.html", "Retour au Shop");
+    const paye = Shop.prix(c.montant) + " · " + Shop.nomMoyen(c.moyen);
+    let tete, etapes, corps = "";
+
+    if (c.statut === "livre") {
+      tete = { icone: "coche", classe: "succes", titre: "C'est livré !", texte: p.nom + " · " + jeu.nom };
+      etapes = etape("fait", "Paiement confirmé", paye) + etape("fait", p.livraison === "credit" ? "Crédité sur ton compte de jeu" : "Code attribué");
+      corps = livraison(c, p, jeu);
+    } else if (c.statut === "livraison") {
+      tete = { icone: "horloge", classe: "", titre: "Livraison en cours…", texte: p.nom + " · " + jeu.nom };
+      etapes = etape("fait", "Paiement confirmé", paye) + etape("cours", p.livraison === "credit" ? "Crédit demandé à " + Shop.editeur(jeu).nom : "Attribution de ton code");
+    } else if (c.statut === "verification") {
+      tete = { icone: "horloge", classe: "", titre: "Vérification en cours", texte: "Pas encore de réponse " + (c.moyen === "dcb" ? "de ton opérateur" : "d'Orange Money") + " depuis 2 minutes." };
+      etapes = etape("cours", "Paiement en cours de vérification", paye) + '<li class="etape-shop attente"><span class="puce-etape"></span><span><b>Livraison</b><small>Dès que le paiement est confirmé</small></span></li>';
+      corps = '<p class="note-shop">Ne repaie pas : si le paiement est confirmé, ton achat est livré automatiquement ; sinon, rien n\'est débité. Tu retrouves cette commande dans « Mes achats ».</p>';
+    } else if (c.statut === "echec") {
+      tete = { icone: "rembourse", classe: "", titre: "Livraison impossible", texte: "Le remboursement est engagé : tu ne perds rien." };
+      etapes = etape("fait", "Paiement confirmé", paye) +
+        etape("echec", "Livraison échouée", Shop.editeur(jeu).nom + " a refusé le compte de jeu après 30 minutes de nouvelles tentatives") +
+        etape("cours", "Remboursement engagé", Shop.prix(c.montant) + " sur " + Shop.moyenEnPhrase(c.moyen) + ", sous 48 h");
+      corps = '<p class="note-shop">Tu recevras une notification Max it quand le remboursement sera effectué. Vérifie ton identifiant de jeu avant un nouvel achat.</p>';
+    } else {
+      tete = { icone: "alerte", classe: "", titre: "Paiement refusé", texte: "Aucun montant n'a été débité et rien n'a été livré." };
+      etapes = etape("echec", "Paiement refusé", paye);
+    }
+
+    document.getElementById("page").innerHTML =
+      '<div class="resultat-shop"><span class="pictogramme-shop ' + tete.classe + '">' + Shop.icone(tete.icone, tete.classe ? "f-white" : "f-primary") + "</span>" +
+      "<h1>" + tete.titre + "</h1><p>" + tete.texte + '</p><p class="reference-shop">Commande ' + c.id + "</p></div>" +
+      '<ol class="etapes-shop" aria-label="Suivi de la commande">' + etapes + "</ol>" + corps + '<div class="fin-contenu"></div>';
+
+    // Sorties : la commande, le jeu, l'accueil du Shop ; récapitulatif après un refus
+    document.getElementById("action").innerHTML = c.statut === "refuse"
+      ? '<a href="' + Shop.url("s06-recapitulatif.html", { produit: p.id }) + '" class="bouton bouton-primaire bouton-pleine-largeur">Retour au récapitulatif</a>'
+      : '<a href="#" class="bouton bouton-primaire bouton-pleine-largeur" data-ecran="s09" data-id="' + c.id + '">Voir ma commande</a>' +
+        '<div class="actions-doubles"><a href="' + Shop.lienJeu(jeu.id, "s01-accueil.html") + '" class="bouton bouton-lien">Retour au jeu</a>' +
+        '<a href="s01-accueil.html" class="bouton bouton-lien">Retour au Shop</a></div>';
+  }
+
+  /* Livraison juste après la confirmation du paiement (S08-01) ; démo : échec puis remboursement (S08-02) */
+  function livrerSiPaye() {
+    const c = Shop.commande(idCommande);
+    if (!c || c.statut !== "livraison") return;
+    setTimeout(() => {
+      const actuelle = Shop.commande(idCommande);
+      if (actuelle.statut !== "livraison") return;
+      if (Shop.consommerScenario("livraison-echec")) {
+        Shop.majCommande(actuelle.id, { statut: "echec", remboursement: Shop.aujourdhui() });
+      } else {
+        Shop.livrer(actuelle);
+      }
+    }, 2200);
+  }
+
+  document.querySelector(".telephone").addEventListener("click", (e) => {
+    if (!e.target.closest("#copier")) return;
+    const code = document.getElementById("code").textContent;
+    try { navigator.clipboard.writeText(code); } catch (erreur) { /* presse-papiers indisponible : la maquette continue */ }
+    Nav.toast("Code copié : colle-le dans " + Shop.jeu(Shop.produit(Shop.commande(idCommande).produit).jeu).nom);
+  });
+
+  // Vérification en cours : le résultat du paiement est consulté toutes les 2 secondes.
+  // Lire la commande suffit : une fois confirmée, elle est livrée et l'écran se met à jour (etat-change).
+  setInterval(() => Shop.commande(idCommande), 2000);
+
+  Shop.monter(rendre);
+  document.addEventListener("DOMContentLoaded", livrerSiPaye);
+</script>
+</body>
+</html>

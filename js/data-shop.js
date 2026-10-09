@@ -14,12 +14,24 @@ const SHOP = {
   joueur: { numero: "+212 6 61 23 45 67", pseudo: "Youss_KZ" },
 
   /* ---- Moyens de paiement du pays (S03-05, S07-01) ----
-     plafondDcb : au-delà, le module de paiement déclare le DCB inutilisable. */
-  paiement: { orangeMoney: true, dcb: true, plafondDcb: 100, soldeOrangeMoney: 245.5 },
+     Réponses simulées du module de paiement Max it :
+     plafondDcb : au-delà, le DCB est déclaré inutilisable ; soldeCredit : crédit de la ligne (joueur prépayé). */
+  paiement: { orangeMoney: true, dcb: true, plafondDcb: 100, soldeOrangeMoney: 245.5, soldeCredit: 80 },
   /* Envoi du code par SMS activé dans le pays (S09-02) */
   smsActif: true,
-  /* Conditions de vente en vigueur (S06-08) */
-  conditions: { version: "2.1", date: "2026-09-01" },
+  /* Conditions de vente (S06-08) : version en vigueur, version acceptée par le joueur,
+     et nouvelle version publiée par le responsable local (menu de démo « Conditions de vente modifiées »). */
+  conditions: {
+    version: "2.1", date: "2026-09-01",
+    acceptee: { version: "2.1", date: "2026-09-03" },
+    nouvelle: { version: "2.2", date: "2026-10-09", changement: "Le délai de réclamation passe de 7 à 14 jours après l'achat." }
+  },
+
+  /* Identifiants au bon format mais inconnus de l'éditeur (S05-03, démo « Identifiant de jeu introuvable ») */
+  identifiantsInconnus: ["512839040"],
+
+  /* Pseudos renvoyés par l'API des éditeurs pour un identifiant de jeu saisi (S05-03) */
+  pseudos: ["Kenza_FF", "Amine.Pro", "SamiKZ", "Nour_99", "Yassine_GG", "LinaStar", "Omar_Snipe", "Ilyas.MA", "Hiba_Queen", "Reda_212"],
 
   /* ---- Éditeurs (S01-01) ----
      api : catalogue, disponibilité et livraison par l'API de l'éditeur (S02-01) ; sinon import de fichier.

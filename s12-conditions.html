@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<!-- Écran s12 — Conditions de vente (s12-conditions.html?depuis=…).
+     US : S06-08 (texte du pays, version et date, absence de remboursement des contenus livrés ;
+     version acceptée par le joueur et date d'acceptation). L'acceptation se fait au récapitulatif (s06).
+     Texte géré par le responsable local ; en français seulement dans la maquette (S03-06 non maquetté). -->
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Conditions de vente</title>
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-zone="shop">
+<div class="cadre">
+  <div class="telephone">
+    <div class="barre-etat" data-heure="21:10"></div>
+    <div id="entete"></div>
+    <main class="contenu" id="page"></main>
+  </div>
+</div>
+
+<script src="js/data-shop.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/shop.js"></script>
+<script src="js/demo.js"></script>
+<script>
+  function rendre() {
+    const enVigueur = Shop.conditionsEnVigueur();
+    const acceptee = Shop.conditionsAcceptees();
+    const delai = Etat.get("shopCgvModifiees") ? 14 : 7;
+    document.getElementById("entete").innerHTML = Shop.entete("Conditions de vente", Shop.depuis());
+
+    // Version en vigueur, et celle acceptée par le joueur
+    let html = '<div class="tete-produit"><h1>Conditions de vente du Shop</h1>' +
+      '<p class="note-carte">Max it Shop · ' + SHOP.pays.nom + " · version " + enVigueur.version + " du " + Shop.dateCourte(enVigueur.date) + "</p></div>";
+    html += '<div class="encart encart-shop' + (Shop.conditionsAJour() ? "" : " encart-alerte") + '">' +
+      Shop.icone(Shop.conditionsAJour() ? "coche" : "info", Shop.conditionsAJour() ? "f-success-dark" : "f-primary") + "<div>" +
+      (Shop.conditionsAJour() ? "<strong>Tu as accepté cette version</strong><p>Le " + Shop.dateCourte(acceptee.date) + ".</p>"
+        : acceptee ? "<strong>Nouvelle version à accepter</strong><p>Tu avais accepté la version " + acceptee.version + " le " + Shop.dateCourte(acceptee.date) +
+            ". " + (enVigueur.changement || "") + " Tu l'accepteras à ton prochain achat.</p>"
+          : "<strong>Pas encore acceptées</strong><p>Tu les accepteras avant ton premier achat.</p>") + "</div></div>";
+
+    const articles = [
+      ["1. Objet", "Ces conditions s'appliquent aux achats faits dans le Shop de Max it par les abonnés Orange du " + SHOP.pays.nom + " : top-up, vouchers, e-cards et pass de jeux vidéo."],
+      ["2. Prix", "Les prix sont affichés toutes taxes comprises, en " + SHOP.pays.monnaie + ". Le prix payé est celui affiché au récapitulatif, avant le paiement."],
+      ["3. Paiement", "Le paiement se fait avec Orange Money ou sur le crédit ou la facture de ta ligne mobile, par le module de paiement Max it. Une commande porte sur un seul produit."],
+      ["4. Livraison", "Le contenu est livré dès la confirmation du paiement : crédit direct sur le compte de jeu indiqué pour un top-up, code affiché et conservé dans « Mes achats » pour un voucher. Tu es responsable de l'identifiant de jeu que tu donnes."],
+      ["5. Pas de remboursement d'un contenu livré", "Un contenu numérique livré ne peut être ni repris, ni échangé, ni remboursé. Si la livraison échoue, tu es remboursé automatiquement sur le moyen de paiement utilisé."],
+      ["6. Pass", "Un pass donne accès à un contenu pendant une durée limitée. Un pass reconduit automatiquement est renouvelé au même prix jusqu'à résiliation ; tu es prévenu à chaque renouvellement, et 3 jours avant la fin d'un pass sans reconduction."],
+      ["7. Réclamations", "Tu peux signaler un problème depuis le détail de ta commande dans les " + delai + " jours suivant l'achat. Un numéro de réclamation t'est donné."]
+    ];
+    html += articles.map((a) => '<section class="bloc-shop"><h2>' + a[0] + "</h2><p>" + a[1] + "</p></section>").join("");
+    html += '<div class="fin-contenu"></div>';
+    document.getElementById("page").innerHTML = html;
+  }
+  Shop.monter(rendre);
+</script>
+</body>
+</html>

@@ -2,7 +2,12 @@
 <!-- Écran 22 — Brique de paiement Max it (simulée) (22-paiement-maxit.html?offre=mensuelle).
      US : S11-02 (offre et montant déjà renseignés ; la plateforme ne traite aucun paiement, elle reçoit
      le résultat : confirmé, refusé ou abandonné), S11-03 (retour exact sur l'écran d'origine :
-     déverrouillé si confirmé, toujours verrouillé sinon). Aucun vrai paiement : le code n'est pas vérifié. -->
+     déverrouillé si confirmé, toujours verrouillé sinon). Aucun vrai paiement : le code n'est pas vérifié.
+     Mode Shop (22-paiement-maxit.html?commande=SH-…), voir ecrans-shop.md :
+     US Shop : S07-02 (Orange Money ; solde insuffisant : montant manquant et autre moyen proposé, aucune livraison),
+     S07-03 (crédit ou facture mobile, DCB ; solde insuffisant : message clair), S06-11 (paiement en cours,
+     refusé, sans réponse). Livraison lancée seulement après confirmation (S08-01) : suite en s07.
+     États de démonstration : solde Orange Money insuffisant, paiement sans réponse. -->
 <html lang="fr">
 <head>
   <meta charset="utf-8">
@@ -68,90 +73,208 @@
 <script src="js/data.js"></script>
 <script src="js/nav.js"></script>
 <script src="js/esport.js"></script>
+<script src="js/data-shop.js"></script>
+<script src="js/shop.js"></script>
 <script src="js/demo.js"></script>
 <script>
-  const scenario = Esport.lireScenario();
-  const refusForce = scenario === "paiement-refuse";
-  const abandonDemo = scenario === "paiement-abandonne";
-  const o = Esport.offre(Nav.param("offre")) || Esport.offre("mensuelle");
-  // Solde affiché : insuffisant dans l'état de démo « paiement refusé »
-  const solde = refusForce ? 12 : DONNEES.soldeOrangeMoney;
-  const numero = DONNEES.joueur.numero.replace(/(\d\d) (\d\d)$/, "•• ••");
-  let etape = "saisie";   // saisie, traitement, confirme, refuse
+  /* ---- Mode e-sport : abonnement (offre=…) ---- */
+  if (!Nav.param("commande")) {
+    const scenario = Esport.lireScenario();
+    const refusForce = scenario === "paiement-refuse";
+    const abandonDemo = scenario === "paiement-abandonne";
+    const o = Esport.offre(Nav.param("offre")) || Esport.offre("mensuelle");
+    // Solde affiché : insuffisant dans l'état de démo « paiement refusé »
+    const solde = refusForce ? 12 : DONNEES.soldeOrangeMoney;
+    const numero = DONNEES.joueur.numero.replace(/(\d\d) (\d\d)$/, "•• ••");
+    let etape = "saisie";   // saisie, traitement, confirme, refuse
 
-  function rendre() {
-    const page = document.getElementById("page");
-    const zone = document.getElementById("action");
-    if (etape === "saisie") {
-      const premier = Esport.jourCourt(new Date(Esport.maintenant().getTime() + (o.essai ? parseInt(o.essai, 10) : 0) * 86400000).toISOString().slice(0, 10));
-      page.innerHTML =
-        '<div class="marchand"><span class="icone-marchand">' + Esport.icone("manette", "f-primary") + "</span>" +
-        "<span><strong>Max it E-sport</strong><small>" + Esport.nomOffre(o.id).replace(/^a/, "A") + "</small></span></div>" +
-        '<div class="montant"><small>Montant</small><b>' + Esport.prix(o.prix) + "</b>" +
-        (o.essai ? '<span class="essai">' + o.essai + " · premier prélèvement le " + premier + "</span>" : "<small>par " + o.libelle.toLowerCase() + ", reconduit automatiquement</small>") + "</div>" +
-        '<dl class="lignes"><dt>Payer avec</dt><dd>Orange Money</dd><dt>Compte</dt><dd>' + numero + "</dd>" +
-        "<dt>Solde disponible</dt><dd>" + solde.toLocaleString("fr-FR", { minimumFractionDigits: 2 }) + " " + Esport.pays().monnaie + "</dd></dl>" +
-        '<div class="code"><label for="code">Code secret Orange Money</label>' +
-        '<input id="code" type="password" inputmode="numeric" maxlength="4" autocomplete="off" aria-describedby="aide-code">' +
-        '<small id="aide-code">Maquette : saisis 4 chiffres au choix, aucun paiement n\'est effectué.</small></div>' +
-        (abandonDemo ? '<p class="demo-note">Démo « paiement abandonné » : la brique va se fermer comme si tu la quittais.</p>' : "");
-      zone.innerHTML = '<button class="bouton bouton-primaire bouton-pleine-largeur" id="confirmer" disabled>Confirmer le paiement</button>' +
-        '<button class="bouton bouton-lien bouton-pleine-largeur" id="annuler" data-sortie>Annuler</button>';
-      const code = document.getElementById("code");
-      code.addEventListener("input", () => {
-        code.value = code.value.replace(/\D/g, "").slice(0, 4);
-        document.getElementById("confirmer").disabled = code.value.length !== 4;
-      });
-    } else if (etape === "traitement") {
-      page.innerHTML = '<div class="chargement" aria-hidden="true"></div><p style="text-align:center" role="status">Paiement en cours…</p>';
-      zone.innerHTML = "";
-    } else if (etape === "confirme") {
-      page.innerHTML = '<div class="resultat"><span class="pictogramme succes">' + Esport.icone("coche", "f-white") + "</span>" +
-        "<h1>Paiement confirmé</h1><p>Ton " + Esport.nomOffre(o.id) + " est actif. Tu retournes là où tu étais.</p>" +
-        '<p class="recu">Reçu n° MX-' + Date.now().toString().slice(-8) + " · envoyé par SMS</p></div>";
-      zone.innerHTML = '<button class="bouton bouton-primaire bouton-pleine-largeur" id="continuer" data-sortie>Continuer</button>';
-    } else {
-      page.innerHTML = '<div class="resultat"><span class="pictogramme">' + Esport.icone("alerte", "f-alert") + "</span>" +
-        "<h1>Paiement refusé</h1><p>Solde Orange Money insuffisant. Aucun montant n'a été débité.</p></div>";
-      zone.innerHTML = '<button class="bouton bouton-primaire bouton-pleine-largeur" id="retour" data-sortie>Retour</button>';
+    function rendre() {
+      const page = document.getElementById("page");
+      const zone = document.getElementById("action");
+      if (etape === "saisie") {
+        const premier = Esport.jourCourt(new Date(Esport.maintenant().getTime() + (o.essai ? parseInt(o.essai, 10) : 0) * 86400000).toISOString().slice(0, 10));
+        page.innerHTML =
+          '<div class="marchand"><span class="icone-marchand">' + Esport.icone("manette", "f-primary") + "</span>" +
+          "<span><strong>Max it E-sport</strong><small>" + Esport.nomOffre(o.id).replace(/^a/, "A") + "</small></span></div>" +
+          '<div class="montant"><small>Montant</small><b>' + Esport.prix(o.prix) + "</b>" +
+          (o.essai ? '<span class="essai">' + o.essai + " · premier prélèvement le " + premier + "</span>" : "<small>par " + o.libelle.toLowerCase() + ", reconduit automatiquement</small>") + "</div>" +
+          '<dl class="lignes"><dt>Payer avec</dt><dd>Orange Money</dd><dt>Compte</dt><dd>' + numero + "</dd>" +
+          "<dt>Solde disponible</dt><dd>" + solde.toLocaleString("fr-FR", { minimumFractionDigits: 2 }) + " " + Esport.pays().monnaie + "</dd></dl>" +
+          '<div class="code"><label for="code">Code secret Orange Money</label>' +
+          '<input id="code" type="password" inputmode="numeric" maxlength="4" autocomplete="off" aria-describedby="aide-code">' +
+          '<small id="aide-code">Maquette : saisis 4 chiffres au choix, aucun paiement n\'est effectué.</small></div>' +
+          (abandonDemo ? '<p class="demo-note">Démo « paiement abandonné » : la brique va se fermer comme si tu la quittais.</p>' : "");
+        zone.innerHTML = '<button class="bouton bouton-primaire bouton-pleine-largeur" id="confirmer" disabled>Confirmer le paiement</button>' +
+          '<button class="bouton bouton-lien bouton-pleine-largeur" id="annuler" data-sortie>Annuler</button>';
+        const code = document.getElementById("code");
+        code.addEventListener("input", () => {
+          code.value = code.value.replace(/\D/g, "").slice(0, 4);
+          document.getElementById("confirmer").disabled = code.value.length !== 4;
+        });
+      } else if (etape === "traitement") {
+        page.innerHTML = '<div class="chargement" aria-hidden="true"></div><p style="text-align:center" role="status">Paiement en cours…</p>';
+        zone.innerHTML = "";
+      } else if (etape === "confirme") {
+        page.innerHTML = '<div class="resultat"><span class="pictogramme succes">' + Esport.icone("coche", "f-white") + "</span>" +
+          "<h1>Paiement confirmé</h1><p>Ton " + Esport.nomOffre(o.id) + " est actif. Tu retournes là où tu étais.</p>" +
+          '<p class="recu">Reçu n° MX-' + Date.now().toString().slice(-8) + " · envoyé par SMS</p></div>";
+        zone.innerHTML = '<button class="bouton bouton-primaire bouton-pleine-largeur" id="continuer" data-sortie>Continuer</button>';
+      } else {
+        page.innerHTML = '<div class="resultat"><span class="pictogramme">' + Esport.icone("alerte", "f-alert") + "</span>" +
+          "<h1>Paiement refusé</h1><p>Solde Orange Money insuffisant. Aucun montant n'a été débité.</p></div>";
+        zone.innerHTML = '<button class="bouton bouton-primaire bouton-pleine-largeur" id="retour" data-sortie>Retour</button>';
+      }
     }
-  }
 
-  /* ---- Issues du paiement (S11-02, S11-03) ---- */
-  function abandonner() {
-    Nav.retourOrigine("Paiement abandonné : aucun montant débité");
-  }
-  function confirmer() {
-    etape = "traitement";
-    rendre();
-    setTimeout(() => {
-      if (refusForce || solde < o.prix) { etape = "refuse"; rendre(); return; }
-      // Paiement confirmé : l'accès s'ouvre tout de suite, le mode abonné est activé
-      Esport.souscrire(o.id);
-      etape = "confirme";
+    /* ---- Issues du paiement (S11-02, S11-03) ---- */
+    function abandonner() {
+      Nav.retourOrigine("Paiement abandonné : aucun montant débité");
+    }
+    function confirmer() {
+      etape = "traitement";
       rendre();
-      setTimeout(continuer, 2000);
-    }, 1500);
-  }
-  let parti = false;   // évite un double retour (bouton « Continuer » et retour automatique)
-  function continuer() {
-    if (parti) return;
-    parti = true;
-    Nav.retourOrigine("Abonnement activé : accès débloqué");
-  }
-
-  document.querySelector(".telephone").addEventListener("click", (e) => {
-    if (e.target.closest("#confirmer") && !e.target.closest("#confirmer").disabled) confirmer();
-    if (e.target.closest("#annuler") || e.target.closest("#fermer")) {
-      if (etape === "confirme") continuer();
-      else if (etape !== "traitement") abandonner();
+      setTimeout(() => {
+        if (refusForce || solde < o.prix) { etape = "refuse"; rendre(); return; }
+        // Paiement confirmé : l'accès s'ouvre tout de suite, le mode abonné est activé
+        Esport.souscrire(o.id);
+        etape = "confirme";
+        rendre();
+        setTimeout(continuer, 2000);
+      }, 1500);
     }
-    if (e.target.closest("#continuer")) continuer();
-    if (e.target.closest("#retour")) Nav.retourOrigine("Paiement refusé : ton accès reste verrouillé");
-  });
+    let parti = false;   // évite un double retour (bouton « Continuer » et retour automatique)
+    function continuer() {
+      if (parti) return;
+      parti = true;
+      Nav.retourOrigine("Abonnement activé : accès débloqué");
+    }
 
-  rendre();
-  if (abandonDemo) setTimeout(abandonner, 3000);
+    document.querySelector(".telephone").addEventListener("click", (e) => {
+      if (e.target.closest("#confirmer") && !e.target.closest("#confirmer").disabled) confirmer();
+      if (e.target.closest("#annuler") || e.target.closest("#fermer")) {
+        if (etape === "confirme") continuer();
+        else if (etape !== "traitement") abandonner();
+      }
+      if (e.target.closest("#continuer")) continuer();
+      if (e.target.closest("#retour")) Nav.retourOrigine("Paiement refusé : ton accès reste verrouillé");
+    });
+
+    rendre();
+    if (abandonDemo) setTimeout(abandonner, 3000);
+  }
+</script>
+<script>
+  /* ---- Mode Shop : paiement d'une commande (commande=SH-…) ---- */
+  if (Nav.param("commande")) {
+    const c = Shop.commande(Nav.param("commande"));
+    const p = c && Shop.produit(c.produit);
+    if (!c || c.statut !== "paiement") ouvrirPage(c ? Shop.url("s07-confirmation.html", { commande: c.id }) : "s01-accueil.html");
+
+    const dcb = c && c.moyen === "dcb";
+    // Réponses simulées du module de paiement : soldes, et démo « solde Orange Money insuffisant »
+    const soldeOm = Shop.scenario() === "om-insuffisant" ? 12.4 : SHOP.paiement.soldeOrangeMoney;
+    const soldeCredit = SHOP.paiement.soldeCredit;
+    let etape = "saisie";   // saisie, traitement, confirme, refuse
+    let refus = null;       // { titre, texte, autreMoyen }
+    const recap = c ? Shop.url("s06-recapitulatif.html", { produit: c.produit, moyen: c.moyen }) : "s01-accueil.html";
+
+    const montant = (m) => m.toLocaleString("fr-FR", { minimumFractionDigits: 2 }).replace(/ | /g, " ") + " " + SHOP.pays.monnaie;
+
+    function rendre() {
+      if (!c || c.statut !== "paiement") return;
+      const page = document.getElementById("page");
+      const zone = document.getElementById("action");
+      if (etape === "saisie") {
+        page.innerHTML =
+          '<div class="marchand"><span class="icone-marchand">' + Shop.icone("achats", "f-primary") + "</span>" +
+          "<span><strong>Max it Shop</strong><small>" + p.nom + " · " + Shop.jeu(p.jeu).nom + "</small></span></div>" +
+          '<div class="montant"><small>Montant TTC</small><b>' + Shop.prix(c.montant) + "</b><small>Commande " + c.id + "</small></div>" +
+          '<dl class="lignes"><dt>Payer avec</dt><dd>' + Shop.nomMoyen(c.moyen) + "</dd>" +
+          (dcb ? "<dt>Ligne</dt><dd>" + Shop.numeroMasque() + "</dd><dt>Débit</dt><dd>Sur ton crédit ou ta facture</dd>"
+            : "<dt>Compte</dt><dd>" + Shop.numeroMasque() + "</dd><dt>Solde disponible</dt><dd>" + montant(soldeOm) + "</dd>") + "</dl>" +
+          (dcb ? '<p class="demo-note">Le montant est débité de ton crédit ou ajouté à ta prochaine facture.</p>'
+            : '<div class="code"><label for="code">Code secret Orange Money</label>' +
+              '<input id="code" type="password" inputmode="numeric" maxlength="4" autocomplete="off" aria-describedby="aide-code">' +
+              '<small id="aide-code">Maquette : saisis 4 chiffres au choix, aucun paiement n\'est effectué.</small></div>');
+        zone.innerHTML = '<button class="bouton bouton-primaire bouton-pleine-largeur" id="confirmer"' + (dcb ? "" : " disabled") + ">Confirmer le paiement</button>" +
+          '<button class="bouton bouton-lien bouton-pleine-largeur" id="annuler" data-sortie>Annuler</button>';
+        const code = document.getElementById("code");
+        if (code) code.addEventListener("input", () => {
+          code.value = code.value.replace(/\D/g, "").slice(0, 4);
+          document.getElementById("confirmer").disabled = code.value.length !== 4;
+        });
+      } else if (etape === "traitement") {
+        page.innerHTML = '<div class="chargement" aria-hidden="true"></div><p style="text-align:center" role="status">Paiement en cours…</p>';
+        zone.innerHTML = "";
+      } else if (etape === "confirme") {
+        page.innerHTML = '<div class="resultat"><span class="pictogramme succes">' + Shop.icone("coche", "f-white") + "</span>" +
+          "<h1>Paiement confirmé</h1><p>" + Shop.prix(c.montant) + " payés avec " + Shop.moyenEnPhrase(c.moyen) + ". La livraison commence.</p>" +
+          '<p class="recu">Reçu n° MX-' + c.id.slice(-4) + String(Date.now()).slice(-4) + " · envoyé par SMS</p></div>";
+        zone.innerHTML = '<button class="bouton bouton-primaire bouton-pleine-largeur" id="continuer" data-sortie>Continuer</button>';
+      } else {
+        page.innerHTML = '<div class="resultat"><span class="pictogramme">' + Shop.icone("alerte", "f-alert") + "</span>" +
+          "<h1>" + refus.titre + "</h1><p>" + refus.texte + "</p></div>";
+        zone.innerHTML = (refus.autreMoyen ? '<button class="bouton bouton-primaire bouton-pleine-largeur" id="autre-moyen" data-sortie>' + refus.autreMoyen.libelle + "</button>" : "") +
+          '<button class="bouton ' + (refus.autreMoyen ? "bouton-lien" : "bouton-primaire") + ' bouton-pleine-largeur" id="retour-recap" data-sortie>Retour au récapitulatif</button>';
+      }
+    }
+
+    /* Résultat rendu par le module de paiement Max it */
+    function confirmer() {
+      etape = "traitement";
+      rendre();
+      setTimeout(() => {
+        // Démo « paiement sans réponse » : vérification en cours, suivie en s07 (S06-11)
+        if (Shop.consommerScenario("sans-reponse")) {
+          Shop.majCommande(c.id, { statut: "verification", debut: Date.now() });
+          return ouvrirPage(Shop.url("s07-confirmation.html", { commande: c.id }));
+        }
+        const manque = dcb ? c.montant - soldeCredit : c.montant - soldeOm;
+        if (manque > 0) {
+          if (!dcb) Shop.consommerScenario("om-insuffisant");
+          Shop.majCommande(c.id, { statut: "refuse" });
+          // Orange Money insuffisant : montant manquant et DCB proposé s'il est utilisable (S07-02)
+          refus = dcb
+            ? { titre: "Crédit insuffisant", texte: "Ton crédit (" + montant(soldeCredit) + ") ne suffit pas pour ce paiement. Aucun montant n'a été débité et rien ne sera livré.",
+                autreMoyen: { libelle: "Payer avec Orange Money", moyen: "orange-money" } }
+            : { titre: "Solde Orange Money insuffisant", texte: "Il te manque " + montant(manque) + ". Aucun montant n'a été débité et rien ne sera livré.",
+                autreMoyen: Shop.dcbUtilisable(c.montant) ? { libelle: "Payer par crédit ou facture mobile", moyen: "dcb" } : null };
+          etape = "refuse";
+          return rendre();
+        }
+        // Paiement confirmé : la livraison peut commencer (S08-01)
+        Shop.majCommande(c.id, { statut: "livraison" });
+        etape = "confirme";
+        rendre();
+        setTimeout(continuer, 1800);
+      }, 1500);
+    }
+    let parti = false;
+    function continuer() {
+      if (parti) return;
+      parti = true;
+      ouvrirPage(Shop.url("s07-confirmation.html", { commande: c.id }));
+    }
+    /* Abandon : la commande disparaît, le produit réservé est libéré (S02-04) */
+    function abandonner() {
+      Shop.supprimerCommande(c.id);
+      Etat.set("toastSuivant", "Paiement abandonné : aucun montant débité");
+      ouvrirPage(recap);
+    }
+
+    document.querySelector(".telephone").addEventListener("click", (e) => {
+      if (e.target.closest("#confirmer") && !e.target.closest("#confirmer").disabled) confirmer();
+      if (e.target.closest("#annuler") || e.target.closest("#fermer")) {
+        if (etape === "saisie") abandonner();
+        else if (etape === "confirme") continuer();
+        else if (etape === "refuse") ouvrirPage(recap);
+      }
+      if (e.target.closest("#continuer")) continuer();
+      if (e.target.closest("#autre-moyen")) ouvrirPage(Shop.url("s06-recapitulatif.html", { produit: c.produit, moyen: refus.autreMoyen.moyen }));
+      if (e.target.closest("#retour-recap")) ouvrirPage(recap);
+    });
+    rendre();
+  }
 </script>
 </body>
 </html>

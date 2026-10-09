@@ -55,12 +55,22 @@ const Demo = (function () {
 
   /* Shop (boutique de jeux) : bascules et raccourcis propres à la mini app */
   const BASCULES_SHOP = [
-    { cle: "shopPremierAchat", libelle: "Premier achat", aide: "Aucun achat passé : pas de « Tes derniers achats »" }
+    { cle: "shopPremierAchat", libelle: "Premier achat", aide: "Aucun achat passé, conditions de vente à accepter" },
+    { cle: "shopCgvModifiees", libelle: "Conditions de vente modifiées", aide: "Version 2.2 à accepter au prochain achat" }
   ];
+  /* scenario : état du tunnel appliqué une fois (Shop.consommerScenario) ;
+     tunnel : achat préparé jusqu'au récapitulatif (compte « Mon compte » Free Fire) */
+  const COMPTE_DEMO = { libelle: "Mon compte", identifiant: "512839047", pseudo: "Youss_KZ" };
   const RACCOURCIS_SHOP = [
     { libelle: "Lien direct vers un jeu", ecran: "s03", params: { jeu: "genshin", via: "lien" } },
     { libelle: "Lien direct vers un produit", ecran: "s04", params: { produit: "gl-illimite", via: "lien" } },
-    { libelle: "Lien vers un jeu non vendu", ecran: "s03", params: { jeu: "codm", via: "lien" } }
+    { libelle: "Lien vers un jeu non vendu", ecran: "s03", params: { jeu: "codm", via: "lien" } },
+    { libelle: "Identifiant de jeu introuvable", ecran: "s05", params: { produit: "ff-310" }, scenario: "id-introuvable" },
+    { libelle: "Solde Orange Money insuffisant", ecran: "s06", params: { produit: "ff-520" }, scenario: "om-insuffisant", tunnel: true },
+    { libelle: "Montant hors plafond DCB", ecran: "s06", params: { produit: "ff-520" }, scenario: "hors-plafond", tunnel: true },
+    { libelle: "Paiement sans réponse", ecran: "s06", params: { produit: "ff-520" }, scenario: "sans-reponse", tunnel: true },
+    { libelle: "Produit épuisé pendant l'achat", ecran: "s06", params: { produit: "ff-310" }, scenario: "epuise-pendant", tunnel: true },
+    { libelle: "Livraison en échec puis remboursement", ecran: "s06", params: { produit: "ff-520" }, scenario: "livraison-echec", tunnel: true }
   ];
 
   const ICONE_REGLAGES =
@@ -187,6 +197,10 @@ const Demo = (function () {
     const raccourciShop = cible.closest("[data-raccourci-shop]");
     if (raccourciShop) {
       const r = RACCOURCIS_SHOP[Number(raccourciShop.dataset.raccourciShop)];
+      Etat.set("shopScenario", r.scenario || null);
+      if (r.tunnel) Etat.set("shopTunnel", { produit: r.params.produit, compte: COMPTE_DEMO });
+      // Le produit redevient disponible pour rejouer la démo « épuisé pendant l'achat »
+      if (r.scenario === "epuise-pendant") Etat.set("shopEpuises", null);
       fermer();
       return Nav.aller(r.ecran, null, r.params);
     }

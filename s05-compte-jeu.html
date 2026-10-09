@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<!-- Écran s05 — Compte de jeu (s05-compte-jeu.html?produit=ff-520&depuis=…), pour un top-up ou un pass crédité.
+     US : S05-02 (format de l'identifiant contrôlé jeu par jeu, message explicite, aide « où trouver mon identifiant »),
+     S05-03 (pseudo affiché avant paiement quand l'éditeur le permet ; sinon avertissement et double saisie ;
+     identifiant inexistant refusé), S05-04 (comptes mémorisés avec libellé, y compris ceux de proches, suppression).
+     État de démonstration : « Identifiant de jeu introuvable » → un identifiant inconnu de l'éditeur est déjà saisi ;
+     la vérification le refuse tant qu'il n'est pas corrigé. -->
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Compte de jeu</title>
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-zone="shop">
+<div class="cadre">
+  <div class="telephone">
+    <div class="barre-etat" data-heure="21:10"></div>
+    <div id="entete"></div>
+    <main class="contenu" id="page"></main>
+    <div class="barre-action" id="action"></div>
+  </div>
+</div>
+
+<script src="js/data-shop.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/shop.js"></script>
+<script src="js/demo.js"></script>
+<script>
+  const p = Shop.produit(Nav.param("produit"));
+  const jeu = p && Shop.jeu(p.jeu);
+  // Produit inconnu → accueil ; produit livré par code → pas d'identifiant, directement le récapitulatif
+  if (!p) ouvrirPage("s01-accueil.html?absent=1");
+  else if (p.livraison !== "credit") ouvrirPage(Shop.url("s06-recapitulatif.html", { produit: p.id }));
+
+  const verifiable = jeu && Shop.editeur(jeu).verification;
+  const ident = jeu && jeu.identifiant;
+
+  // Choix en cours : identifiant d'un compte mémorisé, ou « nouveau »
+  let choix = null;
+  // Nouveau compte : saisie, vérification et message d'erreur
+  const saisie = { identifiant: "", confirmation: "", libelle: "", memoriser: true };
+  let verification = null;   // null, "en-cours" ou { pseudo }
+  let erreur = "";
+
+  function initialiser() {
+    const memo = Shop.comptes(jeu.id);
+    // Démo « identifiant introuvable » : nouveau compte, identifiant inconnu de l'éditeur déjà saisi
+    if (Shop.scenario() === "id-introuvable") {
+      choix = "nouveau";
+      saisie.identifiant = SHOP.identifiantsInconnus[0];
+      saisie.libelle = "Un ami";
+      Shop.consommerScenario("id-introuvable");
+    } else {
+      // Le dernier compte utilisé est proposé avec son libellé (S05-04)
+      choix = memo.length ? memo[0].identifiant : "nouveau";
+      saisie.libelle = memo.some((c) => c.libelle === "Mon compte") ? "" : "Mon compte";
+    }
+  }
+
+  /* Carte d'un compte mémorisé */
+  function carteCompte(c) {
+    const actif = choix === c.identifiant;
+    return '<label class="choix-shop' + (actif ? " actif" : "") + '">' +
+      '<input type="radio" name="compte" value="' + c.identifiant + '"' + (actif ? " checked" : "") + ">" +
+      '<span class="choix-corps"><span class="ligne-titre">' + c.libelle + "</span>" +
+      '<span class="ligne-sous-titre">' + (c.pseudo ? c.pseudo + " · " : "") + ident.libelle + " " + c.identifiant + "</span></span>" +
+      '<button class="lien-shop" data-supprimer="' + c.identifiant + '" aria-label="Supprimer le compte ' + c.libelle + '">Supprimer</button></label>';
+  }
+
+  /* Formulaire d'un nouveau compte (S05-02, S05-03) */
+  function formulaire() {
+    let html = '<div class="formulaire-shop">' +
+      '<label class="etiquette-shop" for="identifiant">' + ident.libelle + " " + jeu.nom + "</label>" +
+      '<div class="champ' + (erreur ? " erreur" : "") + '"><input id="identifiant" inputmode="' + (/^\d+$/.test(ident.exemple) ? "numeric" : "text") +
+      '" autocomplete="off" placeholder="Ex. : ' + ident.exemple + '" value="' + saisie.identifiant + '" aria-describedby="regle"></div>' +
+      '<p class="aide-champ" id="regle">' + ident.regle + ' · <button class="lien-shop" id="ou-trouver">Où trouver mon ' + ident.libelle + " ?</button></p>";
+    if (!verifiable) {
+      // Vérification impossible : identifiant saisi deux fois
+      html += '<label class="etiquette-shop" for="confirmation">Confirme ton ' + ident.libelle + "</label>" +
+        '<div class="champ"><input id="confirmation" autocomplete="off" value="' + saisie.confirmation + '"></div>';
+    }
+    if (erreur) html += '<p class="erreur-shop" role="alert">' + Shop.icone("alerte", "f-alert") + "<span>" + erreur + "</span></p>";
+    if (verification && verification.pseudo) {
+      html += '<div class="trouve-shop" role="status">' + Shop.icone("coche", "f-success-dark") +
+        "<span>Compte trouvé : <b>" + verification.pseudo + "</b><small>Vérifie que c'est bien le bon compte avant de continuer.</small></span></div>";
+    }
+    html += '<label class="etiquette-shop" for="libelle">Nom du compte</label>' +
+      '<div class="champ"><input id="libelle" autocomplete="off" placeholder="Ex. : Mon frère" value="' + saisie.libelle + '"></div>' +
+      '<div class="puces puces-retour puces-libelle">' + ["Mon compte", "Mon frère", "Ma sœur", "Un ami"].map((l) =>
+        '<button class="puce' + (saisie.libelle === l ? " actif" : "") + '" data-libelle="' + l + '">' + l + "</button>").join("") + "</div>" +
+      '<label class="case-shop"><input type="checkbox" id="memoriser"' + (saisie.memoriser ? " checked" : "") + "><span>Mémoriser ce compte pour mes prochains achats</span></label>" +
+      "</div>";
+    return html;
+  }
+
+  function rendre() {
+    if (!p || p.livraison !== "credit") return;
+    if (choix === null) initialiser();
+    const memo = Shop.comptes(jeu.id);
+    if (choix !== "nouveau" && !memo.some((c) => c.identifiant === choix)) choix = memo.length ? memo[0].identifiant : "nouveau";
+
+    document.getElementById("entete").innerHTML = Shop.entete("Compte de jeu", Shop.depuis(Shop.lienProduit(p.id, "s01-accueil.html")));
+    let html = '<div class="bloc-shop">' + Shop.resumeProduit(p) + "</div>";
+
+    // Vérification possible ou non chez cet éditeur (S05-03)
+    html += '<div class="encart encart-shop">' + Shop.icone("bouclier", "f-primary") + "<div>" +
+      (verifiable ? "<strong>Ton pseudo s'affiche avant de payer</strong><p>" + Shop.editeur(jeu).nom + " nous indique le pseudo associé à l'identifiant : tu vérifies que c'est le bon compte.</p>"
+        : "<strong>Vérification impossible pour ce jeu</strong><p>" + Shop.editeur(jeu).nom + " ne permet pas de vérifier le compte : saisis ton identifiant deux fois. Un crédit envoyé sur un mauvais compte ne peut pas être annulé.</p>") +
+      "</div></div>";
+
+    html += '<h2 class="titre-section">Pour quel compte ?</h2><div class="choix-liste">';
+    html += memo.map(carteCompte).join("");
+    html += '<label class="choix-shop' + (choix === "nouveau" ? " actif" : "") + '"><input type="radio" name="compte" value="nouveau"' + (choix === "nouveau" ? " checked" : "") + ">" +
+      '<span class="choix-corps"><span class="ligne-titre">' + (memo.length ? "Un autre compte" : "Mon compte " + jeu.nom) + "</span>" +
+      '<span class="ligne-sous-titre">Le tien ou celui d\'un proche</span></span></label>';
+    if (choix === "nouveau") html += formulaire();
+    html += '</div><div class="fin-contenu"></div>';
+    document.getElementById("page").innerHTML = html;
+    rendreAction();
+  }
+
+  /* Bouton du bas : « Vérifier le compte », puis « Continuer » (S05-03) */
+  function rendreAction() {
+    let libelle = "Continuer";
+    let inactif = false;
+    if (choix === "nouveau") {
+      if (verification === "en-cours") { libelle = "Vérification auprès de " + Shop.editeur(jeu).nom + "…"; inactif = true; }
+      else if (verifiable && !(verification && verification.pseudo)) libelle = "Vérifier le compte";
+      else if (verification && verification.pseudo) libelle = "Continuer avec " + verification.pseudo;
+      inactif = inactif || !saisie.identifiant.trim();
+    }
+    document.getElementById("action").innerHTML =
+      '<button class="bouton bouton-primaire bouton-pleine-largeur" id="continuer"' + (inactif ? " disabled" : "") + ">" + libelle + "</button>" +
+      '<p class="aide-action">Étape suivante : récapitulatif et paiement</p>';
+  }
+
+  /* Contrôles d'un nouvel identifiant : format, double saisie, existence chez l'éditeur */
+  function controler() {
+    const id = saisie.identifiant.trim();
+    if (!Shop.formatValide(jeu, id)) {
+      erreur = "Cet identifiant n'a pas le bon format : l'" + ident.libelle + " " + jeu.nom + " compte " + ident.regle + " (ex. : " + ident.exemple + ").";
+      return rendre();
+    }
+    if (!verifiable) {
+      if (saisie.confirmation.trim() !== id) { erreur = "Les deux identifiants ne sont pas identiques."; return rendre(); }
+      return poursuivre({ libelle: saisie.libelle.trim() || "Autre compte", identifiant: id, pseudo: null });
+    }
+    // Demande du pseudo à l'éditeur (S05-03)
+    erreur = "";
+    verification = "en-cours";
+    rendre();
+    setTimeout(() => {
+      if (SHOP.identifiantsInconnus.includes(id)) {
+        verification = null;
+        erreur = "Aucun compte " + jeu.nom + " ne correspond à l'" + ident.libelle + " " + id + ". Vérifie-le : le paiement n'est possible que vers un compte existant.";
+      } else {
+        verification = { pseudo: Shop.pseudoPour(jeu.id, id) };
+      }
+      rendre();
+    }, 1200);
+  }
+
+  /* Compte choisi : mémorisé si demandé, puis récapitulatif */
+  function poursuivre(compte) {
+    if (choix !== "nouveau" || saisie.memoriser) Shop.memoriserCompte(jeu.id, compte);
+    Etat.set("shopTunnel", { produit: p.id, compte: compte });
+    ouvrirPage(Shop.url("s06-recapitulatif.html", { produit: p.id, depuis: Shop.ici() }));
+  }
+
+  /* Aide « où trouver mon identifiant » (S05-02) */
+  function ouvrirAide() {
+    Shop.feuille('<p class="demo-titre">Où trouver mon ' + ident.libelle + " ?</p>" +
+      '<p class="aide-feuille">' + ident.ouTrouver + "</p>" +
+      '<p class="aide-feuille">Format attendu : ' + ident.regle + ", par exemple <b>" + ident.exemple + "</b>.</p>" +
+      '<button class="bouton bouton-primaire bouton-pleine-largeur" data-fermer>J\'ai compris</button>', "Où trouver mon identifiant");
+  }
+
+  /* Suppression d'un compte mémorisé (S05-04) */
+  function confirmerSuppression(identifiant) {
+    const c = Shop.comptes(jeu.id).find((x) => x.identifiant === identifiant);
+    const voile = Shop.feuille('<p class="demo-titre">Supprimer « ' + c.libelle + " » ?</p>" +
+      '<p class="aide-feuille">Ce compte ne te sera plus proposé. Tes achats passés restent dans « Mes achats ».</p>' +
+      '<button class="bouton bouton-primaire bouton-pleine-largeur" id="confirmer-suppression">Supprimer</button>' +
+      '<button class="bouton bouton-secondaire bouton-pleine-largeur bouton-annuler" data-fermer>Annuler</button>', "Supprimer un compte");
+    voile.querySelector("#confirmer-suppression").addEventListener("click", () => {
+      voile.remove();
+      Shop.supprimerCompte(jeu.id, identifiant);
+      Nav.toast("Compte « " + c.libelle + " » supprimé");
+    });
+  }
+
+  const telephone = document.querySelector(".telephone");
+  telephone.addEventListener("input", (e) => {
+    // Toute modification de l'identifiant annule la vérification précédente
+    if (e.target.id === "identifiant") { saisie.identifiant = e.target.value; verification = null; erreur = ""; rendreAction(); }
+    if (e.target.id === "confirmation") saisie.confirmation = e.target.value;
+    if (e.target.id === "libelle") saisie.libelle = e.target.value;
+  });
+  telephone.addEventListener("change", (e) => {
+    if (e.target.name === "compte") { choix = e.target.value; erreur = ""; rendre(); }
+    if (e.target.id === "memoriser") saisie.memoriser = e.target.checked;
+  });
+  telephone.addEventListener("click", (e) => {
+    const supprimer = e.target.closest("[data-supprimer]");
+    if (supprimer) { e.preventDefault(); return confirmerSuppression(supprimer.dataset.supprimer); }
+    const puce = e.target.closest("[data-libelle]");
+    if (puce) { saisie.libelle = puce.dataset.libelle; return rendre(); }
+    if (e.target.closest("#ou-trouver")) return ouvrirAide();
+    const bouton = e.target.closest("#continuer");
+    if (!bouton || bouton.disabled) return;
+    if (choix !== "nouveau") return poursuivre(Shop.comptes(jeu.id).find((c) => c.identifiant === choix));
+    if (verification && verification.pseudo) {
+      return poursuivre({ libelle: saisie.libelle.trim() || "Autre compte", identifiant: saisie.identifiant.trim(), pseudo: verification.pseudo });
+    }
+    controler();
+  });
+  Shop.monter(rendre);
+</script>
+</body>
+</html>

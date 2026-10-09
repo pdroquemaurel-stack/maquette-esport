@@ -23,6 +23,13 @@
 <iframe id="f"></iframe>
 <script src="banc.js"></script>
 <script>
+  /* Shop : compte de jeu et commande préparés pour contrôler le tunnel d'achat */
+  const COMPTE = { libelle: "Mon compte", identifiant: "512839047", pseudo: "Youss_KZ" };
+  function commandeTest(statut, produit, plus) {
+    return Object.assign({ id: "SH-TEST-" + statut, date: "2026-10-09T21:10", produit: produit, compte: COMPTE,
+      moyen: "orange-money", montant: 49, statut: statut }, plus || {});
+  }
+
   /* Écrans contrôlés, avec les variantes utiles (tournois dans différents états) */
   const PAGES = [
     "00a-maxit-accueil.html", "00b-maxit-univers.html", "00c-maxit-gaming.html", "02-pseudo.html",
@@ -66,7 +73,24 @@
     "s03-jeu.html?jeu=roblox", "s03-jeu.html?jeu=mlbb&via=lien",
     "s04-produit.html?produit=ff-520", "s04-produit.html?produit=ff-1060", "s04-produit.html?produit=rbx-premium",
     "s04-produit.html?produit=gl-semaine&via=lien", "s04-produit.html?produit=gi-lune",
-    "13-jeu.html?id=pubg", "13-jeu.html?id=efootball"
+    "13-jeu.html?id=pubg", "13-jeu.html?id=efootball",
+    // Shop (lot S2) : compte de jeu, récapitulatif, paiement (mode Shop de 22), confirmation, conditions de vente
+    "s05-compte-jeu.html?produit=ff-520", "s05-compte-jeu.html?produit=efoot-550", "s05-compte-jeu.html?produit=mlbb-86",
+    ["s05-compte-jeu.html?produit=ff-310", { shopScenario: "id-introuvable" }],
+    ["s06-recapitulatif.html?produit=ff-520", { shopTunnel: { produit: "ff-520", compte: COMPTE } }],
+    ["s06-recapitulatif.html?produit=efoot-550", { shopTunnel: { produit: "efoot-550", compte: { libelle: "Mon frère", identifiant: "AMIN-482-117-930", pseudo: null } } }],
+    "s06-recapitulatif.html?produit=rbx-400", "s06-recapitulatif.html?produit=pubg-carte",
+    ["s06-recapitulatif.html?produit=gl-semaine", { shopPremierAchat: true }], ["s06-recapitulatif.html?produit=rbx-800", { shopCgvModifiees: true }],
+    ["s06-recapitulatif.html?produit=rbx-400", () => ({ shopCommandes: [commandeTest("verification", "gl-jetons", { debut: Date.now() })] })],
+    ["22-paiement-maxit.html?commande=SH-TEST-paiement", { shopCommandes: [commandeTest("paiement", "ff-520")] }],
+    ["22-paiement-maxit.html?commande=SH-TEST-paiement", { shopCommandes: [commandeTest("paiement", "rbx-400", { moyen: "dcb", compte: null })] }],
+    ["s07-confirmation.html?commande=SH-TEST-livre", { shopCommandes: [commandeTest("livre", "ff-520")] }],
+    ["s07-confirmation.html?commande=SH-TEST-livre", { shopCommandes: [commandeTest("livre", "rbx-premium", { compte: null, code: "ROB-7K2M-Q9TZ", fin: "2026-11-08" })] }],
+    ["s07-confirmation.html?commande=SH-TEST-livre", { shopCommandes: [commandeTest("livre", "ff-booyah", { fin: "2026-11-08" })] }],
+    ["s07-confirmation.html?commande=SH-TEST-verification", () => ({ shopCommandes: [commandeTest("verification", "ff-520", { debut: Date.now() })] })],
+    ["s07-confirmation.html?commande=SH-TEST-echec", { shopCommandes: [commandeTest("echec", "ff-520", { remboursement: "2026-10-09" })] }],
+    ["s07-confirmation.html?commande=SH-TEST-refuse", { shopCommandes: [commandeTest("refuse", "ff-520")] }],
+    "s12-conditions.html?depuis=s01-accueil.html", ["s12-conditions.html", { shopCgvModifiees: true }], ["s12-conditions.html", { shopPremierAchat: true }]
   ];
   const abonne = location.hash === "#abonne";
   const sortie = document.getElementById("sortie");

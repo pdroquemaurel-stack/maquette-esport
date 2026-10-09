@@ -48,14 +48,14 @@ const ECRANS = {
   "s02": { fichier: "s02-recherche.html", titre: "Recherche", pret: true },
   "s03": { fichier: "s03-jeu.html", titre: "Page d'un jeu", pret: true },
   "s04": { fichier: "s04-produit.html", titre: "Fiche produit", pret: true },
-  "s05": { fichier: "s05-compte-jeu.html", titre: "Compte de jeu", pret: false },
-  "s06": { fichier: "s06-recapitulatif.html", titre: "Récapitulatif", pret: false },
-  "s07": { fichier: "s07-confirmation.html", titre: "Confirmation", pret: false },
+  "s05": { fichier: "s05-compte-jeu.html", titre: "Compte de jeu", pret: true },
+  "s06": { fichier: "s06-recapitulatif.html", titre: "Récapitulatif", pret: true },
+  "s07": { fichier: "s07-confirmation.html", titre: "Confirmation", pret: true },
   "s08": { fichier: "s08-achats.html", titre: "Mes achats", pret: false },
   "s09": { fichier: "s09-commande.html", titre: "Détail d'une commande", pret: false },
   "s10": { fichier: "s10-signaler.html", titre: "Signaler un problème", pret: false },
   "s11": { fichier: "s11-aide.html", titre: "Aide", pret: false },
-  "s12": { fichier: "s12-conditions.html", titre: "Conditions de vente", pret: false }
+  "s12": { fichier: "s12-conditions.html", titre: "Conditions de vente", pret: true }
 };
 
 /* ---- Fichier unique (maquette-esport.html) ----
@@ -146,7 +146,14 @@ const Etat = (function () {
     playAvis: null,         // avis du joueur, par jeu : { note, texte, date } (S10-01)
     playSignales: null,     // avis signalés par le joueur (S10-03)
     // Shop (boutique de jeux)
-    shopPremierAchat: false, // premier achat : aucun achat passé (et, au lot S2, conditions de vente à accepter)
+    shopPremierAchat: false, // premier achat : aucun achat passé, conditions de vente à accepter (S06-08)
+    shopCgvModifiees: false, // nouvelle version des conditions de vente publiée (S06-08)
+    shopCgvAcceptee: null,  // version des conditions acceptée pendant la démo : { version, date }
+    shopComptes: null,      // comptes de jeu mémorisés modifiés pendant la démo (S05-04) ; sinon ceux de data-shop.js
+    shopCommandes: null,    // commandes passées pendant la démo (E06 à E09)
+    shopTunnel: null,       // achat en cours : { produit, compte } choisi en s05 (S06-07)
+    shopScenario: null,     // état de démo du tunnel : id-introuvable, om-insuffisant, hors-plafond, sans-reponse…
+    shopEpuises: null,      // produits épuisés pendant la démo (S02-04)
     scenario: null,         // état alternatif forcé pour l'écran visé
     origine: null           // écran à retrouver après le paiement (S11-03)
   };
