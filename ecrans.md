@@ -426,11 +426,14 @@ Entrée : 00c, tuile « Jouer » → p01. Thème sombre, pas de barre du bas. Le
 Lien partagé ─► p03 (fermer → p01) ; lien vers un jeu indisponible ─► p01 avec message
 ```
 
+**Visuels des jeux de Play** : une image par jeu dans `images/play/<id>.jpg`, déclarée dans `PLAY.images` (`js/data-play.js`). Elle sert partout où le jeu apparaît (tuiles, carte « À la une », en-tête et première capture de la fiche, partie simulée), recadrée au centre sans déformation ; les captures 2 et 3 de la galerie et les jeux sans image gardent leur dessin SVG. Pour changer un visuel : remplacer le fichier en gardant son nom (ou ajouter une ligne à `PLAY.images`), puis reconstruire le fichier unique. 9 jeux ont une image : bloc-mania, commando-lagune, foot-lions, ludo-famille, ninja-sahel, rallye-dunes, robots-furie, taxi-brousse, tresor-baobab.
+
 ### Avancement de Play
 | Lot | Écrans | État |
 |---|---|---|
 | P1 | `data-play.js`, `play.js`, section « Play » de tokens.css et style.css, 00c (« Jouer »), p01 à p05, menu de démo (pays, nouveau joueur, jeu indisponible, liens partagés), test `outils/parcours-play.html` | terminé |
 | P2 | Avis : bloc de la fiche (p03), p06 tous les avis, p07 donner son avis, signalement ; vérifications ajoutées à `outils/parcours-play.html` | terminé |
+| P3 | Visuels des jeux en image (`images/play/`) pour 9 jeux, intégrés au fichier unique | terminé |
 
 ### Couverture des US MVP de Play
 | US | Couverture | Écrans | Limites et remarques |

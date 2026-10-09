@@ -50,11 +50,11 @@ fichiersEcrans.forEach((fichier) => {
   PAGES[fichier] = html;
 });
 
-/* ---- Images citées dans js/data.js (visuels des jeux) : intégrées une seule fois ----
+/* ---- Images citées dans js/data.js et js/data-play.js (visuels des jeux) : intégrées une seule fois ----
    Les écrans les obtiennent par ressource() (js/nav.js), via le routeur. */
 const IMAGES = {};
 const TYPES_IMAGES = { ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp" };
-(JS.data.match(/"images\/[^"]+\.(?:png|jpe?g|webp)"/g) || []).forEach((guillemets) => {
+((JS.data + JS["data-play"]).match(/"images\/[^"]+\.(?:png|jpe?g|webp)"/g) || []).forEach((guillemets) => {
   const chemin = guillemets.slice(1, -1);
   if (!fs.existsSync(path.join(RACINE, chemin))) { console.warn("Image absente, ignorée : " + chemin); return; }
   IMAGES[chemin] = "data:" + TYPES_IMAGES[path.extname(chemin).toLowerCase()] + ";base64," + fs.readFileSync(path.join(RACINE, chemin)).toString("base64");

@@ -381,6 +381,12 @@ const Play = (function () {
      variante : « tuile » (pictogramme centré), « carte » (pictogramme en haut, place pour un texte),
      « capture-1 » à « capture-3 » (galerie), « partie » (écran de jeu simulé). */
   function visuel(j, l, h, variante) {
+    // Image fournie (js/data-play.js, PLAY.images) : utilisée partout, sauf pour les captures 2 et 3 de la galerie
+    const image = PLAY.images[j.id];
+    if (image && variante !== "capture-2" && variante !== "capture-3") {
+      return '<img class="visuel-play visuel-image-play" src="' + ressource(image) + '" alt="">';
+    }
+
     const id = "vj" + (++compteurVisuels);
     const couleurs = PALETTES[j.palette];
     const petit = Math.min(l, h);

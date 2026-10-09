@@ -55,6 +55,11 @@
     log(genres.length === 10 && !genres.includes("Stratégie") && genres[0] === "Sport" && genres[9] === "Tous les jeux",
       "A · genres du Maroc : 9 genres dans l'ordre du pays, sans Stratégie, puis « Tous les jeux »");
     log(doc().querySelectorAll(".tuile-play .tuile-note").length === doc().querySelectorAll(".tuile-play").length, "A · chaque tuile affiche « Gratuit » et la note");
+    // Visuels : image fournie (images/play) si elle existe, chargée sans erreur ; sinon dessin SVG
+    const imageBloc = doc().querySelector('.tuile-play[href*="jeu=bloc-mania"] img.visuel-image-play');
+    await attendre(() => imageBloc && imageBloc.complete, 3000, "chargement de l'image de Bloc Mania");
+    log(imageBloc && imageBloc.naturalWidth > 0, "A · Bloc Mania : image fournie, chargée");
+    log(doc().querySelector('.tuile-play[href*="jeu=bijoux-atlas"] svg.visuel-play'), "A · Bijoux de l'Atlas (sans image) : dessin SVG");
 
     // ---- B. Mini app (Kora Games) ----
     await suivre('.tuile-play[href*="jeu=rallye-dunes"]');
