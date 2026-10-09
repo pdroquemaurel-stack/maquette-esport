@@ -34,7 +34,13 @@ const ECRANS = {
   "26": { fichier: "26-contestation.html", titre: "Contestation", pret: true },
   "27": { fichier: "27-preferences-notif.html", titre: "Préférences", pret: true },
   "28": { fichier: "28-mes-donnees.html", titre: "Mes données", pret: true },
-  "29": { fichier: "29-classement-mensuel.html", titre: "Classement MaxPoints", pret: true }
+  "29": { fichier: "29-classement-mensuel.html", titre: "Classement MaxPoints", pret: true },
+  // Play, la mini app des mini-jeux (2e chantier)
+  "p01": { fichier: "p01-accueil.html", titre: "Accueil Play", pret: true },
+  "p02": { fichier: "p02-genre.html", titre: "Genre", pret: true },
+  "p03": { fichier: "p03-jeu.html", titre: "Fiche jeu", pret: true },
+  "p04": { fichier: "p04-transition.html", titre: "Transition vers le hub", pret: true },
+  "p05": { fichier: "p05-partie.html", titre: "Partie", pret: true }
 };
 
 /* ---- Fichier unique (maquette-esport.html) ----
@@ -115,6 +121,13 @@ const Etat = (function () {
     chat: null,             // messages échangés dans la salle de match (11, lot 7)
     chatSignale: false,     // discussion signalée au responsable local (11)
     maxpointsCredites: null, // MaxPoints crédités pendant la démo (29, lot 7)
+    // Play (mini-jeux) : null = valeurs de départ de js/data-play.js
+    playPays: null,         // pays du joueur dans Play (menu de démo : Maroc ou Sénégal)
+    playNouveau: false,     // nouveau joueur : ni récents ni favoris (S06-02)
+    playIndispo: false,     // un jeu momentanément indisponible (S08-04)
+    playRecents: null,      // jeux récemment joués, du plus récent au plus ancien (S09-02)
+    playLances: null,       // jeux déjà lancés au moins une fois (recommandations, avis)
+    playFavoris: null,      // jeux favoris, le dernier ajouté en premier (S09-01)
     scenario: null,         // état alternatif forcé pour l'écran visé
     origine: null           // écran à retrouver après le paiement (S11-03)
   };

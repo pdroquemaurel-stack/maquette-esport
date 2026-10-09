@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<!-- Écran p04 — Écran de transition d'un hub sans lien direct (p04-transition.html?jeu=ludo-famille).
+     Pas d'écran Figma : composants repris de la fiche (thème sombre, bouton orange).
+     US : S08-02 (texte « où trouver le jeu » saisi sur la fiche, bouton « Continuer » vers l'accueil du hub). -->
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ouverture du jeu</title>
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-zone="play">
+<div class="cadre">
+  <div class="telephone play">
+    <div class="barre-etat" data-heure="9:30"></div>
+    <header class="entete-simple-play">
+      <a class="retour-play" id="retour" aria-label="Retour à la fiche du jeu"></a>
+    </header>
+    <main class="contenu" id="page"></main>
+    <div class="barre-action barre-play">
+      <a class="bouton-jouer" id="continuer">Continuer</a>
+      <a class="bouton-jouer-secondaire" id="annuler">Revenir à la fiche</a>
+    </div>
+  </div>
+</div>
+
+<script src="js/data-play.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/play.js"></script>
+<script src="js/demo.js"></script>
+<script>
+  const jeu = Play.jeuDeLaPage();
+
+  function rendre() {
+    if (!jeu) return;
+    if (!Play.disponible(jeu)) return ouvrirPage("p01-accueil.html?indispo=1");
+    const partenaire = Play.partenaire(jeu);
+    // Jeu qui s'ouvre directement : pas de transition
+    if (partenaire.lienDirect) return ouvrirPage(Play.url("p05-partie.html", { jeu: jeu.id, depuis: Play.depuis() }));
+    const fiche = Play.url("p03-jeu.html", { jeu: jeu.id, depuis: Play.depuis() });
+
+    document.getElementById("retour").innerHTML = Play.icone("retour");
+    document.getElementById("retour").href = fiche;
+    document.getElementById("annuler").href = fiche;
+    document.getElementById("continuer").href = Play.url("p05-partie.html", { jeu: jeu.id, mode: "hub", depuis: Play.depuis() });
+
+    document.getElementById("page").innerHTML =
+      '<div class="transition-play">' +
+      '<div class="logo-hub">' + Play.icone("hub", "f-primary") + "</div>" +
+      "<h2>" + jeu.nom + " se trouve dans " + partenaire.nom + "</h2>" +
+      "<p>Ce jeu ne peut pas s'ouvrir directement. " + partenaire.nom + " va s'ouvrir sur son accueil.</p>" +
+      '<div class="ou-trouver"><span class="vignette-cible">' + Play.visuel(jeu, 56, 56, "tuile") + "</span>" +
+      "<p>" + jeu.transition + "</p></div>" +
+      "</div>";
+  }
+  Play.monter(rendre);
+</script>
+</body>
+</html>

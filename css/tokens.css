@@ -117,4 +117,43 @@
   --touch-target: 44px;              /* zone tactile minimale */
   --icon-size: 24px;
   --avatar-size: 36px;
+
+  /* =====================================================================
+     Play (mini-jeux) — relevé dans reference/figma-play (thème sombre)
+     ===================================================================== */
+  /* ---- Couleurs ---- */
+  --play-bg: #121212;                /* fond des écrans Play */
+  --play-sheet: #1c1c1c;             /* feuille de la fiche jeu */
+  --play-surface: #262626;           /* encarts, cases d'information */
+  --play-tile: #3a3532;              /* tuiles de la grille des genres (gris chaud) */
+  --play-chip: #3a3735;              /* étiquette de genre, badges */
+  --play-divider: #2e2e2e;           /* séparateurs de la fiche */
+  --play-handle: #5a5a5a;            /* poignée de la feuille */
+  --play-text: #ffffff;
+  --play-text-secondary: #b8b8b8;    /* sous-titres, description */
+  --play-text-muted: #8a8a8a;
+  --play-free: #6cc3f2;              /* « Gratuit » sous les tuiles, dates des avis */
+  --play-star: #ffc21a;              /* étoiles des notes */
+  --play-button-light: #ececec;      /* bouton secondaire clair (« Donner mon avis ») */
+  --play-on-light: #111111;
+  --play-pattern-a: rgba(168, 133, 216, 0.22);  /* motif de l'en-tête : violet */
+  --play-pattern-b: rgba(255, 121, 0, 0.22);    /* motif de l'en-tête : orange */
+  --play-scrim: rgba(0, 0, 0, 0.6);  /* voile sur l'accueil derrière la fiche */
+  --play-shade: rgba(0, 0, 0, 0.72); /* dégradé sous le texte des cartes */
+
+  /* ---- Tailles ---- */
+  --play-font-title: 22px;           /* « Bienvenue sur Play », nom du jeu */
+  --play-font-section: 19px;         /* titres de section */
+  --play-font-tile: 16px;            /* nom sous une tuile */
+  --play-radius-card: 12px;          /* tuiles, cartes, visuels */
+  --play-radius-button: 10px;        /* bouton « Jouer » */
+  --play-tile-width: 160px;          /* tuile de jeu : 160 × 150 */
+  --play-tile-height: 150px;
+  --play-card-height: 300px;         /* carte « à la une » */
+  --play-genre-size: 76px;           /* case de la grille des genres */
+  --play-hero-height: 330px;         /* visuel en tête de la fiche */
+  --play-gallery-width: 220px;       /* capture de la galerie : 220 × 330 */
+  --play-gallery-height: 330px;
+  --play-cta-height: 50px;           /* bouton « Jouer » */
+  --play-sheet-top: 76px;            /* haut de la feuille de la fiche, sous la barre d'état */
 }

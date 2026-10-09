@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<!-- Écran p03 — Fiche jeu (p03-jeu.html?jeu=rallye-dunes&depuis=p01-accueil.html),
+     feuille posée sur l'accueil, d'après reference/figma-play/04-fiche-jeu.png et 05-fiche-jeu-suite.png.
+     US : S07-01 (en-tête, bouton « Jouer » toujours visible), S07-02 (vidéo à la demande, captures,
+     informations, « Fourni par »), S07-03 (badges), S07-04 (jeux similaires), S07-05 (partage),
+     S09-01 (favori), S06-01 (ouverture par lien direct : « via=lien »), S08-04 (jeu indisponible → accueil).
+     « Jouer » : mini app ou hub avec lien direct → p05 ; hub sans lien direct → p04.
+     Le bloc des avis (E10) arrive au lot P2. -->
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fiche jeu</title>
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-zone="play">
+<div class="cadre">
+  <div class="telephone play">
+    <div class="barre-etat" data-heure="9:30"></div>
+    <div class="zone-fiche">
+      <!-- L'accueil, assombri, derrière la feuille : le toucher ferme la fiche -->
+      <a class="fond-fiche" id="fond" aria-label="Fermer la fiche"></a>
+      <div class="feuille-fiche">
+        <a class="poignee-play" id="poignee" aria-label="Fermer la fiche"></a>
+        <main class="contenu" id="page"></main>
+        <div class="barre-action barre-play"><a class="bouton-jouer" id="jouer">Jouer</a></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/data-play.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/play.js"></script>
+<script src="js/demo.js"></script>
+<script>
+  const jeu = Play.jeuDeLaPage();
+  // Ouvert par un lien partagé : pas de page précédente dans Play, la fermeture mène à l'accueil
+  const depuis = Nav.param("via") === "lien" ? "p01-accueil.html" : Play.depuis();
+  let lectureEnCours = null;  // minuteur de la vidéo simulée
+
+  function rendre() {
+    if (!jeu) return;
+    arreterVideo();
+    // Jeu devenu indisponible pendant la démo : il n'a plus de fiche (S08-04)
+    if (!Play.disponible(jeu)) return ouvrirPage("p01-accueil.html?indispo=1");
+
+    document.title = jeu.nom;
+    const partenaire = Play.partenaire(jeu);
+    const favori = Play.estFavori(jeu.id);
+
+    // Accueil assombri derrière la feuille, et fermeture
+    const une = Play.aLaUne() || jeu;
+    const autre = Play.populaires().find((j) => j.id !== une.id) || jeu;
+    document.getElementById("fond").innerHTML = '<span class="fond-cartes"><span>' + Play.visuel(une, 230, 300, "carte") +
+      "</span><span>" + Play.visuel(autre, 230, 300, "carte") + "</span></span>";
+    document.getElementById("fond").href = depuis;
+    document.getElementById("poignee").href = depuis;
+
+    // « Jouer » : écran de transition si le hub ne sait pas ouvrir le jeu directement (S08-01, S08-02)
+    const ecranJeu = partenaire.lienDirect ? "p05-partie.html" : "p04-transition.html";
+    document.getElementById("jouer").href = Play.url(ecranJeu, { jeu: jeu.id, depuis: depuis });
+
+    let html = "";
+
+    // Vidéo (lancée seulement à la demande) ou visuel du jeu
+    html += '<div class="media-fiche" id="media">' + Play.visuel(jeu, 358, 330, "capture-1") +
+      (jeu.video
+        ? '<button class="bouton-lecture" id="lecture"><span class="rond">' + Play.icone("lecture", "f-play-on-light") + "</span>Vidéo</button>"
+        : "") +
+      "</div>";
+
+    // En-tête : genre, nom, favori, partage, partenaire, note, badges
+    html += '<span class="puce-genre">' + Play.genre(jeu.genre).nom + "</span>";
+    html += '<div class="titre-fiche"><h1>' + jeu.nom + "</h1>" +
+      '<button class="bouton-icone" id="favori" aria-pressed="' + favori + '" aria-label="' + (favori ? "Retirer des favoris" : "Ajouter aux favoris") + '">' +
+      Play.icone(favori ? "coeurPlein" : "coeur", favori ? "f-primary" : "f-play-text") + "</button>" +
+      '<button class="bouton-icone" id="partager" aria-label="Partager">' + Play.icone("partager") + "</button></div>";
+    if (partenaire.mention) html += '<p class="fourni-par">Fourni par ' + partenaire.nom + "</p>";
+    html += '<p class="note-fiche">' + Play.etoiles(jeu.note, 14) + "<b>" + Play.note(jeu) + "</b> · " + jeu.avis + " avis</p>";
+    html += '<div class="badges-play"><span class="badge-play">' + Play.icone("gratuit", "f-play-free") + "Gratuit</span>" +
+      (Play.infosPays().badgeData ? '<span class="badge-play">' + Play.icone("data", "f-play-free") + "Sans consommation de data</span>" : "") +
+      "</div>";
+
+    // Description et informations
+    html += '<hr class="separateur-play">';
+    html += '<h2 class="accroche-play">' + jeu.accroche + '</h2><p class="description-play">' + jeu.description + "</p>";
+    html += '<dl class="infos-jeu">' +
+      "<div><dt>Langues</dt><dd>" + jeu.langues.join(", ") + "</dd></div>" +
+      "<div><dt>Joueurs</dt><dd>" + jeu.joueurs + "</dd></div>" +
+      "<div><dt>Mode</dt><dd>" + jeu.mode + "</dd></div></dl>";
+
+    // Galerie : captures en carrousel
+    html += '<hr class="separateur-play"><section><h2 class="titre-play">Galerie</h2><div class="carrousel rangee-play">' +
+      [1, 2, 3].map((n) => '<span class="capture-play" role="img" aria-label="Capture ' + n + " de " + jeu.nom + '">' +
+        Play.visuel(jeu, 220, 330, "capture-" + n) + "</span>").join("") +
+      "</div></section>";
+
+    // Jeux similaires : même genre, sans ce jeu (S07-04)
+    const similaires = Play.similaires(jeu);
+    if (similaires.length) {
+      html += '<hr class="separateur-play"><section><h2 class="titre-play">Jeux similaires</h2><div class="carrousel rangee-play">' +
+        similaires.map((j) => Play.tuile(j, Play.url("p03-jeu.html", { jeu: jeu.id }))).join("") + "</div></section>";
+    }
+
+    html += '<div class="fin-contenu"></div>';
+    document.getElementById("page").innerHTML = html;
+
+    if (jeu.video) document.getElementById("lecture").addEventListener("click", lancerVideo);
+    document.getElementById("favori").addEventListener("click", () => {
+      const ajoute = Play.basculerFavori(jeu.id);
+      Nav.toast(ajoute ? "Ajouté à tes favoris" : "Retiré de tes favoris");
+    });
+    document.getElementById("partager").addEventListener("click", partager);
+  }
+
+  /* Vidéo simulée de 30 secondes : lecture et pause, sans fichier vidéo */
+  function lancerVideo() {
+    const media = document.getElementById("media");
+    document.getElementById("lecture").remove();
+    media.insertAdjacentHTML("beforeend",
+      '<div class="lecteur-play"><button class="bouton-icone" id="pause" aria-label="Pause">' + Play.icone("pause") + "</button>" +
+      '<span class="piste"><i id="piste"></i></span><span class="temps" id="temps">0:00 / 0:30</span></div>');
+    const bouton = document.getElementById("pause");
+    let secondes = 0;
+
+    function avancer() {
+      secondes = Math.min(30, secondes + 1);
+      document.getElementById("piste").style.width = (secondes / 30 * 100) + "%";
+      document.getElementById("temps").textContent = "0:" + String(secondes).padStart(2, "0") + " / 0:30";
+      if (secondes === 30) mettreEnPause();
+    }
+    function mettreEnPause() {
+      arreterVideo();
+      bouton.innerHTML = Play.icone("lecture");
+      bouton.setAttribute("aria-label", "Lecture");
+    }
+    function reprendre() {
+      if (secondes === 30) secondes = 0;
+      lectureEnCours = setInterval(avancer, 1000);
+      bouton.innerHTML = Play.icone("pause");
+      bouton.setAttribute("aria-label", "Pause");
+    }
+
+    bouton.addEventListener("click", () => (lectureEnCours ? mettreEnPause() : reprendre()));
+    reprendre();
+  }
+  function arreterVideo() {
+    clearInterval(lectureEnCours);
+    lectureEnCours = null;
+  }
+
+  /* Partage par les applications du téléphone (S07-05) : feuille système simulée */
+  function partager() {
+    const lien = "maxit.app/play/" + jeu.id;
+    const options = [
+      { icone: "discussion", libelle: "Messagerie" },
+      { icone: "message", libelle: "SMS" },
+      { icone: "reseau", libelle: "Réseaux sociaux" },
+      { icone: "copier", libelle: "Copier le lien" }
+    ];
+    const voile = Play.feuille(
+      '<div class="apercu-partage"><span class="vignette-partage">' + Play.visuel(jeu, 52, 52, "tuile") + "</span>" +
+      "<div><strong>" + jeu.nom + "</strong><small>Joue avec moi sur Max it · " + lien + "</small></div></div>" +
+      '<div class="options-partage">' + options.map((o, i) =>
+        '<button class="option-partage" data-option="' + i + '"><span>' + Play.icone(o.icone, "f-text") + "</span>" + o.libelle + "</button>"
+      ).join("") + "</div>" +
+      '<button class="bouton bouton-secondaire bouton-pleine-largeur" data-fermer>Annuler</button>',
+      "Partager " + jeu.nom
+    );
+    voile.querySelectorAll("[data-option]").forEach((bouton) => bouton.addEventListener("click", () => {
+      const option = options[Number(bouton.dataset.option)];
+      voile.remove();
+      Nav.toast(option.libelle === "Copier le lien" ? "Lien copié" : "Lien envoyé par " + option.libelle);
+    }));
+  }
+
+  Play.monter(rendre);
+</script>
+</body>
+</html>

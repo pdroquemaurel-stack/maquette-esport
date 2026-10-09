@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<!-- Écran p02 — Page d'un genre (p02-genre.html?genre=sport), ou tout le catalogue (?genre=tous).
+     Pas d'écran Figma : composants repris de l'accueil (tuiles, thème sombre).
+     US : S06-03 (tous les jeux du genre dans le pays), S06-04 (tuiles) ; jeux indisponibles masqués (S08-04). -->
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Genre</title>
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-zone="play">
+<div class="cadre">
+  <div class="telephone play">
+    <div class="barre-etat" data-heure="9:30"></div>
+    <header class="entete-simple-play">
+      <a href="p01-accueil.html" class="retour-play" aria-label="Retour à l'accueil de Play"></a>
+      <h1 id="titre"></h1>
+    </header>
+    <main class="contenu" id="page"></main>
+  </div>
+</div>
+
+<script src="js/data-play.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/play.js"></script>
+<script src="js/demo.js"></script>
+<script>
+  function rendre() {
+    // Genre demandé ; inconnu → tout le catalogue
+    const genre = Play.genre(Nav.param("genre"));
+    const idGenre = genre ? genre.id : "tous";
+    const jeux = Play.jeuxDuGenre(idGenre);
+    const titre = genre ? genre.nom : "Tous les jeux";
+    document.title = titre;
+
+    document.querySelector(".retour-play").innerHTML = Play.icone("retour");
+    document.getElementById("titre").textContent = titre;
+
+    let html = '<p class="sous-titre-play">' + jeux.length + (jeux.length > 1 ? " jeux gratuits" : " jeu gratuit") +
+      " · les plus joués en premier</p>";
+    html += jeux.length
+      ? '<div class="grille-play">' + jeux.map((j) => Play.tuile(j)).join("") + "</div>"
+      : '<p class="sous-titre-play">Aucun jeu de ce genre pour le moment. <a href="p01-accueil.html">Retour à l\'accueil</a></p>';
+    html += '<div class="fin-contenu"></div>';
+    document.getElementById("page").innerHTML = html;
+  }
+  Play.monter(rendre);
+</script>
+</body>
+</html>
