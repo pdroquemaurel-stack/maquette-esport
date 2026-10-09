@@ -94,3 +94,40 @@ jeu momentanément indisponible ; ouverture par lien partagé ; lien vers un jeu
 - Textes traduits en français, noms de jeux et de partenaires fictifs, visuels en SVG
   aux formats de Figma.
 - Écrans sans Figma : réutiliser les composants Figma, sans en inventer.
+
+
+## Section Shop — Game Center Shop (3e chantier)
+
+### Objectif
+Maquette front office du Shop décrit dans reference/backlog-shop.html : uniquement les Epics
+« Parcours du client » (E05 à E10), plus S02-04 (ne vendre que du livrable). Le back-office
+(E01 à E04, E11, E12) n'est pas maquetté : catalogue, prix, promotions, bannières et stocks sont
+simulés dans js/data-shop.js. Les US V2 (S06-04, S06-09, S06-12, S10-03) ne sont pas maquettées.
+Si des visuels Figma sont dans reference/figma-shop/, ils font foi, comme pour Play.
+
+### Entrées
+- Depuis 00c (univers gaming), le bouton du Shop ouvre l'accueil du Shop.
+- Depuis la page d'un jeu de l'e-sport (13), le lien « Boutique Max it » ouvre la page de ce
+  jeu dans le Shop.
+- Les entrées E-sport et Jouer ne doivent pas être modifiées.
+
+### Règles propres au Shop
+- Fichiers préfixés « s » (s01-accueil.html…) ; données dans js/data-shop.js.
+- Réutiliser tokens.css, style.css, nav.js et demo.js. Aucune nouvelle couleur.
+- Mini app : en-tête avec retour vers Max it, accès à « Mes achats » et à l'aide.
+- Catalogue fictif cohérent avec l'e-sport : les 4 jeux de data.js, plus 4 ou 5 autres ; pour
+  chaque jeu, 3 à 6 produits mêlant top-up, vouchers ou e-cards et pass. Prix en MAD, TTC.
+  Quelques produits en promotion (prix barré) et quelques produits en rupture (non achetables).
+- Pas de panier : une commande porte sur un seul produit. Le tunnel part toujours du jeu, puis
+  du produit.
+- Le paiement réutilise la brique de paiement Max it simulée de l'e-sport (écran 22),
+  complétée par le choix entre Orange Money et crédit ou facture mobile (DCB).
+- Vérification du compte de jeu : possible pour certains jeux (le pseudo s'affiche),
+  impossible pour d'autres (saisie de l'identifiant en double).
+- Tous les textes en français ; le changement de langue (S03-06) n'est pas maquetté.
+
+### Menu de démo — ajouts Shop
+Premier achat (conditions de vente à accepter) ; conditions de vente modifiées ; identifiant de
+jeu introuvable ; solde Orange Money insuffisant ; montant hors plafond DCB ; paiement sans
+réponse (« Vérification en cours ») ; livraison en échec puis remboursement ; pass qui expire
+dans 3 jours ; envoi du code par SMS activé ou non.
