@@ -897,3 +897,626 @@ svg { display: block; flex-shrink: 0; }
 .rang.podium-3 { background: var(--illu-terracotta); }
 .points { font-weight: var(--font-weight-bold); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .points small { font-weight: var(--font-weight-medium); color: var(--color-text-muted); font-size: var(--font-size-xs); }
+
+/* =====================================================================
+   Play — mini app des mini-jeux (p01 à p05), d'après reference/figma-play
+   Thème sombre ; couleurs et tailles propres à Play : section « Play » de tokens.css.
+   ===================================================================== */
+
+/* Classes de remplissage propres à Play */
+.f-play-text { fill: var(--play-text); }
+.f-play-muted { fill: var(--play-text-muted); }
+.f-play-star { fill: var(--play-star); }
+.f-play-chip { fill: var(--play-chip); }
+.f-play-free { fill: var(--play-free); }
+.f-play-on-light { fill: var(--play-on-light); }
+
+.telephone.play { background: var(--play-bg); color: var(--play-text); }
+.play .barre-etat { background: var(--play-bg); }
+.play .barre-etat svg .f-text,
+.play .demo-bouton .f-text { fill: var(--play-text); }
+.play .toast { background: var(--play-button-light); color: var(--play-on-light); }
+
+/* Visuels des jeux (SVG dessinés par js/play.js) */
+.visuel-play { display: block; width: 100%; height: 100%; }
+.visuel-play .p1 { fill: var(--play-text); }
+.visuel-play .p2 { fill: var(--vj-sombre); }
+.visuel-play .p3 { fill: var(--vj-clair); }
+.visuel-play .t1 { stroke: var(--play-text); }
+.visuel-play .t2 { stroke: var(--vj-sombre); }
+
+/* ============ En-tête de l'accueil : motif, illustration, bienvenue ============ */
+.entete-play {
+  position: relative;
+  overflow: hidden;
+  padding: 0 var(--page-gutter) var(--space-2);
+  text-align: center;
+}
+.entete-play .motif { position: absolute; inset: 0; width: 100%; height: 100%; }
+.entete-play .motif .m1 { stroke: var(--play-pattern-a); }
+.entete-play .motif .m2 { stroke: var(--play-pattern-b); }
+.retour-play {
+  position: relative;
+  width: var(--touch-target);
+  height: var(--touch-target);
+  margin-left: calc(-1 * var(--space-2));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.retour-play svg { width: var(--icon-size); height: var(--icon-size); }
+.illustration-play { position: relative; width: 220px; height: 180px; margin: 0 auto; }
+.illustration-play .i-bleu { fill: var(--color-game-blue); }
+.illustration-play .i-violet { fill: var(--color-game-purple); }
+.illustration-play .i-nuit { fill: var(--color-game-blue-bg); }
+.illustration-play .i-sombre { fill: var(--color-surface-dark); }
+.illustration-play .i-gris { fill: var(--illu-gray-dark); }
+.illustration-play .i-or { fill: var(--illu-gold); }
+.illustration-play .i-or-clair { fill: var(--illu-gold-light); }
+.illustration-play .i-rose { fill: var(--illu-neon-pink); }
+.illustration-play .i-violet-fonce { fill: var(--illu-purple-deep); }
+.illustration-play .i-blanc { fill: var(--play-text); }
+.illustration-play .s-bleu { stroke: var(--color-game-blue); }
+.entete-play h1 {
+  position: relative;
+  font-size: var(--play-font-title);
+  line-height: var(--line-height-tight);
+  margin-top: var(--space-3);
+}
+.entete-play p { position: relative; color: var(--play-text-secondary); margin-top: var(--space-1); }
+
+/* ============ Titres et rangées ============ */
+.titre-play {
+  font-size: var(--play-font-section);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-tight);
+  padding: 0 var(--page-gutter);
+  margin: var(--space-8) 0 var(--space-4);
+}
+.rangee-play { gap: var(--space-3); }
+
+/* Tuile d'un jeu : visuel 160 × 150, nom, « Gratuit » et note (S06-04) */
+.tuile-play { width: var(--play-tile-width); display: flex; flex-direction: column; gap: 2px; }
+.visuel-tuile {
+  display: block;
+  width: 100%;
+  aspect-ratio: 160 / 150;
+  border-radius: var(--play-radius-card);
+  overflow: hidden;
+  margin-bottom: var(--space-2);
+}
+.tuile-nom {
+  font-size: var(--play-font-tile);
+  line-height: var(--line-height-tight);
+  overflow-wrap: anywhere;
+}
+.tuile-meta { display: flex; align-items: center; gap: var(--space-2); font-size: 12px; color: var(--play-free); }
+.tuile-note { display: inline-flex; align-items: center; gap: 2px; color: var(--play-text-secondary); }
+.tuile-note svg { width: 12px; height: 12px; }
+
+/* Grille de tuiles (page d'un genre) */
+.grille-play {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-5) var(--space-3);
+  padding: 0 var(--page-gutter);
+}
+.grille-play .tuile-play { width: auto; min-width: 0; }
+
+/* ============ Carte « à la une » (style des cartes « Discover » de Figma) ============ */
+.carte-une-play {
+  position: relative;
+  display: block;
+  height: var(--play-card-height);
+  margin: 0 var(--page-gutter);
+  border-radius: var(--play-radius-card);
+  overflow: hidden;
+}
+.carte-une-play .visuel-play { position: absolute; inset: 0; }
+.carte-une-play::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 45%, var(--play-shade));
+}
+.carte-une-texte { position: absolute; left: var(--space-4); right: var(--space-4); bottom: var(--space-5); z-index: 1; }
+.carte-une-texte h3 { font-size: var(--play-font-title); line-height: var(--line-height-tight); }
+.carte-une-texte p { margin-top: var(--space-2); font-size: var(--font-size-md); }
+
+/* ============ Grille des genres (S06-03) ============ */
+.grille-genres {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-4) var(--space-3);
+  padding: 0 var(--page-gutter);
+}
+.genre-play {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-sm);
+  color: var(--play-text-secondary);
+  text-align: center;
+  min-width: 0;
+}
+.genre-icone {
+  width: 100%;
+  max-width: var(--play-genre-size);
+  aspect-ratio: 1;
+  border-radius: var(--play-radius-card);
+  background: var(--play-tile);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.genre-icone svg { width: 44px; height: 44px; }
+.picto-genre .g1 { fill: var(--color-primary); }
+.picto-genre .g2 { fill: var(--play-text); }
+.picto-genre .g3 { fill: var(--play-text-muted); }
+.picto-genre .gs2 { stroke: var(--play-text); }
+
+/* ============ Message (jeu indisponible, S08-04) et sections vides ============ */
+.message-play {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+  margin: var(--space-3) var(--page-gutter) 0;
+  padding: var(--space-3) var(--space-3) var(--space-3) var(--space-4);
+  border-radius: var(--play-radius-card);
+  background: var(--play-surface);
+  font-size: var(--font-size-sm);
+}
+.message-play > svg { width: 20px; height: 20px; margin-top: 1px; }
+.message-play div { flex: 1; min-width: 0; }
+.message-play strong { display: block; font-size: var(--font-size-md); }
+.message-play p { color: var(--play-text-secondary); }
+.message-play .bouton-icone { width: 32px; height: 32px; margin: -4px -4px 0 0; }
+.message-play .bouton-icone svg { width: 18px; height: 18px; }
+
+/* ============ En-tête simple (page d'un genre, transition) ============ */
+.entete-simple-play {
+  height: var(--top-bar-height);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 0 var(--space-2);
+}
+.entete-simple-play .retour-play { margin-left: 0; }
+.entete-simple-play h1 {
+  font-size: var(--font-size-xl);
+  line-height: var(--line-height-tight);
+  overflow-wrap: anywhere;
+}
+.sous-titre-play { padding: 0 var(--page-gutter) var(--space-5); color: var(--play-text-secondary); font-size: var(--font-size-sm); }
+
+/* ============ Fiche jeu : feuille posée sur l'accueil (Figma 04 à 06) ============ */
+.zone-fiche { position: relative; flex: 1; min-height: 0; }
+.fond-fiche { position: absolute; inset: 0; display: block; overflow: hidden; }
+.fond-fiche .fond-cartes { display: flex; gap: var(--space-3); padding: var(--space-2) var(--page-gutter) 0; }
+.fond-fiche .fond-cartes span {
+  width: 230px;
+  height: var(--play-card-height);
+  flex-shrink: 0;
+  border-radius: var(--play-radius-card);
+  overflow: hidden;
+}
+.fond-fiche::after { content: ""; position: absolute; inset: 0; background: var(--play-scrim); }
+.feuille-fiche {
+  position: absolute;
+  top: var(--play-sheet-top);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--play-sheet);
+  border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;
+  overflow: hidden;
+}
+.poignee-play {
+  display: block;
+  flex-shrink: 0;
+  width: 64px;
+  padding: var(--space-3) 0;
+  margin: 0 auto;
+}
+.poignee-play::before {
+  content: "";
+  display: block;
+  height: 5px;
+  border-radius: var(--radius-pill);
+  background: var(--play-handle);
+}
+.feuille-fiche .contenu { padding: 0 var(--page-gutter); }
+.feuille-fiche .titre-play { padding: 0; margin: 0 0 var(--space-4); }
+.feuille-fiche .carrousel { margin: 0 calc(-1 * var(--page-gutter)); }
+
+/* Visuel ou vidéo en tête de fiche : la vidéo ne démarre qu'à la demande (S07-02) */
+.media-fiche {
+  position: relative;
+  width: 100%;
+  height: var(--play-hero-height);
+  border-radius: var(--play-radius-card);
+  overflow: hidden;
+}
+.media-fiche .visuel-play { position: absolute; inset: 0; }
+.bouton-lecture {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-sm);
+}
+.bouton-lecture .rond {
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-round);
+  background: var(--play-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.bouton-lecture .rond svg { width: 26px; height: 26px; }
+.lecteur-play {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-6) var(--space-3) var(--space-3);
+  background: linear-gradient(180deg, transparent, var(--play-shade));
+  font-size: var(--font-size-xs);
+}
+.lecteur-play .bouton-icone { width: 36px; height: 36px; }
+.lecteur-play .bouton-icone svg { width: 22px; height: 22px; }
+.lecteur-play .piste { flex: 1; height: 4px; border-radius: var(--radius-pill); background: var(--play-handle); overflow: hidden; }
+.lecteur-play .piste i { display: block; height: 100%; width: 0; background: var(--color-primary); transition: width 1s linear; }
+.lecteur-play .temps { font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* En-tête de la fiche : genre, nom, actions, note, badges (S07-01, S07-03) */
+.puce-genre {
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 var(--space-3);
+  margin-top: var(--space-4);
+  border-radius: var(--radius-pill);
+  background: var(--play-chip);
+  font-size: var(--font-size-sm);
+}
+.titre-fiche { display: flex; align-items: center; gap: var(--space-1); margin-top: var(--space-2); }
+.titre-fiche h1 { flex: 1; min-width: 0; font-size: var(--play-font-title); line-height: var(--line-height-tight); overflow-wrap: anywhere; }
+.titre-fiche .bouton-icone:last-child { margin-right: calc(-1 * var(--space-2)); }
+.fourni-par { font-size: var(--font-size-sm); color: var(--play-text-secondary); margin-top: 2px; }
+.note-fiche { display: flex; align-items: center; gap: var(--space-2); margin-top: var(--space-2); font-size: var(--font-size-sm); color: var(--play-text-secondary); }
+.note-fiche b { color: var(--play-text); }
+.etoiles { display: inline-flex; gap: 1px; }
+.badges-play { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-3); }
+.badge-play {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  height: 28px;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-pill);
+  background: var(--play-chip);
+  font-size: 12px;
+  font-weight: var(--font-weight-bold);
+}
+.badge-play svg { width: 14px; height: 14px; }
+
+.separateur-play { height: 1px; background: var(--play-divider); margin: var(--space-5) 0; border: 0; }
+.accroche-play { font-size: var(--font-size-lg); font-weight: var(--font-weight-bold); margin-bottom: var(--space-2); }
+.description-play { color: var(--play-text-secondary); }
+
+/* Informations du jeu (S07-02) */
+.infos-jeu { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-2); margin-top: var(--space-4); }
+.infos-jeu div { min-width: 0; padding: var(--space-2) var(--space-3); border-radius: var(--play-radius-card); background: var(--play-surface); }
+.infos-jeu dt { font-size: 12px; color: var(--play-text-muted); }
+.infos-jeu dd { font-size: var(--font-size-sm); font-weight: var(--font-weight-bold); line-height: var(--line-height-tight); overflow-wrap: anywhere; }
+
+/* Galerie : captures 220 × 330 */
+.capture-play {
+  width: var(--play-gallery-width);
+  height: var(--play-gallery-height);
+  border-radius: var(--play-radius-card);
+  overflow: hidden;
+}
+
+/* Bouton « Jouer » toujours visible en bas de la fiche (S07-01) */
+.barre-action.barre-play { background: var(--play-sheet); box-shadow: none; }
+.bouton-jouer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: var(--play-cta-height);
+  border-radius: var(--play-radius-button);
+  background: var(--color-primary);
+  color: var(--color-text);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+}
+.bouton-jouer:active { background: var(--color-primary-pressed); }
+.bouton-jouer-secondaire {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: var(--touch-target);
+  margin-top: var(--space-2);
+  color: var(--play-text-secondary);
+  font-weight: var(--font-weight-bold);
+}
+
+/* Feuille de partage (feuille système du téléphone, S07-05) */
+.apercu-partage { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-5); }
+.apercu-partage .vignette-partage { width: 52px; height: 52px; border-radius: var(--radius-sm); overflow: hidden; flex-shrink: 0; }
+.apercu-partage div { min-width: 0; }
+.apercu-partage strong { display: block; }
+.apercu-partage small { color: var(--color-text-secondary); overflow-wrap: anywhere; }
+.options-partage { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-3); margin-bottom: var(--space-5); }
+.option-partage { display: flex; flex-direction: column; align-items: center; gap: var(--space-1); font-size: var(--font-size-xs); text-align: center; }
+.option-partage span {
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-round);
+  background: var(--color-surface-warm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.option-partage svg { width: 24px; height: 24px; }
+
+/* ============ Écran de transition d'un hub sans lien direct (S08-02) ============ */
+.transition-play { padding: var(--space-6) var(--page-gutter); text-align: center; }
+.logo-hub {
+  width: 88px;
+  height: 88px;
+  margin: 0 auto var(--space-5);
+  border-radius: var(--radius-lg);
+  background: var(--play-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.logo-hub svg { width: 44px; height: 44px; }
+.transition-play h2 { font-size: var(--play-font-title); line-height: var(--line-height-tight); }
+.transition-play > p { color: var(--play-text-secondary); margin-top: var(--space-2); }
+.ou-trouver {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  margin-top: var(--space-6);
+  padding: var(--space-4);
+  border-radius: var(--play-radius-card);
+  background: var(--play-surface);
+  text-align: left;
+}
+.ou-trouver .vignette-cible { width: 56px; height: 56px; border-radius: var(--radius-sm); overflow: hidden; flex-shrink: 0; }
+.ou-trouver p { font-size: var(--font-size-sm); }
+
+/* ============ Jeu simulé (S08-01, S08-03) ============ */
+.barre-maxit {
+  height: 52px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: 0 var(--space-3);
+  background: var(--color-bg-dark);
+  border-bottom: 1px solid var(--play-divider);
+  position: relative;
+  z-index: 5;
+}
+.quitter-jeu {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: 36px;
+  padding: 0 var(--space-3) 0 var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--color-glass-dark);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+}
+.quitter-jeu svg { width: 18px; height: 18px; }
+.barre-maxit .nom-jeu { min-width: 0; font-size: var(--font-size-sm); color: var(--play-text-secondary); text-align: right; overflow-wrap: anywhere; }
+.ecran-jeu { position: relative; flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: none; }
+.ecran-jeu::-webkit-scrollbar { display: none; }
+.chargement-jeu { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-3); padding: var(--space-6); text-align: center; }
+.chargement-jeu .vignette-cible { width: 112px; height: 112px; border-radius: var(--radius-lg); overflow: hidden; }
+.chargement-jeu strong { font-size: var(--font-size-lg); }
+.chargement-jeu small { color: var(--play-text-secondary); }
+.barre-chargement { width: 200px; height: 6px; border-radius: var(--radius-pill); background: var(--play-surface); overflow: hidden; }
+.barre-chargement i { display: block; height: 100%; width: 0; background: var(--color-primary); animation: charge-play 1.6s ease-out forwards; }
+@keyframes charge-play { to { width: 100%; } }
+.partie-jeu { position: absolute; inset: 0; }
+.partie-jeu .visuel-play { position: absolute; inset: 0; }
+.hud-jeu { position: absolute; top: var(--space-3); left: var(--space-3); right: var(--space-3); display: flex; justify-content: space-between; }
+.hud-jeu span, .etiquette-simulee {
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-pill);
+  background: var(--play-shade);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+}
+.etiquette-simulee {
+  position: absolute;
+  left: var(--space-6);
+  right: var(--space-6);
+  bottom: var(--space-6);
+  border-radius: var(--play-radius-card);
+  padding: var(--space-3) var(--space-4);
+  text-align: center;
+  font-weight: var(--font-weight-regular);
+}
+.etiquette-simulee b { display: block; }
+
+/* Accueil du hub partenaire (après l'écran de transition) */
+.hub-jeu { padding: var(--space-5) var(--page-gutter); }
+.hub-tete { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-2); }
+.hub-tete .logo-hub { width: 48px; height: 48px; margin: 0; border-radius: var(--radius-sm); }
+.hub-tete .logo-hub svg { width: 26px; height: 26px; }
+.hub-tete strong { font-size: var(--font-size-xl); }
+.hub-aide { color: var(--play-text-secondary); font-size: var(--font-size-sm); }
+.hub-onglet { font-size: var(--font-size-sm); font-weight: var(--font-weight-bold); color: var(--color-primary); margin: var(--space-5) 0 var(--space-2); }
+.hub-grille { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-3); }
+.hub-grille button { display: flex; flex-direction: column; gap: var(--space-1); font-size: 12px; text-align: left; min-width: 0; overflow-wrap: anywhere; }
+.hub-grille .visuel-hub { width: 100%; aspect-ratio: 1; border-radius: var(--radius-sm); overflow: hidden; }
+
+/* ============ Avis des joueurs (lot P2, d'après reference/figma-play/06-avis.png) ============ */
+.bouton-jouer:disabled { background: var(--play-chip); color: var(--play-text-muted); cursor: default; }
+
+/* Titre « Notes et avis » avec « Voir tout » (texte blanc, chevron orange) */
+.titre-avec-lien { display: flex; align-items: center; }
+.voir-tout-play {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  min-height: var(--touch-target);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-bold);
+}
+.voir-tout-play svg { width: 18px; height: 18px; }
+
+/* Moyenne en grand, étoiles et nombre d'avis */
+.resume-note { display: flex; align-items: center; gap: var(--space-3); }
+.resume-note b { font-size: var(--font-size-display); line-height: 1; }
+.nombre-avis { font-size: var(--font-size-sm); margin-top: var(--space-2); }
+
+/* Bouton clair « Donner mon avis » (Figma : « Write a review ») */
+.bouton-clair {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 48px;
+  margin-top: var(--space-4);
+  border-radius: var(--play-radius-button);
+  background: var(--play-button-light);
+  color: var(--play-on-light);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+}
+.bouton-clair:disabled { background: var(--play-chip); color: var(--play-text-muted); cursor: default; }
+.aide-avis { font-size: var(--font-size-sm); color: var(--play-text-secondary); margin-top: var(--space-2); }
+.aide-avis b { color: var(--play-text); }
+
+/* Carte d'un avis : avatar à initiales, pseudonyme, étoiles, date, texte */
+.avis-play { padding: var(--space-4) 0; border-bottom: 1px solid var(--play-divider); }
+.avis-tete { display: flex; align-items: flex-start; gap: var(--space-3); }
+.avatar-play {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: var(--radius-round);
+  background: var(--color-primary);
+  color: var(--color-text);
+  font-size: var(--font-size-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.avis-mien .avatar-play { background: var(--play-button-light); color: var(--play-on-light); }
+.avis-auteur { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.avis-nom { font-size: var(--font-size-md); overflow-wrap: anywhere; }
+.avis-nom small { color: var(--play-text-secondary); font-size: var(--font-size-sm); }
+.avis-note { display: flex; align-items: center; gap: var(--space-3); }
+.avis-date { font-size: var(--font-size-sm); color: var(--play-free); }
+.avis-texte { margin-top: var(--space-3); font-size: var(--font-size-sm); color: var(--play-text-secondary); overflow-wrap: anywhere; }
+.avis-texte.replie { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.avis-pied { display: flex; gap: var(--space-4); }
+.avis-pied:empty { display: none; }
+.lien-avis {
+  min-height: 32px;
+  margin-top: var(--space-1);
+  font-size: var(--font-size-sm);
+  color: var(--play-text-secondary);
+  text-decoration: underline;
+}
+.lien-signaler { color: var(--play-text-muted); }
+.avis-signale { display: inline-block; margin-top: var(--space-2); font-size: var(--font-size-xs); color: var(--play-text-muted); }
+.lien-tous-avis {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch-target);
+  margin-top: var(--space-2);
+  font-weight: var(--font-weight-bold);
+  text-decoration: underline;
+}
+
+/* Feuille de Play (signalement) : thème sombre */
+.feuille.feuille-sombre { background: var(--play-sheet); color: var(--play-text); }
+.feuille-sombre .poignee { background: var(--play-handle); }
+.feuille-sombre .demo-aide { color: var(--play-text-secondary); }
+.feuille-sombre .bouton-secondaire { background: var(--play-surface); color: var(--play-text); border-color: var(--play-surface); }
+.feuille-sombre .bouton-primaire:disabled { background: var(--play-chip); color: var(--play-text-muted); border-color: var(--play-chip); }
+.bouton-annuler { margin-top: var(--space-2); }
+.motifs-play { display: flex; flex-direction: column; margin-bottom: var(--space-5); }
+.motif-play {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--touch-target);
+  border-bottom: 1px solid var(--play-divider);
+  cursor: pointer;
+}
+.motif-play input { width: 20px; height: 20px; accent-color: var(--color-primary); }
+
+/* Page de tous les avis (p06) */
+.synthese-avis {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--space-5);
+  align-items: center;
+  margin: 0 var(--page-gutter);
+  padding: var(--space-4);
+  border-radius: var(--play-radius-card);
+  background: var(--play-surface);
+}
+.repartition { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
+.ligne-repartition { display: flex; align-items: center; gap: var(--space-2); font-size: var(--font-size-xs); color: var(--play-text-secondary); }
+.barre-note { flex: 1; height: 6px; border-radius: var(--radius-pill); background: var(--play-chip); overflow: hidden; }
+.barre-note i { display: block; height: 100%; background: var(--play-star); }
+.actions-avis { padding: 0 var(--page-gutter); }
+.liste-avis { padding: var(--space-2) var(--page-gutter) 0; }
+
+/* Formulaire d'avis (p07) */
+.jeu-avis { display: flex; align-items: center; gap: var(--space-3); padding: 0 var(--page-gutter); }
+.jeu-avis .vignette-cible { width: 56px; height: 56px; border-radius: var(--radius-sm); overflow: hidden; flex-shrink: 0; }
+.jeu-avis div { min-width: 0; }
+.jeu-avis strong { display: block; font-size: var(--font-size-lg); }
+.jeu-avis small { color: var(--play-text-secondary); }
+.formulaire-avis { padding: 0 var(--page-gutter); }
+.formulaire-avis .titre-play { padding: 0; margin: var(--space-6) 0 var(--space-3); }
+.formulaire-avis .titre-play small { font-size: var(--font-size-sm); font-weight: var(--font-weight-regular); color: var(--play-text-secondary); }
+.choix-etoiles { display: flex; gap: var(--space-2); }
+.choix-etoiles button { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; }
+.choix-etoiles svg { width: 40px; height: 40px; }
+.libelle-note { margin-top: var(--space-2); font-size: var(--font-size-sm); color: var(--play-text-secondary); }
+.champ-avis {
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--play-chip);
+  border-radius: var(--play-radius-card);
+  background: var(--play-surface);
+  color: var(--play-text);
+  font: inherit;
+  resize: none;
+}
+.champ-avis:focus { outline: 0; border-color: var(--color-primary); }
+.champ-avis::placeholder { color: var(--play-text-muted); }
+.compteur { text-align: right; font-size: var(--font-size-xs); color: var(--play-text-muted); margin-top: var(--space-1); }
+.lien-supprimer { margin-top: var(--space-4); color: var(--color-primary); }
+.formulaire-avis + .message-play, .jeu-avis + .message-play { margin-top: var(--space-5); }

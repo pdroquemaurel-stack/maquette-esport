@@ -46,12 +46,25 @@
     ["14-resultat.html", () => ({ monMatch: { presenceMoi: "21:21", issue: "demarre", demarrage: "21:23", demarrageIso: "2026-10-09T21:23" },
       horloge: { reel: Date.now(), simule: "2026-10-09T21:40" } })],
     ["15-litige.html", { scenario: "litige-ouvert" }],
-    ["10-equipe.html?id=t12", { scenario: "equipe-fermee" }]
+    ["10-equipe.html?id=t12", { scenario: "equipe-fermee" }],
+    // Play (lot P1) : accueil, genres, fiches (mini app, hub avec et sans lien direct), transition, partie
+    "p01-accueil.html", ["p01-accueil.html", { playNouveau: true }], ["p01-accueil.html", { playPays: "SN" }],
+    ["p01-accueil.html?indispo=1", { playIndispo: true }],
+    "p02-genre.html?genre=sport", "p02-genre.html?genre=tous", ["p02-genre.html?genre=strategie", { playPays: "SN" }],
+    "p03-jeu.html?jeu=rallye-dunes&depuis=p01-accueil.html", "p03-jeu.html?jeu=bloc-mania&depuis=p02-genre.html%3Fgenre%3Dpuzzle",
+    ["p03-jeu.html?jeu=ludo-famille", { playPays: "SN" }], "p03-jeu.html?jeu=mot-juste&via=lien",
+    "p04-transition.html?jeu=ludo-famille&depuis=p01-accueil.html",
+    "p05-partie.html?jeu=rallye-dunes", "p05-partie.html?jeu=bloc-mania", "p05-partie.html?jeu=ludo-famille&mode=hub",
+    // Play (lot P2) : avis — fiche d'un jeu noté, d'un jeu jamais lancé, liste complète, formulaire
+    "p03-jeu.html?jeu=foot-lions", "p03-jeu.html?jeu=parking-pro",
+    "p06-avis.html?jeu=foot-lions&depuis=p01-accueil.html", "p06-avis.html?jeu=parking-pro", ["p06-avis.html?jeu=taxi-brousse", { playSignales: ["taxi-brousse-0"] }],
+    "p07-donner-avis.html?jeu=bloc-mania", "p07-donner-avis.html?jeu=foot-lions&retour=avis", "p07-donner-avis.html?jeu=parking-pro"
   ];
   const abonne = location.hash === "#abonne";
   const sortie = document.getElementById("sortie");
   // Zones qui défilent horizontalement : un débordement y est normal
-  const DEFILANTS = ".carrousel, .puces, .arbre, .offres-jeu, .visuel-jeu, .collection-courte";
+  // (.fond-fiche : l'accueil de Play rogné derrière la feuille de la fiche jeu, p03)
+  const DEFILANTS = ".carrousel, .puces, .arbre, .offres-jeu, .visuel-jeu, .collection-courte, .fond-fiche";
 
   function decrire(e) {
     const classes = typeof e.className === "string" && e.className.trim() ? "." + e.className.trim().split(/\s+/).join(".") : "";

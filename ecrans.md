@@ -369,3 +369,83 @@ Le nom « E-Sport Orange Points » du backlog est affiché « MaxPoints » (déc
 
 ### US MVP hors périmètre (back-office)
 S02-01, S03-01, S03-02, S07-04, S08-01, S08-03, S08-05, S09-01, S09-03, et la partie gestion de S09-02.
+
+---
+
+# Play — mini app des mini-jeux (2e chantier)
+
+Source : `reference/backlog-play.html`, Epics « Front — mini app Play » (E06 à E10). Visuels de référence : `reference/figma-play/` (et `reference/05-fiche-jeu-suite.png`). Arbitrages Figma / backlog : voir CLAUDE.md.
+Données fictives (back-office simulé) : `js/data-play.js` ; fonctions communes : `js/play.js` ; couleurs et tailles : section « Play » de `css/tokens.css`.
+Entrée : 00c, tuile « Jouer » → p01. Thème sombre, pas de barre du bas. Les numéros d'US ci-dessous sont ceux du backlog Play.
+
+### p01 `p01-accueil.html` — Accueil de Play
+- Référence : Figma 01 et 02.
+- US : S06-01, S06-02, S06-03, S06-04, S09-01, S09-02, S09-03, S08-04.
+- Éléments : retour vers Max it, illustration, « Bienvenue sur Play » ; Récemment joués (dès la première partie) ; À la une (une carte) ; Recommandés pour toi ; Mes favoris (dès le premier favori) ; Nouveautés ; Populaires ici ; grille des genres du pays et « Tous les jeux ». Avec `?indispo=1` : message « Ce jeu n'est pas disponible pour le moment ».
+- Liens : retour → 00c ; tuiles et carte → p03 ; genres → p02.
+
+### p02 `p02-genre.html?genre=sport` — Page d'un genre (`?genre=tous` : tout le catalogue)
+- Pas d'écran Figma. US : S06-03, S06-04.
+- Éléments : nom du genre, nombre de jeux, grille des jeux du pays par popularité.
+- Liens : retour → p01 ; tuiles → p03.
+
+### p03 `p03-jeu.html?jeu=…&depuis=…` — Fiche jeu
+- Référence : Figma 04 et 05 (feuille posée sur l'accueil).
+- US : S07-01 à S07-05, S09-01, S06-01 (lien direct `via=lien`), S08-04.
+- Éléments : vidéo lancée à la demande ou visuel ; genre, nom, favori, partage (feuille du téléphone simulée) ; « Fourni par Kora Games » pour ce seul partenaire ; note et nombre d'avis ; badges « Gratuit » et, selon le pays, « Sans consommation de data » ; accroche, description, langues, joueurs, mode ; galerie ; jeux similaires ; notes et avis (Figma 06 : moyenne, nombre d'avis, « Donner mon avis » ou « Modifier mon avis », mon avis, 2 derniers commentaires, « Signaler ») ; bouton « Jouer » toujours visible.
+- Liens : fermer (voile ou poignée) → page d'origine ; « Jouer » → p05, ou p04 pour un hub sans lien direct ; jeux similaires → p03 ; « Voir tout » et « Voir tous les avis » → p06 ; « Donner mon avis » → p07.
+
+### p06 `p06-avis.html?jeu=…` — Tous les avis
+- Pas d'écran Figma pour la liste : composants de Figma 06. US : S10-01, S10-02, S10-03.
+- Éléments : moyenne, nombre d'avis et de commentaires, répartition des notes ; « Donner mon avis » (inactif si le jeu n'a jamais été lancé) ; mon avis en tête avec « Modifier » et « Supprimer » ; tous les commentaires, du plus récent au plus ancien, avec « Lire la suite » et « Signaler » (motif : insultant, hors sujet, publicité, autre).
+- Liens : retour → p03 ; « Modifier » / « Donner mon avis » → p07 (retour sur p06).
+
+### p07 `p07-donner-avis.html?jeu=…` — Donner ou modifier son avis
+- Pas d'écran Figma. US : S10-01.
+- Éléments : jeu, 1 à 5 étoiles avec libellé, commentaire facultatif (500 caractères, compteur), pseudonyme de publication, « Publier » (inactif sans note), « Supprimer mon avis » pour un avis existant. Jeu jamais lancé : message « Joue d'abord une partie » et « Revenir au jeu ».
+- Liens : retour et « Publier » → p03 (ou p06 si l'on en vient).
+
+### p04 `p04-transition.html?jeu=…` — Transition vers un hub sans lien direct
+- Pas d'écran Figma. US : S08-02.
+- Éléments : hub, texte « où trouver le jeu » de la fiche, « Continuer », « Revenir à la fiche ».
+- Liens : « Continuer » → p05 (accueil du hub) ; retour → p03.
+
+### p05 `p05-partie.html?jeu=…` — Jeu simulé
+- Pas d'écran Figma. US : S08-01, S08-03 (et S08-02 avec `mode=hub`).
+- Éléments : barre Max it avec « Quitter » au-dessus du jeu ; chargement puis « partie en cours » ; avec `mode=hub`, accueil du hub où le joueur choisit le jeu. Le lancement alimente les récents et les recommandations.
+- Liens : « Quitter » → p03 du jeu.
+
+### Schéma de navigation de Play
+```
+00c ─« Jouer »─► p01 Accueil ─┬─► p02 Genre ─► p03
+                  ▲           └─► p03 Fiche ─┬─ jeux similaires ─► p03
+                  │ retour Max it             ├─ « Jouer » (mini app, hub avec lien) ─► p05 ─« Quitter »─► p03
+                  00c                         ├─ « Jouer » (hub sans lien) ─► p04 ─► p05 (accueil du hub) ─► p03
+                                              ├─ « Voir tout » ─► p06 Tous les avis ─► p07 ─► p06
+                                              └─ « Donner mon avis » ─► p07 ─« Publier »─► p03
+Lien partagé ─► p03 (fermer → p01) ; lien vers un jeu indisponible ─► p01 avec message
+```
+
+### Avancement de Play
+| Lot | Écrans | État |
+|---|---|---|
+| P1 | `data-play.js`, `play.js`, section « Play » de tokens.css et style.css, 00c (« Jouer »), p01 à p05, menu de démo (pays, nouveau joueur, jeu indisponible, liens partagés), test `outils/parcours-play.html` | terminé |
+| P2 | Avis : bloc de la fiche (p03), p06 tous les avis, p07 donner son avis, signalement ; vérifications ajoutées à `outils/parcours-play.html` | terminé |
+
+### Couverture des US MVP de Play
+| US | Couverture | Écrans | Limites et remarques |
+|---|---|---|---|
+| S06-01 | En partie | 00c, p01, p03 | Pays et compte Max it simulés (menu de démo) ; textes en français seulement. |
+| S06-02 | Couverte | p01 | Ordre de Figma : Récemment joués avant l'éditorial. |
+| S06-03 | Couverte (arbitrage) | p01, p02 | Grille des genres de Figma à la place des rangées par genre. |
+| S06-04 | Couverte | p01, p02, p03 | — |
+| S07-01 à S07-04 | Couvertes | p03 | Vidéo simulée (30 s), sans fichier. |
+| S07-05 | En partie | p03 | Feuille de partage simulée ; ce que voit une personne sans Max it n'est pas maquetté (question ouverte). |
+| S08-01 | En partie | p03, p05 | Jeux simulés ; classement et défis des hubs non montrés ; statistiques : back-office. |
+| S08-02, S08-03 | Couvertes | p04, p05 | — |
+| S08-04 | En partie | toutes | Indisponibilité forcée par le menu de démo, pas par de vrais échecs d'ouverture. |
+| S09-01 | En partie | p03, p01 | Favoris mémorisés dans le navigateur, pas sur le compte Max it. |
+| S09-02, S09-03 | Couvertes | p01 | — |
+| S10-01 | Couverte | p03, p06, p07 | Avis publié tout de suite sous le pseudonyme (choix CLAUDE.md) ; mémorisé dans le navigateur. |
+| S10-02 | Couverte | p03, p06 | Commentaires des autres joueurs fictifs ; la répartition des notes est calculée autour de la moyenne. |
+| S10-03 | En partie | p03, p06 | Motif et marque « en cours d'examen » ; la modération (S04-01) relève du back-office. |

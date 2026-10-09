@@ -1,0 +1,324 @@
+<title>Backlog Play Mini-jeux</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+:root{--add:#1f6b3f;--add-bg:#e3f2e8;--del:#9a2a22;--del-bg:#fbe9e7;--new:#1f5a99;--new-bg:#e4eef9}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--add:#8fd6a8;--add-bg:#173324;--del:#ff9a90;--del-bg:#3b1a17;--new:#9cc4f0;--new-bg:#17283c}}
+:root[data-theme="dark"]{--add:#8fd6a8;--add-bg:#173324;--del:#ff9a90;--del-bg:#3b1a17;--new:#9cc4f0;--new-bg:#17283c}
+.chip.ap-conf{background:var(--add-bg);color:var(--add)}
+.chip.ap-adj{background:var(--should-bg);color:var(--should)}
+.chip.ap-rep{background:var(--must-bg);color:var(--must)}
+.chip.ap-todo{background:var(--sunk);color:var(--muted);border:1px dashed var(--line)}
+.chip.ap-new{background:var(--new-bg);color:var(--new)}
+.chip.chg{background:var(--spike-bg);color:var(--spike)}
+.note{margin:0;padding:10px 12px;border-left:3px solid var(--accent);background:var(--sunk);border-radius:4px;font-size:14px;max-width:80ch}
+.note b{font-weight:600}
+.detail li.add,.detail p.add{background:var(--add-bg);color:var(--fg);border-radius:3px;padding:1px 4px}
+.detail li.add::marker{content:"+ ";color:var(--add);font-weight:700}
+.detail li.del,.detail p.del{color:var(--del);text-decoration:line-through;text-decoration-thickness:1px;opacity:.85}
+.detail li.del::marker{content:"− ";color:var(--del);font-weight:700}
+.detail p.del{background:var(--del-bg);border-radius:3px;padding:1px 4px}
+.oldtitle{display:block;font-size:12.5px;color:var(--del);text-decoration:line-through;font-weight:400}
+.legend{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;font-size:13px;color:var(--muted);margin:14px 0 0}
+.legend .sw{display:inline-block;padding:1px 6px;border-radius:3px;margin-right:4px}
+.legend .sw.add{background:var(--add-bg);color:var(--add)}
+.legend .sw.del{background:var(--del-bg);color:var(--del);text-decoration:line-through}
+.emptyq{color:var(--muted);font-size:13px;margin:0}
+
+.chip.ver.MVP{background:var(--accent);color:#1d1a17}
+.chip.ver.V2{background:var(--could-bg);color:var(--could)}
+.qonly{display:inline-flex;align-items:center;gap:6px;font-size:14px;color:var(--muted);white-space:nowrap;flex:none}
+.filters .qonly input{width:16px;height:16px;flex:none;min-width:0;padding:0;margin:0}
+.story > button{padding-left:4px}
+.detail{padding-left:48px}
+@media (max-width:700px){.detail{padding-left:4px}}
+.filters select,.filters input[type=search]{max-width:100%;min-width:0}
+</style>
+<style>
+/* Layout : outil de consultation — bandeau de synthèse, barre de filtres collante, colonne d'Epics à gauche, stories dépliables à droite */
+:root{
+  --bg:#f6f4f1; --surface:#ffffff; --sunk:#efebe6; --line:#e2dcd4;
+  --fg:#1d1a17; --muted:#6b635b; --accent:#ff7900; --accent-ink:#a84f00; --accent-soft:#fff0e2;
+  --must:#b3261e; --must-bg:#fde8e6; --should:#8a5a00; --should-bg:#fbf0d6; --could:#44617a; --could-bg:#e6eef5;
+  --spike:#5b3fa8; --spike-bg:#ece7fa;
+  --f-display:"Archivo","Helvetica Neue",Arial,sans-serif;
+  --f-body:"IBM Plex Sans","Helvetica Neue",Arial,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#141210; --surface:#1d1a17; --sunk:#262220; --line:#35302b;
+  --fg:#f1ece6; --muted:#a39a90; --accent:#ff7900; --accent-ink:#ff9a40; --accent-soft:#3a2513;
+  --must:#ff8a80; --must-bg:#3b1a17; --should:#f0c060; --should-bg:#3a2d10; --could:#9fc2e0; --could-bg:#1c2a36;
+  --spike:#c2b0ff; --spike-bg:#2a2340; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#141210; --surface:#1d1a17; --sunk:#262220; --line:#35302b;
+  --fg:#f1ece6; --muted:#a39a90; --accent:#ff7900; --accent-ink:#ff9a40; --accent-soft:#3a2513;
+  --must:#ff8a80; --must-bg:#3b1a17; --should:#f0c060; --should-bg:#3a2d10; --could:#9fc2e0; --could-bg:#1c2a36;
+  --spike:#c2b0ff; --spike-bg:#2a2340; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font:15px/1.55 var(--f-body)}
+.wrap{max-width:1240px;margin:0 auto;padding-inline:20px;padding-block:28px 60px}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0}
+.eyebrow{font:600 12px/1 var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:var(--accent-ink)}
+header.top{display:grid;gap:10px;margin-bottom:22px}
+header.top h1{font-size:clamp(26px,4vw,38px);font-weight:800;letter-spacing:-.01em}
+header.top h1 span{color:var(--accent)}
+header.top p{margin:0;color:var(--muted);max-width:70ch}
+.stats{display:flex;flex-wrap:wrap;gap:8px 28px;margin-top:6px;font-variant-numeric:tabular-nums}
+.stat b{font:800 24px/1 var(--f-display);display:block}
+.stat small{color:var(--muted);font-size:12.5px}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:18px;overflow-x:auto}
+.tab{background:none;border:0;border-bottom:3px solid transparent;padding:10px 14px;font:600 14px var(--f-body);color:var(--muted);cursor:pointer;white-space:nowrap}
+.tab[aria-selected="true"]{color:var(--fg);border-color:var(--accent)}
+.tab:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.filters{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding-block:10px;border-bottom:1px solid var(--line);margin-bottom:18px}
+.filters input,.filters select{font:14px var(--f-body);color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:7px 10px}
+.filters input{flex:1 1 220px;min-width:0}
+.btn{font:600 13px var(--f-body);background:var(--surface);color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:7px 12px;cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.count{color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums;margin-left:auto}
+.layout{display:grid;grid-template-columns:260px minmax(0,1fr);gap:28px;align-items:start}
+nav.epics{position:sticky;top:76px;display:grid;gap:2px;max-height:calc(100vh - 100px);overflow:auto}
+nav.epics a{display:grid;grid-template-columns:42px 1fr auto;gap:6px;align-items:baseline;padding:6px 8px;border-radius:6px;color:var(--fg);text-decoration:none;font-size:13.5px}
+nav.epics a:hover{background:var(--sunk)}
+nav.epics a .id{font:500 12px var(--f-mono);color:var(--accent-ink)}
+nav.epics a .n{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+section.epic{margin-bottom:34px;scroll-margin-top:80px}
+.epic-head{display:grid;gap:6px;padding-bottom:12px;border-bottom:2px solid var(--fg);margin-bottom:10px}
+.epic-head h2{font-size:22px;font-weight:700;display:flex;gap:12px;align-items:baseline;flex-wrap:wrap}
+.epic-head h2 .id{font:500 14px var(--f-mono);color:var(--accent-ink)}
+.epic-head p{margin:0;color:var(--muted);max-width:78ch}
+.epic-meta{display:flex;flex-wrap:wrap;gap:6px}
+.story{border-bottom:1px solid var(--line)}
+.story>button{all:unset;box-sizing:border-box;width:100%;display:grid;grid-template-columns:62px minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px 4px;cursor:pointer}
+.story>button:hover{background:var(--sunk)}
+.story>button:focus-visible{outline:2px solid var(--accent)}
+.sid{font:500 12.5px var(--f-mono);color:var(--muted)}
+.stitle{font-weight:600;min-width:0}
+.chips{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end}
+.chip{font:600 11px/1 var(--f-body);letter-spacing:.03em;padding:4px 7px;border-radius:4px;background:var(--sunk);color:var(--muted);white-space:nowrap}
+.chip.Must{background:var(--must-bg);color:var(--must)}
+.chip.Should{background:var(--should-bg);color:var(--should)}
+.chip.Could{background:var(--could-bg);color:var(--could)}
+.chip.spike{background:var(--spike-bg);color:var(--spike)}
+.chip.dep{background:var(--accent-soft);color:var(--accent-ink)}
+.detail{padding:4px 4px 18px 76px;display:grid;gap:12px}
+.detail .us{margin:0;font-size:15px;max-width:80ch}
+.detail h4{margin:0 0 4px;font:600 11.5px var(--f-body);letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.detail ul{margin:0;padding-left:18px;display:grid;gap:3px;max-width:80ch}
+.detail .q li::marker{content:"? ";color:var(--accent-ink);font-weight:700}
+.labels{display:flex;flex-wrap:wrap;gap:5px}
+.labels code{font:500 11.5px var(--f-mono);background:var(--sunk);padding:3px 6px;border-radius:4px}
+.phase{font:700 12.5px/1 var(--f-body);letter-spacing:.09em;text-transform:uppercase;color:var(--accent-ink);margin:6px 0 14px;padding-bottom:8px;border-bottom:1px dashed var(--line)}
+nav.epics .navph{font:700 11px var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:10px 8px 4px}
+.empty{padding:40px 0;color:var(--muted)}
+/* Cadrage */
+.cadrage{display:grid;gap:22px;max-width:980px}
+.cadrage h3{font-size:18px;margin-bottom:8px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:16px 18px;min-width:0}
+.panel ul{margin:0;padding-left:18px;display:grid;gap:4px}
+.panel p{margin:0 0 6px}
+.callout{border-left:4px solid var(--accent);background:var(--accent-soft);padding:12px 16px;border-radius:0 8px 8px 0}
+.callout p{margin:0}
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:600 12px var(--f-body);letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+td code{font:500 12.5px var(--f-mono)}
+.mono{font-family:var(--f-mono);font-size:12.5px}
+@media (max-width:860px){
+  .layout{grid-template-columns:1fr}
+  nav.epics{display:none}
+  .story>button{grid-template-columns:54px minmax(0,1fr)}
+  .chips{grid-column:2;justify-content:flex-start}
+  .detail{padding-left:4px}
+}
+@media (prefers-reduced-motion:no-preference){.detail{animation:fade .18s ease-out}@keyframes fade{from{opacity:.4;transform:translateY(-3px)}to{opacity:1;transform:none}}}
+</style>
+<div class="wrap">
+  <header class="top">
+    <div class="eyebrow">Max it · Gaming · OMEA · Backlog Jira</div>
+    <h1>Play <span>mini-jeux</span> — backlog de faisabilité</h1>
+    <p>Cadre fonctionnel pour estimer la faisabilité de Play, la mini app qui porte les mini-jeux dans Max it : des jeux gratuits, sans téléchargement, fournis par plusieurs partenaires (MiniGames, YueZhi, WeChat Game), avec une expérience identique quel que soit le fournisseur. Le backlog distingue le back-office et le front de la mini app.</p>
+    <div class="stats" id="stats"></div>
+  </header>
+
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" id="tab-backlog" aria-selected="true" data-view="backlog">Backlog</button>
+    <button class="tab" role="tab" id="tab-cadrage" aria-selected="false" data-view="cadrage">Cadrage</button>
+  </div>
+
+  <div id="view-backlog">
+    <div class="filters">
+      <input id="q" type="search" placeholder="Rechercher (titre, règle, critère…)" aria-label="Rechercher">
+      <select id="fEpic" aria-label="Epic"><option value="">Tous les Epics</option></select>
+      <select id="fVer" aria-label="Version"><option value="">MVP et V2</option><option>MVP</option><option>V2</option></select>
+      <label class="qonly"><input id="fQ" type="checkbox"> Avec questions ouvertes</label>
+      <button class="btn" id="toggleAll" type="button">Tout déplier</button>
+      <span class="count" id="count"></span>
+    </div>
+    <div class="layout">
+      <nav class="epics" id="nav" aria-label="Epics"></nav>
+      <main id="list"></main>
+    </div>
+  </div>
+
+  <div id="view-cadrage" hidden>
+  <div class="cadrage">
+    <div class="grid2">
+      <div class="panel"><h3>Dans le périmètre</h3><ul>
+        <li><b>Back-office</b> : partenaires et modes d'intégration, catalogue des jeux, genres, jeux proposés par pays, badges, éditorialisation de l'accueil, modération des avis, statistiques</li>
+        <li><b>Front</b> : la mini app Play dans Max it — accueil, rangées par genre, fiche jeu, lancement des jeux, favoris, jeux récents, recommandations, avis, partage</li>
+        <li>Deux modèles d'intégration, une seule expérience : une mini app par jeu (cible) ou un hub partenaire (transitoire)</li>
+        <li>Chaque jeu présenté comme un produit Max it : fiche, genre, favori, avis</li>
+        <li>Administration par pays et vue MEA, pour les 17 pays ; textes en français, anglais et arabe</li>
+      </ul></div>
+      <div class="panel"><h3>Hors périmètre</h3><ul>
+        <li>Les jeux eux-mêmes, et les mini apps ou hubs fournis par les partenaires</li>
+        <li>Le classement et les défis propres aux hubs : ils restent dans le hub pendant le POC</li>
+        <li><b>À anticiper, sans être développé</b> : jeux payants, achats dans les jeux, gratuité de la data côté réseau. La fiche jeu prévoit déjà un prix (S02-01)</li>
+        <li>Le shop Game Center et la plateforme de tournois : backlogs dédiés</li>
+        <li>Négociation des contrats partenaires</li>
+        <li><b>Exigences non fonctionnelles</b> : performance, compatibilité des terminaux, sécurité, hébergement, supervision</li>
+      </ul></div>
+    </div>
+
+    <div class="panel"><h3>Personas</h3>
+      <div class="tablewrap"><table>
+        <tr><th>Persona</th><th>Ce qu'il attend</th></tr>
+        <tr><td><b>Joueur</b></td><td>Utilisateur Max it. Trouver un jeu gratuit en quelques clics, y jouer sans téléchargement, retrouver ses jeux récents et ses favoris, et donner son avis.</td></tr>
+        <tr><td><b>Responsable MEA</b></td><td>Équipe régionale : partenaires et modes d'intégration, fiches des jeux, genres, mention du partenaire, jeu à la une par défaut, statistiques régionales.</td></tr>
+        <tr><td><b>Responsable local</b></td><td>Gère Play pour son pays : jeux proposés, badges, jeu à la une, nouveautés, ordre des rangées, modération des avis, statistiques.</td></tr>
+      </table></div>
+    </div>
+
+    <div class="panel"><h3>Modèles d'intégration</h3>
+      <div class="tablewrap"><table>
+        <tr><th>Modèle</th><th>Fourni par le partenaire</th><th>Dans Max it</th><th>Au clic sur « Jouer »</th></tr>
+        <tr><td><b>A · Cible</b></td><td>Une mini app dédiée à chaque jeu</td><td>Une fiche par jeu</td><td>Ouverture directe de la mini app du jeu</td></tr>
+        <tr><td><b>B · Transitoire</b></td><td>Une mini app regroupant plusieurs jeux (hub)</td><td>Une fiche par jeu, pas de tuile unique pour le hub</td><td>Hub ouvert directement sur le jeu ; à défaut, écran de transition puis accueil du hub</td></tr>
+      </table></div>
+    </div>
+
+    <div class="panel"><h3>Genres</h3>
+      <div class="tablewrap"><table>
+        <tr><th>Genre</th><th>Exemples</th></tr>
+        <tr><td><b>Action</b></td><td>Tir, combat, plateforme</td></tr>
+        <tr><td><b>Arcade</b></td><td>Rétro, runners, réflexes</td></tr>
+        <tr><td><b>Course et voitures</b></td><td>Course, conduite, parking</td></tr>
+        <tr><td><b>Puzzle et réflexion</b></td><td>Match-3, logique, blocs</td></tr>
+        <tr><td><b>Casual</b></td><td>Simple, à une main</td></tr>
+        <tr><td><b>Sport</b></td><td>Football, basket, billard</td></tr>
+        <tr><td><b>Cartes et plateau</b></td><td>Solitaire, dames, ludo</td></tr>
+        <tr><td><b>Quiz et mots</b></td><td>Trivia, mots mêlés</td></tr>
+        <tr><td><b>Aventure</b></td><td>Exploration, énigmes</td></tr>
+        <tr><td><b>Stratégie</b></td><td>Tower defense, gestion</td></tr>
+      </table></div>
+      <p style="margin-top:8px;color:var(--muted);font-size:13.5px">Un genre principal par jeu, qui fixe sa rangée sur l'accueil.</p>
+    </div>
+
+    <div class="panel"><h3>Points à valider</h3>
+      <div class="tablewrap"><table>
+        <tr><th>#</th><th>Point</th><th>Repris dans</th></tr>
+        <tr><td>01</td><td>Lien direct vers un jeu précis dans les hubs partenaires</td><td>S08-01</td></tr>
+        <tr><td>02</td><td>Mention « Fourni par » ou marque blanche totale</td><td>S01-01</td></tr>
+        <tr><td>03</td><td>Bouton de sortie des mini apps pour le hub</td><td>S08-03</td></tr>
+        <tr><td>04</td><td>Modération des avis</td><td>S04-01</td></tr>
+        <tr><td>05</td><td>Administration du catalogue : équipe centrale ou pays</td><td>S02-01</td></tr>
+        <tr><td>06</td><td>Pays, partenaire(s) et catalogue du POC</td><td>Cadrage, à arbitrer avant l'estimation</td></tr>
+      </table></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+const EPICS = [{"id":"E01","ph":"Back-office","t":"Partenaires et intégration","g":"Déclarer chaque partenaire, son mode d'intégration et sa mention, pour que l'expérience reste la même quel que soit le fournisseur.","s":[{"id":"S01-01","t":"Fiche partenaire","v":"MVP","us":"En tant que responsable MEA, je peux créer la fiche d'un partenaire afin d'y rattacher ses jeux, de choisir son mode d'intégration et la façon dont il est mentionné.","rg":["La fiche porte le nom du partenaire, ses contacts et son modèle d'intégration : A, une mini app par jeu (cible) ; ou B, un hub regroupant plusieurs jeux (transitoire).","La fiche liste tous les jeux du partenaire.","Le responsable MEA choisit pour chaque partenaire d'afficher ou non la mention « Fourni par [partenaire] » sur la fiche de ses jeux ; sans mention, les jeux sont présentés en marque blanche totale.","Un partenaire peut être activé ou suspendu ; la suspension retire immédiatement tous ses jeux de Play.","Ajouter un nouveau partenaire ne demande aucun changement de l'interface de Play."],"ca":["Étant donné un partenaire suspendu, quand un joueur ouvre Play, alors aucun jeu de ce partenaire n'est visible.","Étant donné un nouveau partenaire en modèle A, quand ses jeux sont publiés, alors ils s'affichent comme tous les autres jeux, sans changement de l'interface.","Étant donné un partenaire en marque blanche, quand le joueur ouvre la fiche d'un de ses jeux, alors aucune mention du partenaire n'apparaît."],"q":["Mention « Fourni par » ou marque blanche totale : quel choix pour chaque partenaire ? (point à valider 02)"]}]},{"id":"E02","ph":"Back-office","t":"Catalogue des jeux","g":"Présenter chaque jeu comme un produit Max it, avec sa fiche, son genre et ses informations, quel que soit le partenaire et le modèle d'intégration.","s":[{"id":"S02-01","t":"Fiche jeu","v":"MVP","us":"En tant que responsable MEA, je peux créer la fiche d'un jeu dans la fiche de son partenaire afin de le présenter aux joueurs comme un produit Max it.","rg":["La fiche porte l'icône, le nom, le genre principal, une description courte, des captures d'écran ou une courte vidéo, les langues du jeu, le nombre de joueurs et le mode solo ou multijoueur.","Les textes sont saisis en français, anglais et arabe.","Chaque jeu a sa propre fiche, y compris les jeux d'un hub : il n'y a pas de tuile unique pour un hub.","La fiche porte ce qu'il faut pour ouvrir le jeu : la référence de sa mini app, ou pour un jeu de hub, le lien direct vers le jeu dans le hub. Si le hub ne permet pas d'ouvrir le jeu directement, la fiche porte le texte de l'écran de transition (S08-02).","La fiche prévoit un prix, à « Gratuit » par défaut, pour accueillir plus tard des jeux payants.","Une fiche ne peut pas être publiée tant qu'un champ obligatoire manque."],"ca":["Étant donné un hub de 12 jeux, quand le responsable MEA les déclare, alors 12 fiches distinctes sont créées.","Étant donné une fiche sans icône, quand le responsable MEA veut la publier, alors la publication est refusée avec le champ manquant."],"q":["Le catalogue est-il administré par l'équipe centrale, par les pays, ou par les deux comme pour le shop ? (point à valider 05)"]},{"id":"S02-02","t":"Genre principal d'un jeu","v":"MVP","us":"En tant que responsable MEA, je peux donner à chaque jeu un genre principal afin de le ranger dans la bonne rangée de l'accueil.","rg":["Les genres sont : Action, Arcade, Course et voitures, Puzzle et réflexion, Casual, Sport, Cartes et plateau, Quiz et mots, Aventure, Stratégie.","Un jeu a un seul genre principal, qui fixe sa rangée sur l'accueil.","La liste des genres est gérée par le responsable MEA et traduite en français, anglais et arabe."],"ca":["Étant donné un jeu classé « Puzzle et réflexion », quand le joueur parcourt l'accueil, alors ce jeu apparaît dans cette seule rangée de genre."],"q":[]},{"id":"S02-03","t":"Statuts et historique des jeux","v":"MVP","us":"En tant que responsable MEA, je peux suivre le statut de chaque jeu et l'historique de ses modifications afin de maîtriser ce qui est proposé aux joueurs.","rg":["Un jeu est Brouillon, Publié, Suspendu ou Archivé.","La date de première publication est conservée ; elle sert à la rangée Nouveautés (S03-02).","Chaque modification est historisée : auteur, date, valeur avant, valeur après."],"ca":["Étant donné un jeu suspendu, quand un joueur ouvre Play, alors ce jeu n'est visible nulle part, ni dans ses favoris ni dans ses jeux récents."],"q":[]},{"id":"S02-04","t":"Jeux proposés dans le pays","v":"MVP","us":"En tant que responsable local, je peux choisir les jeux proposés dans mon pays afin d'adapter le catalogue au marché local.","rg":["Un jeu s'active ou se désactive pays par pays, à l'unité ou en masse.","Le responsable local ne voit et ne modifie que son pays ; le responsable MEA voit tous les pays."],"ca":["Étant donné un jeu non activé en Guinée, quand un abonné guinéen ouvre Play, alors ce jeu n'apparaît pas."],"q":[]},{"id":"S02-05","t":"Badges Gratuit et Sans consommation de data","v":"MVP","us":"En tant que responsable local, je peux afficher les badges qui rassurent le joueur avant de jouer, afin de lever le frein du coût.","rg":["Le badge « Gratuit » s'affiche sur tous les jeux gratuits.","Le badge « Sans consommation de data » s'active pays par pays, là où les jeux ne décomptent pas la data du joueur."],"ca":["Étant donné un pays où le badge data est activé, quand le joueur ouvre une fiche jeu, alors il voit les badges « Gratuit » et « Sans consommation de data »."],"q":["La gratuité de la data s'applique-t-elle à tous les jeux d'un pays, ou jeu par jeu ?"]}]},{"id":"E03","ph":"Back-office","t":"Éditorialisation de l'accueil","g":"Composer l'accueil de Play dans chaque pays : jeu à la une, nouveautés, jeux populaires et rangées par genre.","s":[{"id":"S03-01","t":"Jeu à la une","v":"MVP","us":"En tant que responsable local, je peux choisir le jeu mis en avant en bannière dans mon pays afin de pousser un jeu.","rg":["Un seul jeu à la une à la fois par pays, avec un visuel de bannière et des dates de début et de fin.","Plusieurs jeux à la une peuvent être programmés à la suite.","Si aucun jeu n'est programmé, le jeu à la une défini par le responsable MEA s'affiche."],"ca":["Étant donné un jeu à la une programmé du 1er au 7 du mois, quand le 8 arrive, alors le jeu suivant programmé, ou celui du responsable MEA, le remplace."],"q":[]},{"id":"S03-02","t":"Rangée Nouveautés","v":"MVP","us":"En tant que responsable local, je peux compter sur une rangée Nouveautés alimentée automatiquement afin de faire découvrir les derniers jeux sans effort.","rg":["La rangée affiche les jeux publiés dans le pays depuis moins de [30] jours, du plus récent au plus ancien.","Le responsable local peut retirer un jeu de la rangée."],"ca":["Étant donné un jeu publié il y a 10 jours, quand le joueur ouvre l'accueil, alors il figure dans Nouveautés."],"q":[]},{"id":"S03-03","t":"Rangée Populaires ici","v":"MVP","us":"En tant que responsable local, je peux compter sur une rangée des jeux les plus joués dans mon pays afin de mettre en avant ce qui plaît.","rg":["La rangée classe les jeux selon le nombre de parties lancées dans le pays sur les [7] derniers jours.","Elle se met à jour chaque jour."],"ca":["Étant donné un jeu très joué au Sénégal cette semaine, quand un joueur sénégalais ouvre l'accueil, alors il figure en tête de Populaires ici."],"q":[]},{"id":"S03-04","t":"Ordre des rangées par genre","v":"MVP","us":"En tant que responsable local, je peux ordonner les rangées par genre de mon pays afin de mettre en avant les genres qui fonctionnent localement.","rg":["L'ordre des genres se règle par pays.","Dans une rangée, les jeux sont classés par popularité dans le pays ; le responsable local peut épingler des jeux en tête."],"ca":["Étant donné le genre Sport placé en premier, quand le joueur fait défiler l'accueil, alors la rangée Sport apparaît avant les autres rangées de genre."],"q":[]}]},{"id":"E04","ph":"Back-office","t":"Modération des avis","g":"Garder des avis utiles et respectueux sur les fiches des jeux.","s":[{"id":"S04-01","t":"Modérer les avis","v":"MVP","us":"En tant que responsable local, je peux consulter et masquer les avis de mon pays afin que les commentaires publiés restent respectueux.","rg":["Les avis se filtrent par jeu, par note, et selon qu'ils ont été signalés par des joueurs (S10-03).","Le responsable local peut masquer un avis en indiquant un motif ; l'avis masqué n'est plus visible et ne compte plus dans la note moyenne.","Chaque décision est enregistrée avec son auteur et son motif."],"ca":["Étant donné un avis signalé, quand le responsable local ouvre la modération, alors il le voit en tête de liste.","Étant donné un avis masqué, quand un joueur ouvre la fiche du jeu, alors l'avis n'apparaît plus et la note moyenne est recalculée."],"q":["Les avis sont-ils publiés tout de suite puis modérés, ou validés avant publication ? (point à valider 04)","Les avis et la note moyenne sont-ils propres à chaque pays, ou communs à tous les pays ?"]}]},{"id":"E05","ph":"Back-office","t":"Statistiques","g":"Mesurer l'audience des jeux et l'efficacité de l'accueil, par pays, par jeu, par genre et par partenaire.","s":[{"id":"S05-01","t":"Audience des jeux","v":"MVP","us":"En tant que responsable local ou responsable MEA, je peux suivre les parties lancées et les joueurs uniques afin de savoir quels jeux plaisent.","rg":["Les indicateurs sont : parties lancées, joueurs uniques, joueurs revenus jouer dans les [7] jours.","Ils se lisent par période, pays, jeu, genre et partenaire.","Le responsable local ne voit que son pays."],"ca":["Étant donné un mois et un pays, quand le responsable local consulte l'audience, alors il voit le classement des jeux par parties lancées."],"q":["Les partenaires peuvent-ils transmettre la durée de jeu, que Max it ne voit pas directement ?"]},{"id":"S05-02","t":"Efficacité de l'accueil et des fiches","v":"MVP","us":"En tant que responsable local, je peux savoir d'où viennent les parties lancées afin d'ajuster l'éditorialisation de l'accueil.","rg":["Chaque partie lancée est rattachée à sa section d'origine : jeu à la une, récemment joués, recommandés, favoris, nouveautés, populaires, rangée de genre, jeux similaires, lien partagé.","Le taux de passage de la fiche au bouton « Jouer » se lit par jeu.","Les favoris ajoutés, la note moyenne et le nombre d'avis se lisent par jeu."],"ca":["Étant donné une semaine de données, quand le responsable local consulte l'efficacité, alors il voit combien de parties sont venues du jeu à la une."],"q":[]},{"id":"S05-03","t":"Exporter les données","v":"MVP","us":"En tant que responsable local ou responsable MEA, je peux exporter les statistiques de Play afin de les exploiter en dehors.","rg":["L'export se filtre par période, pays, jeu, genre et partenaire.","Le responsable local n'exporte que son pays.","L'export est disponible en CSV et en Excel."],"ca":["Étant donné un mois et un pays, quand l'export est lancé, alors il contient les parties lancées et les joueurs uniques de chaque jeu."],"q":[]}]},{"id":"E06","ph":"Front — mini app Play","t":"Accès et accueil","g":"Ouvrir Play depuis Max it et trouver un jeu en quelques clics.","s":[{"id":"S06-01","t":"Ouvrir Play depuis Max it","v":"MVP","us":"En tant que joueur, je peux ouvrir Play depuis la page d'accueil de l'univers gaming de Max it, sans nouvelle connexion et sans téléchargement, afin de jouer en quelques clics.","rg":["Play s'ouvre depuis la page d'accueil de l'univers gaming de Max it, ou par un lien direct vers la fiche d'un jeu.","Le joueur est reconnu par son compte Max it ; Play reprend son pays et sa langue.","Le bouton retour ramène le joueur dans Max it."],"ca":["Étant donné un joueur sur la page d'accueil de l'univers gaming, quand il ouvre Play, alors il arrive sur l'accueil de Play sans saisie.","Étant donné un lien direct vers un jeu, quand le joueur l'ouvre, alors il arrive sur la fiche de ce jeu."],"q":[]},{"id":"S06-02","t":"Accueil de Play","v":"MVP","us":"En tant que joueur, je peux voir sur l'accueil des sections éditoriales et personnelles afin de trouver vite un jeu qui me plaît.","rg":["Les sections s'affichent dans cet ordre : jeu à la une, récemment joués, recommandés, mes favoris, nouveautés, populaires ici, rangées par genre.","Jeu à la une, recommandés, nouveautés et populaires ici sont toujours visibles.","Récemment joués apparaît dès la première partie ; mes favoris dès le premier favori.","Une rangée de genre n'apparaît que si le genre a au moins un jeu dans le pays."],"ca":["Étant donné un nouveau joueur, quand il ouvre Play, alors il ne voit ni Récemment joués ni Mes favoris.","Étant donné un joueur qui a lancé une partie, quand il revient sur l'accueil, alors la section Récemment joués apparaît."],"q":[]},{"id":"S06-03","t":"Rangées par genre et « Voir tout »","v":"MVP","us":"En tant que joueur, je peux parcourir les jeux par genre afin d'explorer le catalogue.","rg":["Chaque rangée de genre affiche ses premiers jeux et un lien « Voir tout ».","« Voir tout » ouvre la page du genre, qui liste tous ses jeux dans le pays."],"ca":["Étant donné la rangée Course et voitures, quand le joueur appuie sur « Voir tout », alors il voit tous les jeux de ce genre."],"q":[]},{"id":"S06-04","t":"Tuile d'un jeu","v":"MVP","us":"En tant que joueur, je peux reconnaître un jeu d'un coup d'œil dans toutes les rangées afin de choisir rapidement.","rg":["La tuile montre l'icône, le nom et la note moyenne du jeu.","Une tuile mène toujours à la fiche du jeu, pas directement au jeu.","La tuile est identique quel que soit le partenaire et le modèle d'intégration."],"ca":["Étant donné un jeu de hub et un jeu en mini app, quand le joueur les voit côte à côte, alors rien ne distingue leurs tuiles."],"q":[]}]},{"id":"E07","ph":"Front — mini app Play","t":"Fiche jeu","g":"Tout pour décider, puis jouer : chaque jeu est présenté comme un produit Max it.","s":[{"id":"S07-01","t":"En-tête et bouton Jouer","v":"MVP","us":"En tant que joueur, je peux identifier le jeu et le lancer immédiatement depuis sa fiche.","rg":["L'en-tête montre l'icône, le nom, le genre, la note moyenne et le nombre d'avis.","Le bouton « Jouer » est bien visible et reste accessible quand le joueur fait défiler la fiche."],"ca":["Étant donné un joueur qui fait défiler la fiche jusqu'aux avis, quand il veut jouer, alors le bouton « Jouer » est toujours à l'écran."],"q":[]},{"id":"S07-02","t":"Visuels et informations du jeu","v":"MVP","us":"En tant que joueur, je peux voir à quoi ressemble le jeu et comment on y joue afin de décider s'il me plaît.","rg":["Les captures d'écran ou la courte vidéo défilent en carrousel ; la vidéo ne démarre qu'à la demande du joueur.","La fiche affiche la description courte, les langues, le nombre de joueurs et le mode solo ou multijoueur.","La mention « Fourni par » s'affiche si elle est activée pour le partenaire (S01-01)."],"ca":["Étant donné un jeu avec une vidéo, quand le joueur ouvre la fiche, alors la vidéo ne se lance pas toute seule."],"q":[]},{"id":"S07-03","t":"Badges de la fiche","v":"MVP","us":"En tant que joueur, je peux voir que le jeu est gratuit, et selon mon pays sans consommation de data, afin de jouer sans crainte du coût.","rg":["Les badges affichés suivent le paramétrage (S02-05)."],"ca":["Étant donné un pays sans gratuité de la data, quand le joueur ouvre une fiche, alors seul le badge « Gratuit » apparaît."],"q":[]},{"id":"S07-04","t":"Jeux similaires","v":"MVP","us":"En tant que joueur, je peux découvrir depuis une fiche d'autres jeux du même genre afin d'enchaîner sur un nouveau jeu.","rg":["La rangée affiche des jeux du même genre principal, proposés dans mon pays, classés par popularité.","Le jeu de la fiche n'y figure pas."],"ca":["Étant donné la fiche d'un jeu de Sport, quand le joueur arrive en bas de la fiche, alors il voit d'autres jeux de Sport."],"q":[]},{"id":"S07-05","t":"Partager un jeu","v":"MVP","us":"En tant que joueur, je peux partager un jeu avec mes amis afin de jouer avec eux.","rg":["Le partage passe par les applications du téléphone (messagerie, réseaux sociaux).","Le lien partagé ouvre la fiche du jeu dans Max it."],"ca":["Étant donné un lien reçu par un abonné qui a Max it, quand il l'ouvre, alors il arrive sur la fiche du jeu."],"q":["Que voit une personne qui ouvre le lien sans avoir Max it ?"]}]},{"id":"E08","ph":"Front — mini app Play","t":"Lancer et quitter un jeu","g":"Un clic sur « Jouer » mène au jeu, quel que soit le modèle d'intégration du partenaire, et le joueur revient facilement dans Play.","s":[{"id":"S08-01","t":"Lancer un jeu","v":"MVP","us":"En tant que joueur, je peux lancer un jeu d'un clic sur « Jouer » et arriver directement dans le jeu, que la mini app porte un seul jeu ou qu'elle soit un hub, afin de jouer immédiatement, sans téléchargement.","rg":["Mini app à un seul jeu : « Jouer » ouvre directement la mini app du jeu, sans étape intermédiaire.","Hub partenaire : « Jouer » ouvre le hub directement sur le jeu, grâce au lien direct (deep link).","Le joueur ne voit aucune différence entre les deux cas.","Le classement et les défis propres au hub restent dans le hub pendant le POC.","Chaque lancement est enregistré : il alimente les jeux récents, les recommandations et les statistiques."],"ca":["Étant donné un jeu porté par sa propre mini app, quand le joueur appuie sur « Jouer », alors la mini app du jeu s'ouvre.","Étant donné un jeu de hub avec lien direct, quand le joueur appuie sur « Jouer », alors le hub s'ouvre sur ce jeu, pas sur son accueil."],"q":["Les hubs des partenaires permettent-ils d'ouvrir un jeu précis par lien direct (deep link) ? (point à valider 01)"]},{"id":"S08-02","t":"Écran de transition sans lien direct","v":"MVP","us":"En tant que joueur, je suis guidé quand un jeu ne peut pas s'ouvrir directement, afin de le retrouver dans le hub.","rg":["Si le hub ne permet pas d'ouvrir le jeu directement, un écran de transition indique où trouver le jeu, avec le texte saisi sur la fiche du jeu (S02-01).","Le joueur appuie sur « Continuer » pour ouvrir l'accueil du hub."],"ca":["Étant donné un jeu de hub sans lien direct, quand le joueur appuie sur « Jouer », alors il voit l'écran de transition avant l'accueil du hub."],"q":[]},{"id":"S08-03","t":"Revenir dans Play","v":"MVP","us":"En tant que joueur, je peux quitter un jeu et revenir dans Play afin de choisir un autre jeu.","rg":["En quittant un jeu, le joueur revient sur la fiche de ce jeu.","Le retour fonctionne de la même façon pour un jeu en mini app et pour un hub."],"ca":["Étant donné un joueur qui quitte un jeu, quand il ferme la mini app, alors il retrouve la fiche du jeu dans Play."],"q":["Faut-il un bouton de sortie dans les mini apps des hubs, et qui l'affiche : Max it ou le partenaire ? (point à valider 03)"]},{"id":"S08-04","t":"Masquer un jeu momentanément indisponible","v":"MVP","us":"En tant que joueur, je ne vois jamais un jeu momentanément indisponible, afin de ne pas tomber sur un jeu qui ne s'ouvre pas.","rg":["Un jeu est considéré indisponible quand le partenaire le signale, ou après [3] échecs d'ouverture consécutifs.","Un jeu indisponible est retiré de toutes les sections de Play : accueil, rangées, favoris, récemment joués, recommandés, jeux similaires.","Il réapparaît automatiquement dès qu'il redevient disponible ; il retrouve sa place dans les favoris du joueur.","Un lien partagé vers ce jeu ouvre l'accueil de Play avec le message « Ce jeu n'est pas disponible pour le moment ».","Le responsable local voit dans le back-office les jeux masqués de son pays et depuis quand."],"ca":["Étant donné un jeu dont la mini app ne répond plus, quand le seuil d'échecs est atteint, alors le jeu disparaît de toutes les sections de Play.","Étant donné un jeu masqué en favori, quand il redevient disponible, alors il réapparaît dans les favoris du joueur."],"q":[]}]},{"id":"E09","ph":"Front — mini app Play","t":"Personnalisation","g":"Une découverte personnalisée : jeux récents, recommandations et favoris.","s":[{"id":"S09-01","t":"Mes favoris","v":"MVP","us":"En tant que joueur, je peux ajouter un jeu à mes favoris afin de le retrouver facilement.","rg":["Le joueur ajoute ou retire un favori depuis la fiche du jeu.","La section Mes favoris apparaît sur l'accueil dès le premier favori ; le dernier ajouté est en premier.","Les favoris sont rattachés au compte Max it et se retrouvent sur un autre téléphone."],"ca":["Étant donné un premier jeu ajouté aux favoris, quand le joueur revient sur l'accueil, alors la section Mes favoris apparaît avec ce jeu."],"q":[]},{"id":"S09-02","t":"Récemment joués","v":"MVP","us":"En tant que joueur, je peux retrouver les derniers jeux que j'ai lancés afin de reprendre une partie rapidement.","rg":["La section affiche les [10] derniers jeux lancés, du plus récent au plus ancien.","Elle apparaît dès la première partie.","Un jeu retiré du catalogue disparaît de la section."],"ca":["Étant donné un joueur qui a lancé trois jeux, quand il ouvre l'accueil, alors il voit ces trois jeux, le dernier lancé en premier."],"q":[]},{"id":"S09-03","t":"Recommandés pour moi","v":"MVP","us":"En tant que joueur, je peux découvrir des jeux choisis selon les genres auxquels je joue afin de trouver de nouveaux jeux qui me plaisent.","rg":["La section propose des jeux des genres les plus joués par le joueur, qu'il n'a pas encore lancés.","Un joueur qui n'a encore rien joué voit les jeux populaires de son pays.","La section est toujours visible."],"ca":["Étant donné un joueur qui joue surtout à des puzzles, quand il ouvre l'accueil, alors les recommandés proposent surtout des puzzles qu'il n'a pas encore lancés."],"q":[]}]},{"id":"E10","ph":"Front — mini app Play","t":"Avis des joueurs","g":"Laisser les joueurs noter et commenter les jeux, pour aider les autres à choisir.","s":[{"id":"S10-01","t":"Noter et commenter un jeu","v":"MVP","us":"En tant que joueur, je peux noter un jeu et laisser un commentaire afin de partager mon avis.","rg":["La note va de 1 à 5 étoiles ; le commentaire est facultatif, limité à [500] caractères.","Le joueur ne peut noter qu'un jeu qu'il a lancé au moins une fois.","Un joueur laisse un seul avis par jeu, qu'il peut modifier ou supprimer."],"ca":["Étant donné un jeu jamais lancé, quand le joueur ouvre sa fiche, alors il ne peut pas le noter.","Étant donné un avis déjà laissé, quand le joueur note à nouveau, alors son avis précédent est remplacé."],"q":["Sous quel nom l'avis est-il affiché : pseudonyme, prénom, ou anonyme ?"]},{"id":"S10-02","t":"Consulter les avis","v":"MVP","us":"En tant que joueur, je peux lire les avis des autres joueurs afin de décider si un jeu vaut la peine.","rg":["La fiche affiche la note moyenne, le nombre d'avis et les derniers commentaires.","Un lien ouvre la liste complète des avis."],"ca":["Étant donné un jeu avec 40 avis, quand le joueur ouvre la fiche, alors il voit la note moyenne, le nombre d'avis et les derniers commentaires."],"q":[]},{"id":"S10-03","t":"Signaler un avis","v":"MVP","us":"En tant que joueur, je peux signaler un avis inapproprié afin qu'il soit examiné.","rg":["Le joueur choisit un motif : insultant, hors sujet, publicité, autre.","L'avis signalé remonte en modération (S04-01)."],"ca":["Étant donné un avis signalé, quand le responsable local ouvre la modération, alors il le voit avec le motif."],"q":[]}]}];
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const all = EPICS.flatMap(e => e.s.map(s => ({...s, epic:e.id})));
+let expanded = new Set();
+
+(function stats(){
+  const qs = all.reduce((n,s)=>n+s.q.length,0);
+  $("#stats").innerHTML = [[EPICS.length,"Epics"],[all.length,"User stories"],
+    [all.filter(s=>s.v==="MVP").length,"US MVP"],[all.filter(s=>s.v==="V2").length,"US V2"],[qs,"Questions ouvertes"]]
+    .map(([n,l])=>`<div class="stat"><b>${n}</b><small>${l}</small></div>`).join("");
+  $("#fEpic").innerHTML += EPICS.map(e=>`<option value="${e.id}">${e.id} · ${esc(e.t)}</option>`).join("");
+})();
+
+function matches(s){
+  if ($("#fEpic").value && s.epic !== $("#fEpic").value) return false;
+  if ($("#fVer").value && s.v !== $("#fVer").value) return false;
+  if ($("#fQ").checked && !s.q.length) return false;
+  const q = $("#q").value.trim().toLowerCase();
+  if (q && ![s.id,s.t,s.us,...s.rg,...s.ca,...s.q].join(" ").toLowerCase().includes(q)) return false;
+  return true;
+}
+
+function storyHTML(s){
+  const open = expanded.has(s.id);
+  const list = (title, arr, cls="") => arr.length ? `<div><h4>${title}</h4><ul class="${cls}">${arr.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>` : "";
+  return `<div class="story" id="${s.id}">
+    <button type="button" aria-expanded="${open}" data-id="${s.id}">
+      <span class="sid">${s.id}</span><span class="stitle">${esc(s.t)}</span>
+      <span class="chips"><span class="chip ver ${s.v}">${s.v}</span>${s.q.length ? `<span class="chip dep">? ${s.q.length}</span>` : ""}</span>
+    </button>
+    ${open ? `<div class="detail">
+      <p class="us">${esc(s.us)}</p>
+      ${list("Règles de gestion", s.rg)}
+      ${list("Critères d'acceptation", s.ca)}
+      ${list("Questions ouvertes", s.q, "q")}
+    </div>` : ""}
+  </div>`;
+}
+
+function render(){
+  const vis = all.filter(matches);
+  $("#count").textContent = `${vis.length} / ${all.length} US`;
+  let lastPh = "";
+  $("#list").innerHTML = EPICS.map(e=>{
+    const items = vis.filter(s=>s.epic===e.id);
+    if (!items.length) return "";
+    const ph = e.ph !== lastPh ? `<p class="phase">${esc(e.ph)}</p>` : "";
+    lastPh = e.ph;
+    return ph + `<section class="epic" id="sec-${e.id}">
+      <div class="epic-head"><h2><span class="id">${e.id}</span>${esc(e.t)}</h2><p>${esc(e.g)}</p></div>
+      ${items.map(storyHTML).join("")}
+    </section>`;
+  }).join("") || `<p class="empty">Aucune US ne correspond aux filtres.</p>`;
+  let navPh = "";
+  $("#nav").innerHTML = EPICS.map(e=>{
+    const n = vis.filter(s=>s.epic===e.id).length;
+    const ph = e.ph !== navPh ? `<span class="navph">${esc(e.ph)}</span>` : "";
+    navPh = e.ph;
+    return ph + `<a href="#sec-${e.id}"><span class="id">${e.id}</span><span>${esc(e.t)}</span><span class="n">${n}</span></a>`;
+  }).join("");
+  $("#toggleAll").textContent = vis.length && vis.every(s=>expanded.has(s.id)) ? "Tout replier" : "Tout déplier";
+}
+
+$("#list").addEventListener("click", ev=>{
+  const b = ev.target.closest("button[data-id]"); if (!b) return;
+  const id = b.dataset.id; expanded.has(id) ? expanded.delete(id) : expanded.add(id); render();
+  document.querySelector(`[data-id="${id}"]`).focus();
+});
+$("#toggleAll").addEventListener("click", ()=>{
+  const vis = all.filter(matches);
+  const allOpen = vis.every(s=>expanded.has(s.id));
+  vis.forEach(s=> allOpen ? expanded.delete(s.id) : expanded.add(s.id)); render();
+});
+["#q","#fEpic","#fVer","#fQ"].forEach(sel=>$(sel).addEventListener("input", render));
+$("#nav").addEventListener("click", ev=>{
+  const a = ev.target.closest("a"); if (!a) return; ev.preventDefault();
+  document.querySelector(a.getAttribute("href")).scrollIntoView({behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth"});
+});
+document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click", ()=>{
+  document.querySelectorAll(".tab").forEach(x=>x.setAttribute("aria-selected", x===t));
+  $("#view-backlog").hidden = t.dataset.view!=="backlog";
+  $("#view-cadrage").hidden = t.dataset.view!=="cadrage";
+}));
+render();
+</script>

@@ -25,7 +25,10 @@ const fichiersEcrans = Object.values(ECRANS).filter((e) => e.pret).map((e) => e.
 
 /* ---- Ressources communes ---- */
 const CSS = { tokens: lire("css/tokens.css"), style: lire("css/style.css") };
-const JS = { data: lire("js/data.js"), nav: nav, esport: lire("js/esport.js"), demo: lire("js/demo.js") };
+const JS = {
+  data: lire("js/data.js"), nav: nav, esport: lire("js/esport.js"), demo: lire("js/demo.js"),
+  "data-play": lire("js/data-play.js"), play: lire("js/play.js")
+};
 
 /* ---- Modèles d'écran : repères à la place des ressources externes ---- */
 const PAGES = {};
@@ -35,7 +38,7 @@ fichiersEcrans.forEach((fichier) => {
     if (!CSS[nom]) throw new Error(fichier + " : feuille inconnue css/" + nom + ".css");
     return "@@CSS:" + nom + "@@";
   });
-  html = html.replace(/<script src="js\/(\w+)\.js"><\/script>/g, (m, nom) => {
+  html = html.replace(/<script src="js\/([\w-]+)\.js"><\/script>/g, (m, nom) => {
     if (!JS[nom]) throw new Error(fichier + " : script inconnu js/" + nom + ".js");
     return "@@JS:" + nom + "@@";
   });
@@ -73,7 +76,7 @@ function routeur() {
     return D.PAGES[fichier]
       .replace("@@PARAMS@@", () => params)
       .replace(/@@CSS:(\w+)@@/g, (m, nom) => "<style>" + D.CSS[nom] + "</style>")
-      .replace(/@@JS:(\w+)@@/g, (m, nom) => OUVRE + D.JS[nom] + FERME);
+      .replace(/@@JS:([\w-]+)@@/g, (m, nom) => OUVRE + D.JS[nom] + FERME);
   }
 
   function afficher(url) {

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<!-- Écran p01 — Accueil de Play, d'après reference/figma-play/01-accueil.png et 02-accueil-suite.png.
+     US : S06-01 (ouverture depuis l'univers gaming, retour vers Max it), S06-02 (sections),
+     S06-03 (grille des genres, arbitrage Figma), S06-04 (tuiles), S09-01, S09-02, S09-03,
+     S08-04 (jeux indisponibles masqués ; « ?indispo=1 » : arrivée par le lien d'un jeu indisponible).
+     Ordre : Récemment joués, À la une, Recommandés, Mes favoris, Nouveautés, Populaires ici, genres. -->
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Play</title>
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-zone="play">
+<div class="cadre">
+  <div class="telephone play">
+    <div class="barre-etat" data-heure="9:30"></div>
+    <main class="contenu" id="page"></main>
+  </div>
+</div>
+
+<script src="js/data-play.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/play.js"></script>
+<script src="js/demo.js"></script>
+<script>
+  /* Motif de l'en-tête : manettes, étoiles et triangles en filigrane (Figma 01) */
+  const MOTIF =
+    '<svg class="motif" aria-hidden="true"><defs><pattern id="motif-play" width="96" height="88" patternUnits="userSpaceOnUse">' +
+    '<g fill="none" stroke-width="1.6" stroke-linejoin="round">' +
+    '<path class="m1" d="M8 14h14c4 0 6 3 6 7v2c0 3-3 4-5 2l-2-2h-8l-2 2c-2 2-5 1-5-2v-2c0-4 2-7 4-7z"/>' +
+    '<path class="m2" d="M62 8l3 6 6 1-4 4 1 6-6-3-6 3 1-6-4-4 6-1z"/>' +
+    '<path class="m1" d="M44 50l12 7-12 7z"/>' +
+    '<circle class="m2" cx="16" cy="62" r="6"/><circle class="m2" cx="16" cy="62" r="2.5"/>' +
+    '<path class="m1" d="M76 52h10v10H76z"/>' +
+    "</g></pattern></defs>" +
+    '<rect width="100%" height="100%" fill="url(#motif-play)"/></svg>';
+
+  /* Illustration : manette, cristal, casque et pièce sur un socle lumineux */
+  const ILLUSTRATION =
+    '<svg class="illustration-play" viewBox="0 0 220 180" aria-hidden="true">' +
+    '<ellipse class="i-bleu" cx="110" cy="150" rx="88" ry="20" opacity=".35"/>' +
+    '<ellipse class="i-nuit" cx="110" cy="146" rx="78" ry="16"/>' +
+    '<ellipse class="i-sombre" cx="110" cy="140" rx="78" ry="16"/>' +
+    '<ellipse fill="none" class="s-bleu" stroke-width="2" cx="110" cy="140" rx="78" ry="16"/>' +
+    // Cristal
+    '<path class="i-violet" d="M110 10l30 36-30 62-30-62z"/>' +
+    '<path class="i-bleu" d="M110 10l30 36h-60z" opacity=".8"/>' +
+    '<path class="i-violet-fonce" d="M110 108l30-62h-30z" opacity=".55"/>' +
+    // Casque
+    '<path class="i-gris" d="M150 70a26 26 0 0 1 52 0v26h-8V70a18 18 0 0 0-36 0v26h-8z"/>' +
+    '<rect class="i-sombre" x="144" y="88" width="16" height="26" rx="6"/><rect class="i-sombre" x="190" y="88" width="16" height="26" rx="6"/>' +
+    '<rect class="i-bleu" x="148" y="94" width="4" height="14" rx="2"/><rect class="i-bleu" x="198" y="94" width="4" height="14" rx="2"/>' +
+    // Carte de jeu
+    '<rect class="i-rose" x="22" y="62" width="40" height="56" rx="6" transform="rotate(-12 42 90)"/>' +
+    '<rect class="i-violet-fonce" x="27" y="68" width="30" height="34" rx="3" transform="rotate(-12 42 90)"/>' +
+    // Manette
+    '<path class="i-sombre" d="M70 104h80c12 0 18 8 20 22l2 10c2 12-10 16-18 8l-10-10H76l-10 10c-8 8-20 4-18-8l2-10c2-14 8-22 20-22z"/>' +
+    '<path class="i-bleu" d="M78 116h4v6h6v4h-6v6h-4v-6h-6v-4h6z"/>' +
+    '<circle class="i-rose" cx="138" cy="118" r="3.5"/><circle class="i-bleu" cx="146" cy="125" r="3.5"/>' +
+    '<circle class="i-or" cx="130" cy="125" r="3.5"/><circle class="i-violet" cx="138" cy="132" r="3.5"/>' +
+    // Pièce
+    '<circle class="i-or" cx="52" cy="140" r="13"/><circle class="i-or-clair" cx="52" cy="140" r="8"/>' +
+    "</svg>";
+
+  function rendre() {
+    const ici = "p01-accueil.html";
+    let html = "";
+
+    // En-tête : retour vers Max it (univers gaming), illustration, bienvenue
+    html += '<header class="entete-play">' + MOTIF +
+      '<a href="00c-maxit-gaming.html" class="retour-play" aria-label="Retour à Max it">' + Play.icone("retour") + "</a>" +
+      ILLUSTRATION +
+      "<h1>Bienvenue sur Play</h1>" +
+      "<p>Ton nouvel espace pour profiter des derniers jeux</p>" +
+      "</header>";
+
+    // Arrivée par le lien partagé d'un jeu indisponible (S08-04)
+    if (Nav.param("indispo")) {
+      html += '<div class="message-play" role="status" id="message-indispo">' + Play.icone("info", "f-primary") +
+        "<div><strong>Ce jeu n'est pas disponible pour le moment</strong><p>Découvre d'autres jeux gratuits ci-dessous.</p></div>" +
+        '<button class="bouton-icone" id="fermer-message" aria-label="Fermer le message">' + Play.icone("fermer") + "</button></div>";
+    }
+
+    // Récemment joués : dès la première partie (S09-02)
+    html += Play.rangee("Récemment joués", Play.recents(), ici);
+
+    // Jeu à la une (S03-01) : une seule carte, au style des cartes « Discover » de Figma
+    const une = Play.aLaUne();
+    if (une) {
+      html += '<section><h2 class="titre-play">À la une</h2>' +
+        '<a href="' + Play.lienFiche(une.id, ici) + '" class="carte-une-play">' + Play.visuel(une, 358, 300, "carte") +
+        '<span class="carte-une-texte"><h3>' + une.nom + "</h3><p>" + une.accroche + "</p></span></a></section>";
+    }
+
+    // Recommandés : toujours visible (S09-03)
+    html += Play.rangee("Recommandés pour toi", Play.recommandes(), ici);
+    // Mes favoris : dès le premier favori (S09-01)
+    html += Play.rangee("Mes favoris", Play.favoris(), ici);
+    // Nouveautés et populaires : toujours visibles (S03-02, S03-03)
+    html += Play.rangee("Nouveautés", Play.nouveautes(), ici);
+    html += Play.rangee("Populaires ici", Play.populaires(), ici);
+
+    // Genres : seulement ceux qui ont un jeu dans le pays, puis « Tous les jeux » (S06-02, S06-03)
+    html += '<section><h2 class="titre-play">Parcourir par genre</h2><nav class="grille-genres" aria-label="Genres">' +
+      Play.genresVisibles().map((g) =>
+        '<a href="' + Play.url("p02-genre.html", { genre: g.id }) + '" class="genre-play">' +
+        '<span class="genre-icone">' + Play.pictoGenre(g.id) + "</span>" + g.court + "</a>"
+      ).join("") +
+      '<a href="p02-genre.html?genre=tous" class="genre-play"><span class="genre-icone">' + Play.pictoGenre("tous") + "</span>Tous les jeux</a>" +
+      "</nav></section>";
+
+    html += '<div class="fin-contenu"></div>';
+    document.getElementById("page").innerHTML = html;
+
+    const fermer = document.getElementById("fermer-message");
+    if (fermer) fermer.addEventListener("click", () => document.getElementById("message-indispo").remove());
+  }
+  Play.monter(rendre);
+</script>
+</body>
+</html>

@@ -42,6 +42,17 @@ const Demo = (function () {
     { libelle: "Nouvelle notification", action: "notification", aide: "Arrive sur l'écran affiché en moins de 5 s" }
   ];
 
+  /* Play (mini-jeux) : bascules et raccourcis propres à la mini app.
+     etat : valeurs à forcer avant d'ouvrir l'écran. */
+  const BASCULES_PLAY = [
+    { cle: "playNouveau", libelle: "Nouveau joueur", aide: "Ni jeux récents, ni favoris, ni avis" },
+    { cle: "playIndispo", libelle: "Jeu momentanément indisponible", aide: "« Bloc Mania » disparaît de Play" }
+  ];
+  const RACCOURCIS_PLAY = [
+    { libelle: "Ouverture par lien partagé", ecran: "p03", params: { jeu: "rallye-dunes", via: "lien" } },
+    { libelle: "Lien vers un jeu indisponible", ecran: "p03", params: { jeu: "bloc-mania", via: "lien" }, etat: { playIndispo: true } }
+  ];
+
   const ICONE_REGLAGES =
     '<svg viewBox="0 0 24 24" aria-hidden="true"><path class="f-text" d="M4 6h10.2a3 3 0 0 1 5.6 0H20v2h-.2a3 3 0 0 1-5.6 0H4zm13 1a1 1 0 1 0 0 .01zM4 16h.2a3 3 0 0 1 5.6 0H20v2H9.8a3 3 0 0 1-5.6 0H4zm3 1a1 1 0 1 0 0 .01z"/></svg>';
   const ICONE_FLECHE =
@@ -66,12 +77,27 @@ const Demo = (function () {
 
       '<p class="demo-groupe">Compte Max it</p>';
 
-    BASCULES.forEach((b) => {
+    const bascule = (b) => {
       const actif = Etat.get(b.cle);
       html +=
         '<button class="demo-ligne" role="switch" aria-checked="' + !!actif + '" data-bascule="' + b.cle + '">' +
         "<span>" + b.libelle + "<small>" + b.aide + "</small></span>" +
         '<span class="inter' + (actif ? " on" : "") + '"></span></button>';
+    };
+    BASCULES.forEach(bascule);
+
+    // Play (mini-jeux) : pays, nouveau joueur, jeu indisponible, liens partagés
+    const senegal = Etat.get("playPays") === "SN";
+    html += '<p class="demo-groupe">Play (mini-jeux)</p>' +
+      '<div class="segment" role="radiogroup" aria-label="Pays du joueur dans Play">' +
+      '<button role="radio" data-pays="MA" aria-checked="' + !senegal + '" class="' + (senegal ? "" : "actif") + '">Maroc</button>' +
+      '<button role="radio" data-pays="SN" aria-checked="' + senegal + '" class="' + (senegal ? "actif" : "") + '">Sénégal</button>' +
+      "</div>" +
+      '<p class="demo-aide">Au Sénégal, les fiches affichent le badge « Sans consommation de data ».</p>';
+    BASCULES_PLAY.forEach(bascule);
+    RACCOURCIS_PLAY.forEach((r, i) => {
+      html += '<button class="demo-ligne" data-raccourci-play="' + i + '">' +
+        "<span>" + r.libelle + "<small>Écran " + r.ecran + " · " + ECRANS[r.ecran].titre + "</small></span>" + ICONE_FLECHE + "</button>";
     });
 
     html += '<p class="demo-groupe">États alternatifs</p>';
@@ -116,11 +142,28 @@ const Demo = (function () {
       return ouvrir();
     }
 
+    const pays = cible.closest("[data-pays]");
+    if (pays) {
+      Etat.set("playPays", pays.dataset.pays);
+      Nav.toast("Play : joueur au " + (pays.dataset.pays === "SN" ? "Sénégal" : "Maroc"));
+      return ouvrir();
+    }
+
     const bascule = cible.closest("[data-bascule]");
     if (bascule) {
       const cle = bascule.dataset.bascule;
+      // Nouveau joueur : l'historique de Play repart de zéro (ou de l'historique de départ)
+      if (cle === "playNouveau") ["playRecents", "playLances", "playFavoris", "playAvis"].forEach((c) => Etat.set(c, null));
       Etat.set(cle, !Etat.get(cle));
       return ouvrir();
+    }
+
+    const raccourciPlay = cible.closest("[data-raccourci-play]");
+    if (raccourciPlay) {
+      const r = RACCOURCIS_PLAY[Number(raccourciPlay.dataset.raccourciPlay)];
+      Object.keys(r.etat || {}).forEach((cle) => Etat.set(cle, r.etat[cle]));
+      fermer();
+      return Nav.aller(r.ecran, null, r.params);
     }
 
     const raccourci = cible.closest("[data-raccourci]");

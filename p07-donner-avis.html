@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<!-- Écran p07 — Donner ou modifier son avis (p07-donner-avis.html?jeu=bloc-mania&depuis=… ; « retour=avis » : venu de p06).
+     Pas d'écran Figma : composants repris de reference/figma-play/06-avis.png (étoiles, bouton clair, thème sombre).
+     US : S10-01 (1 à 5 étoiles, commentaire facultatif de 500 caractères au plus, un seul avis par jeu,
+     modifiable ou supprimable ; impossible pour un jeu jamais lancé). Avis publié tout de suite, sous le pseudonyme. -->
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Donner mon avis</title>
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-zone="play">
+<div class="cadre">
+  <div class="telephone play">
+    <div class="barre-etat" data-heure="9:30"></div>
+    <header class="entete-simple-play">
+      <a class="retour-play" id="retour" aria-label="Retour"></a>
+      <h1 id="titre">Donner mon avis</h1>
+    </header>
+    <main class="contenu" id="page"></main>
+    <div class="barre-action barre-play" id="barre"></div>
+  </div>
+</div>
+
+<script src="js/data-play.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/play.js"></script>
+<script src="js/demo.js"></script>
+<script>
+  const jeu = Play.jeuDeLaPage();
+  const LIBELLES = ["", "Très décevant", "Décevant", "Correct", "Bien", "Excellent"];
+  const MAX = 500;
+  let note = 0;
+
+  /* Page où revenir : la liste des avis si l'on en vient, sinon la fiche */
+  function pageRetour() {
+    const params = { jeu: jeu.id, depuis: Play.depuis() };
+    return Nav.param("retour") === "avis" ? Play.url("p06-avis.html", params) : Play.url("p03-jeu.html", params);
+  }
+
+  function rendre() {
+    if (!jeu) return;
+    if (!Play.disponible(jeu)) return ouvrirPage("p01-accueil.html?indispo=1");
+    const mien = Play.monAvis(jeu.id);
+    const retour = document.getElementById("retour");
+    retour.innerHTML = Play.icone("retour");
+    retour.href = pageRetour();
+    document.getElementById("titre").textContent = mien ? "Modifier mon avis" : "Donner mon avis";
+
+    const tete = '<div class="jeu-avis"><span class="vignette-cible">' + Play.visuel(jeu, 56, 56, "tuile") + "</span>" +
+      "<div><strong>" + jeu.nom + "</strong><small>" + Play.genre(jeu.genre).nom + "</small></div></div>";
+
+    // Jeu jamais lancé : pas de note possible (S10-01), et une sortie vers la fiche
+    if (!Play.aLance(jeu.id)) {
+      document.getElementById("page").innerHTML = tete +
+        '<div class="message-play">' + Play.icone("info", "f-primary") + "<div><strong>Joue d'abord une partie</strong>" +
+        "<p>Tu pourras noter " + jeu.nom + " après l'avoir lancé au moins une fois.</p></div></div>";
+      document.getElementById("barre").innerHTML = '<a class="bouton-jouer" href="' + pageRetour() + '">Revenir au jeu</a>';
+      return;
+    }
+
+    note = mien ? mien.note : note;
+    document.getElementById("page").innerHTML = tete +
+      '<section class="formulaire-avis">' +
+      '<h2 class="titre-play">Ta note</h2>' +
+      '<div class="choix-etoiles" role="radiogroup" aria-label="Note de 1 à 5 étoiles">' +
+      [1, 2, 3, 4, 5].map((n) => '<button role="radio" data-note="' + n + '" aria-label="' + n + (n > 1 ? " étoiles" : " étoile") + '">' +
+        Play.icone("etoile", "f-play-chip") + "</button>").join("") + "</div>" +
+      '<p class="libelle-note" id="libelle-note">Touche une étoile pour noter</p>' +
+      '<h2 class="titre-play">Ton commentaire <small>(facultatif)</small></h2>' +
+      '<textarea class="champ-avis" id="texte" maxlength="' + MAX + '" rows="6" placeholder="Qu\'as-tu pensé de ' + jeu.nom.replace(/"/g, "") + ' ?">' + (mien ? mien.texte : "") + "</textarea>" +
+      '<p class="compteur" id="compteur"></p>' +
+      '<p class="aide-avis">Ton avis sera publié tout de suite sous ton pseudonyme <b>' + Play.pseudo() + "</b>." +
+      (mien ? " Il remplacera ton avis du " + Play.dateCourte(mien.date) + "." : "") + "</p>" +
+      (mien ? '<button class="lien-avis lien-supprimer" id="supprimer">Supprimer mon avis</button>' : "") +
+      "</section>";
+    document.getElementById("barre").innerHTML = '<button class="bouton-jouer" id="publier">Publier</button>';
+
+    document.querySelectorAll("[data-note]").forEach((b) => b.addEventListener("click", () => { note = Number(b.dataset.note); majNote(); }));
+    document.getElementById("texte").addEventListener("input", majCompteur);
+    document.getElementById("publier").addEventListener("click", publier);
+    if (mien) document.getElementById("supprimer").addEventListener("click", supprimer);
+    majNote();
+    majCompteur();
+  }
+
+  /* Étoiles pleines jusqu'à la note choisie ; « Publier » inactif tant qu'il n'y a pas de note */
+  function majNote() {
+    document.querySelectorAll("[data-note]").forEach((b) => {
+      const pleine = Number(b.dataset.note) <= note;
+      b.setAttribute("aria-checked", Number(b.dataset.note) === note);
+      b.querySelector("svg").setAttribute("class", pleine ? "f-play-star" : "f-play-chip");
+    });
+    document.getElementById("libelle-note").textContent = note ? LIBELLES[note] : "Touche une étoile pour noter";
+    document.getElementById("publier").disabled = !note;
+  }
+
+  function majCompteur() {
+    document.getElementById("compteur").textContent = document.getElementById("texte").value.length + " / " + MAX;
+  }
+
+  function publier() {
+    if (!note) return;
+    Play.enregistrerAvis(jeu.id, note, document.getElementById("texte").value.trim().slice(0, MAX));
+    Etat.set("toastSuivant", "Avis publié");
+    ouvrirPage(pageRetour());
+  }
+
+  function supprimer() {
+    Nav.dialogue({
+      titre: "Supprimer ton avis ?",
+      texte: "Ta note et ton commentaire sur " + jeu.nom + " seront retirés.",
+      boutons: [
+        { libelle: "Supprimer", primaire: true, action: () => {
+          Play.supprimerAvis(jeu.id);
+          Etat.set("toastSuivant", "Avis supprimé");
+          ouvrirPage(pageRetour());
+        } },
+        { libelle: "Annuler" }
+      ]
+    });
+  }
+
+  // Rendu au chargement seulement : une saisie en cours n'est pas effacée par le menu de démo
+  document.addEventListener("DOMContentLoaded", rendre);
+</script>
+</body>
+</html>

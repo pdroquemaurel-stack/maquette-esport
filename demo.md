@@ -44,6 +44,16 @@ Total : 16 min 30 avec l'étape 10 bis. Pour finir : menu de démo → « Réini
 | Exclusion d'un tournoi (contestation) | 26 | Motif, durée, champ libre, envoi au responsable local. |
 | Abonnement résilié | 24 | Accès conservé jusqu'à l'échéance. |
 
+## Play (mini-jeux) — 6 minutes
+
+| # | Écrans | Ce qu'on montre | Menu de démo |
+|---|---|---|---|
+| 1 | 00c → p01 | Tuile « Jouer » : accueil de Play. Récemment joués, la carte à la une, recommandés, favoris, nouveautés, populaires, grille des genres (pas de Stratégie au Maroc). | Variante : « Nouveau joueur » (ni récents ni favoris). |
+| 2 | p01 → p03 → p05 → p03 | « Rallye des dunes » : « Fourni par Kora Games », vidéo lancée seulement en touchant « Vidéo », favori, partage. « Jouer » → chargement → partie simulée → « Quitter » → retour sur la fiche. | Pays « Sénégal » : badge « Sans consommation de data ». |
+| 3 | p03 → p04 → p05 | « Ludo en famille » (hub Zénith Jeux sans lien direct) : écran de transition, « Continuer », accueil du hub, choisir le jeu. « Bloc Mania » (hub avec lien direct) s'ouvre sans transition. | — |
+| 4 | p03 → p07 → p03 → p06 | Avis : « Parking Pro », jamais lancé, ne peut pas être noté. « Bloc Mania » : « Donner mon avis », 4 étoiles et un commentaire → publié tout de suite sous `Youss_KZ`, la moyenne et le nombre d'avis changent. « Voir tout » : liste complète, « Modifier », « Supprimer », « Signaler » un avis (motif obligatoire). | — |
+| 5 | p01 | Jeu indisponible : « Bloc Mania » disparaît de partout, y compris des favoris, et y revient quand on coupe la bascule. | « Jeu momentanément indisponible », « Lien vers un jeu indisponible », « Ouverture par lien partagé ». |
+
 ## Bon à savoir
 
 - Le temps accéléré (×30) ne concerne que la salle de match, la déclaration du résultat et le litige.
