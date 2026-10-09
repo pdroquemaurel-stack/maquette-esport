@@ -45,7 +45,7 @@ const Demo = (function () {
   /* Play (mini-jeux) : bascules et raccourcis propres à la mini app.
      etat : valeurs à forcer avant d'ouvrir l'écran. */
   const BASCULES_PLAY = [
-    { cle: "playNouveau", libelle: "Nouveau joueur", aide: "Ni jeux récents ni favoris" },
+    { cle: "playNouveau", libelle: "Nouveau joueur", aide: "Ni jeux récents, ni favoris, ni avis" },
     { cle: "playIndispo", libelle: "Jeu momentanément indisponible", aide: "« Bloc Mania » disparaît de Play" }
   ];
   const RACCOURCIS_PLAY = [
@@ -153,7 +153,7 @@ const Demo = (function () {
     if (bascule) {
       const cle = bascule.dataset.bascule;
       // Nouveau joueur : l'historique de Play repart de zéro (ou de l'historique de départ)
-      if (cle === "playNouveau") ["playRecents", "playLances", "playFavoris"].forEach((c) => Etat.set(c, null));
+      if (cle === "playNouveau") ["playRecents", "playLances", "playFavoris", "playAvis"].forEach((c) => Etat.set(c, null));
       Etat.set(cle, !Etat.get(cle));
       return ouvrir();
     }

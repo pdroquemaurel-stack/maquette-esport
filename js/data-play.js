@@ -55,9 +55,30 @@ const PLAY = {
 
   /* ---- Historique du joueur au début de la démo (le menu « Nouveau joueur » le vide) ---- */
   joueur: {
+    pseudo: "Youss_KZ",                                      // pseudonyme du compte, affiché sous ses avis
     recents: ["foot-lions", "bloc-mania", "rallye-dunes"],  // du plus récent au plus ancien
-    favoris: ["bloc-mania", "ludo-famille"]                  // le dernier ajouté en premier
+    favoris: ["bloc-mania", "ludo-famille"],                 // le dernier ajouté en premier
+    // Avis déjà laissés (S10-01) : un seul par jeu, modifiable ou supprimable
+    avis: { "foot-lions": { note: 5, texte: "Le meilleur jeu de foot de Play. Les matchs à deux sur le même téléphone sont géniaux.", date: "2026-10-02" } }
   },
+
+  /* ---- Avis des autres joueurs (E10) ----
+     Commentaires fictifs, publiés tout de suite et affichés sous le pseudonyme (choix CLAUDE.md).
+     Chaque jeu en reçoit une sélection (voir js/play.js), du plus récent au plus ancien. */
+  avisJoueurs: [
+    { pseudo: "Salma_ElA", note: 5, texte: "Parfait pour la pause de midi : une partie dure deux minutes et on a envie d'en refaire une." },
+    { pseudo: "Mamadou221", note: 5, texte: "Je joue tous les soirs dans le car rapide. Ça marche même quand le réseau est faible." },
+    { pseudo: "Awa_Dkr", note: 4, texte: "Très joli et facile à prendre en main. Il manque juste quelques niveaux en plus." },
+    { pseudo: "Kofi.Gh", note: 5, texte: "Mes petits frères adorent, on se le passe à tour de rôle sur mon téléphone." },
+    { pseudo: "Ines_Tunis", note: 4, texte: "Bonne surprise, je ne pensais pas trouver un jeu aussi complet gratuitement." },
+    { pseudo: "Yacine_DZ", note: 3, texte: "Sympa au début, mais ça devient répétitif après une semaine." },
+    { pseudo: "Fatou_Sn", note: 5, texte: "Aucun téléchargement, ça s'ouvre tout de suite depuis Max it. Top !" },
+    { pseudo: "Omar_Casa", note: 4, texte: "Les commandes répondent bien. Le niveau 12 est vraiment difficile !" },
+    { pseudo: "Aminata_CI", note: 5, texte: "J'ai battu le record de mon cousin, il ne s'en remet pas." },
+    { pseudo: "Karim_Rbt", note: 2, texte: "Le chargement est un peu long chez moi le soir." },
+    { pseudo: "Nadia.M", note: 4, texte: "Graphismes soignés et parties courtes, exactement ce que je cherchais." },
+    { pseudo: "Ibrahim_Ml", note: 5, texte: "Simple, rapide, gratuit. Je recommande à tout le monde." }
+  ],
 
   /* ---- Menu de démo ---- */
   demo: {

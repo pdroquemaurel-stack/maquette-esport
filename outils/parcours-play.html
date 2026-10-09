@@ -141,6 +141,54 @@
     log(doc().querySelectorAll(".tuile-play").length === 27, "I · « Tous les jeux » : 27 jeux au Maroc");
     await charger("p03-jeu.html?jeu=rallye-dunes&via=lien"); await pause(400);
     log(/Rallye des dunes/.test(texte()) && doc().querySelector(".fond-fiche").getAttribute("href") === "p01-accueil.html", "I · lien partagé → fiche ; fermer → accueil de Play");
+
+    // ---- J. Avis (lot P2) ----
+    etat();
+    await charger("p03-jeu.html?jeu=parking-pro&depuis=p01-accueil.html"); await pause(400);
+    log(/Notes et avis/.test(texte()) && /52 avis/.test(texte()) && doc().querySelectorAll("#avis .avis-play").length === 2,
+      "J · fiche : moyenne, nombre d'avis et 2 derniers commentaires");
+    log(doc().querySelector("#avis button.bouton-clair[disabled]") && /Lance le jeu au moins une fois/.test(texte()), "J · jeu jamais lancé : « Donner mon avis » inactif");
+    await charger("p03-jeu.html?jeu=bloc-mania&depuis=p01-accueil.html"); await pause(400);
+    log(/Donner mon avis/.test(doc().querySelector("#avis .bouton-clair").textContent), "J · jeu déjà lancé : « Donner mon avis » actif");
+    const avant = doc().querySelector(".nombre-avis").textContent;
+    await suivre("#avis a.bouton-clair");
+    log(page().startsWith("p07-donner-avis.html?jeu=bloc-mania"), "J · « Donner mon avis » → formulaire");
+    log(doc().getElementById("publier").disabled, "J · « Publier » inactif sans note");
+    cliquer('[data-note="4"]'); await pause(100);
+    log(!doc().getElementById("publier").disabled && /Bien/.test(texte()), "J · 4 étoiles : « Bien », « Publier » actif");
+    const champ = doc().getElementById("texte");
+    log(champ.maxLength === 500, "J · commentaire limité à 500 caractères");
+    champ.value = "Très bon jeu pour la pause."; champ.dispatchEvent(new Event("input"));
+    log(/27 \/ 500/.test(texte()), "J · compteur de caractères");
+    let n = navigation(); cliquer("#publier"); await n; await pause(500);
+    log(page().startsWith("p03-jeu.html?jeu=bloc-mania"), "J · « Publier » → retour à la fiche");
+    log(/Youss_KZ · Ton avis/.test(texte()) && /Très bon jeu pour la pause/.test(texte()), "J · avis publié tout de suite, sous le pseudonyme");
+    log(doc().querySelector(".nombre-avis").textContent === "403 avis" && avant === "402 avis", "J · nombre d'avis recalculé (402 → 403)");
+    log(/Modifier mon avis/.test(doc().querySelector("#avis .bouton-clair").textContent), "J · un seul avis par jeu : « Modifier mon avis »");
+    // Modifier depuis la liste complète : l'avis est remplacé, retour sur la liste
+    await suivre('#avis a.voir-tout-play');
+    log(page().startsWith("p06-avis.html?jeu=bloc-mania"), "J · « Voir tout » → liste complète des avis");
+    log(doc().querySelector(".avis-mien") && doc().querySelectorAll(".avis-play").length > 6, "J · p06 : mon avis en tête, puis tous les commentaires");
+    await suivre('.avis-mien a.lien-avis');
+    cliquer('[data-note="2"]'); await pause(100);
+    n = navigation(); cliquer("#publier"); await n; await pause(500);
+    log(page().startsWith("p06-avis.html") && Object.keys(lire().playAvis).filter((k) => k === "bloc-mania").length === 1 && lire().playAvis["bloc-mania"].note === 2,
+      "J · avis modifié : il remplace le précédent, retour sur la liste");
+    // Signaler un avis
+    const premier = doc().querySelector("[data-signaler]").dataset.signaler;
+    cliquer("[data-signaler]"); await pause(200);
+    log(doc().getElementById("envoyer-signalement").disabled, "J · signalement : motif obligatoire");
+    doc().querySelector('input[value="Publicité"]').click(); await pause(100);
+    cliquer("#envoyer-signalement"); await pause(300);
+    log(lire().playSignales.includes(premier) && /Signalé · en cours d'examen/.test(texte()), "J · avis signalé, marqué « en cours d'examen »");
+    // Supprimer mon avis
+    cliquer("#supprimer"); await pause(200);
+    cliquer(".dialogue .bouton-primaire"); await pause(400);
+    log(!doc().querySelector(".avis-mien") && /402 avis/.test(texte()), "J · avis supprimé, moyenne et nombre recalculés");
+    // Formulaire ouvert pour un jeu jamais lancé : message et sortie
+    await charger("p07-donner-avis.html?jeu=parking-pro"); await pause(400);
+    log(/Joue d'abord une partie/.test(texte()) && !doc().getElementById("publier") && doc().querySelector(".barre-play a[href^='p03-jeu.html']"),
+      "J · p07 pour un jeu jamais lancé : message et retour au jeu");
   } catch (e) { log(false, "erreur : " + e.message); }
   s.textContent += "FIN"; })();
 </script>

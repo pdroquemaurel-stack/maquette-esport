@@ -54,7 +54,11 @@
     "p03-jeu.html?jeu=rallye-dunes&depuis=p01-accueil.html", "p03-jeu.html?jeu=bloc-mania&depuis=p02-genre.html%3Fgenre%3Dpuzzle",
     ["p03-jeu.html?jeu=ludo-famille", { playPays: "SN" }], "p03-jeu.html?jeu=mot-juste&via=lien",
     "p04-transition.html?jeu=ludo-famille&depuis=p01-accueil.html",
-    "p05-partie.html?jeu=rallye-dunes", "p05-partie.html?jeu=bloc-mania", "p05-partie.html?jeu=ludo-famille&mode=hub"
+    "p05-partie.html?jeu=rallye-dunes", "p05-partie.html?jeu=bloc-mania", "p05-partie.html?jeu=ludo-famille&mode=hub",
+    // Play (lot P2) : avis — fiche d'un jeu noté, d'un jeu jamais lancé, liste complète, formulaire
+    "p03-jeu.html?jeu=foot-lions", "p03-jeu.html?jeu=parking-pro",
+    "p06-avis.html?jeu=foot-lions&depuis=p01-accueil.html", "p06-avis.html?jeu=parking-pro", ["p06-avis.html?jeu=taxi-brousse", { playSignales: ["taxi-brousse-0"] }],
+    "p07-donner-avis.html?jeu=bloc-mania", "p07-donner-avis.html?jeu=foot-lions&retour=avis", "p07-donner-avis.html?jeu=parking-pro"
   ];
   const abonne = location.hash === "#abonne";
   const sortie = document.getElementById("sortie");

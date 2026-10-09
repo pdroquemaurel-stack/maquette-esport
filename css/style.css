@@ -1373,3 +1373,150 @@ svg { display: block; flex-shrink: 0; }
 .hub-grille { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-3); }
 .hub-grille button { display: flex; flex-direction: column; gap: var(--space-1); font-size: 12px; text-align: left; min-width: 0; overflow-wrap: anywhere; }
 .hub-grille .visuel-hub { width: 100%; aspect-ratio: 1; border-radius: var(--radius-sm); overflow: hidden; }
+
+/* ============ Avis des joueurs (lot P2, d'après reference/figma-play/06-avis.png) ============ */
+.bouton-jouer:disabled { background: var(--play-chip); color: var(--play-text-muted); cursor: default; }
+
+/* Titre « Notes et avis » avec « Voir tout » (texte blanc, chevron orange) */
+.titre-avec-lien { display: flex; align-items: center; }
+.voir-tout-play {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  min-height: var(--touch-target);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-bold);
+}
+.voir-tout-play svg { width: 18px; height: 18px; }
+
+/* Moyenne en grand, étoiles et nombre d'avis */
+.resume-note { display: flex; align-items: center; gap: var(--space-3); }
+.resume-note b { font-size: var(--font-size-display); line-height: 1; }
+.nombre-avis { font-size: var(--font-size-sm); margin-top: var(--space-2); }
+
+/* Bouton clair « Donner mon avis » (Figma : « Write a review ») */
+.bouton-clair {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 48px;
+  margin-top: var(--space-4);
+  border-radius: var(--play-radius-button);
+  background: var(--play-button-light);
+  color: var(--play-on-light);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+}
+.bouton-clair:disabled { background: var(--play-chip); color: var(--play-text-muted); cursor: default; }
+.aide-avis { font-size: var(--font-size-sm); color: var(--play-text-secondary); margin-top: var(--space-2); }
+.aide-avis b { color: var(--play-text); }
+
+/* Carte d'un avis : avatar à initiales, pseudonyme, étoiles, date, texte */
+.avis-play { padding: var(--space-4) 0; border-bottom: 1px solid var(--play-divider); }
+.avis-tete { display: flex; align-items: flex-start; gap: var(--space-3); }
+.avatar-play {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: var(--radius-round);
+  background: var(--color-primary);
+  color: var(--color-text);
+  font-size: var(--font-size-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.avis-mien .avatar-play { background: var(--play-button-light); color: var(--play-on-light); }
+.avis-auteur { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.avis-nom { font-size: var(--font-size-md); overflow-wrap: anywhere; }
+.avis-nom small { color: var(--play-text-secondary); font-size: var(--font-size-sm); }
+.avis-note { display: flex; align-items: center; gap: var(--space-3); }
+.avis-date { font-size: var(--font-size-sm); color: var(--play-free); }
+.avis-texte { margin-top: var(--space-3); font-size: var(--font-size-sm); color: var(--play-text-secondary); overflow-wrap: anywhere; }
+.avis-texte.replie { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.avis-pied { display: flex; gap: var(--space-4); }
+.avis-pied:empty { display: none; }
+.lien-avis {
+  min-height: 32px;
+  margin-top: var(--space-1);
+  font-size: var(--font-size-sm);
+  color: var(--play-text-secondary);
+  text-decoration: underline;
+}
+.lien-signaler { color: var(--play-text-muted); }
+.avis-signale { display: inline-block; margin-top: var(--space-2); font-size: var(--font-size-xs); color: var(--play-text-muted); }
+.lien-tous-avis {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch-target);
+  margin-top: var(--space-2);
+  font-weight: var(--font-weight-bold);
+  text-decoration: underline;
+}
+
+/* Feuille de Play (signalement) : thème sombre */
+.feuille.feuille-sombre { background: var(--play-sheet); color: var(--play-text); }
+.feuille-sombre .poignee { background: var(--play-handle); }
+.feuille-sombre .demo-aide { color: var(--play-text-secondary); }
+.feuille-sombre .bouton-secondaire { background: var(--play-surface); color: var(--play-text); border-color: var(--play-surface); }
+.feuille-sombre .bouton-primaire:disabled { background: var(--play-chip); color: var(--play-text-muted); border-color: var(--play-chip); }
+.bouton-annuler { margin-top: var(--space-2); }
+.motifs-play { display: flex; flex-direction: column; margin-bottom: var(--space-5); }
+.motif-play {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--touch-target);
+  border-bottom: 1px solid var(--play-divider);
+  cursor: pointer;
+}
+.motif-play input { width: 20px; height: 20px; accent-color: var(--color-primary); }
+
+/* Page de tous les avis (p06) */
+.synthese-avis {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--space-5);
+  align-items: center;
+  margin: 0 var(--page-gutter);
+  padding: var(--space-4);
+  border-radius: var(--play-radius-card);
+  background: var(--play-surface);
+}
+.repartition { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
+.ligne-repartition { display: flex; align-items: center; gap: var(--space-2); font-size: var(--font-size-xs); color: var(--play-text-secondary); }
+.barre-note { flex: 1; height: 6px; border-radius: var(--radius-pill); background: var(--play-chip); overflow: hidden; }
+.barre-note i { display: block; height: 100%; background: var(--play-star); }
+.actions-avis { padding: 0 var(--page-gutter); }
+.liste-avis { padding: var(--space-2) var(--page-gutter) 0; }
+
+/* Formulaire d'avis (p07) */
+.jeu-avis { display: flex; align-items: center; gap: var(--space-3); padding: 0 var(--page-gutter); }
+.jeu-avis .vignette-cible { width: 56px; height: 56px; border-radius: var(--radius-sm); overflow: hidden; flex-shrink: 0; }
+.jeu-avis div { min-width: 0; }
+.jeu-avis strong { display: block; font-size: var(--font-size-lg); }
+.jeu-avis small { color: var(--play-text-secondary); }
+.formulaire-avis { padding: 0 var(--page-gutter); }
+.formulaire-avis .titre-play { padding: 0; margin: var(--space-6) 0 var(--space-3); }
+.formulaire-avis .titre-play small { font-size: var(--font-size-sm); font-weight: var(--font-weight-regular); color: var(--play-text-secondary); }
+.choix-etoiles { display: flex; gap: var(--space-2); }
+.choix-etoiles button { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; }
+.choix-etoiles svg { width: 40px; height: 40px; }
+.libelle-note { margin-top: var(--space-2); font-size: var(--font-size-sm); color: var(--play-text-secondary); }
+.champ-avis {
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--play-chip);
+  border-radius: var(--play-radius-card);
+  background: var(--play-surface);
+  color: var(--play-text);
+  font: inherit;
+  resize: none;
+}
+.champ-avis:focus { outline: 0; border-color: var(--color-primary); }
+.champ-avis::placeholder { color: var(--play-text-muted); }
+.compteur { text-align: right; font-size: var(--font-size-xs); color: var(--play-text-muted); margin-top: var(--space-1); }
+.lien-supprimer { margin-top: var(--space-4); color: var(--color-primary); }
+.formulaire-avis + .message-play, .jeu-avis + .message-play { margin-top: var(--space-5); }

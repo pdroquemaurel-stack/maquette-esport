@@ -40,7 +40,9 @@ const ECRANS = {
   "p02": { fichier: "p02-genre.html", titre: "Genre", pret: true },
   "p03": { fichier: "p03-jeu.html", titre: "Fiche jeu", pret: true },
   "p04": { fichier: "p04-transition.html", titre: "Transition vers le hub", pret: true },
-  "p05": { fichier: "p05-partie.html", titre: "Partie", pret: true }
+  "p05": { fichier: "p05-partie.html", titre: "Partie", pret: true },
+  "p06": { fichier: "p06-avis.html", titre: "Tous les avis", pret: true },
+  "p07": { fichier: "p07-donner-avis.html", titre: "Donner mon avis", pret: true }
 };
 
 /* ---- Fichier unique (maquette-esport.html) ----
@@ -128,6 +130,8 @@ const Etat = (function () {
     playRecents: null,      // jeux récemment joués, du plus récent au plus ancien (S09-02)
     playLances: null,       // jeux déjà lancés au moins une fois (recommandations, avis)
     playFavoris: null,      // jeux favoris, le dernier ajouté en premier (S09-01)
+    playAvis: null,         // avis du joueur, par jeu : { note, texte, date } (S10-01)
+    playSignales: null,     // avis signalés par le joueur (S10-03)
     scenario: null,         // état alternatif forcé pour l'écran visé
     origine: null           // écran à retrouver après le paiement (S11-03)
   };

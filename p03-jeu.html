@@ -5,7 +5,8 @@
      informations, « Fourni par »), S07-03 (badges), S07-04 (jeux similaires), S07-05 (partage),
      S09-01 (favori), S06-01 (ouverture par lien direct : « via=lien »), S08-04 (jeu indisponible → accueil).
      « Jouer » : mini app ou hub avec lien direct → p05 ; hub sans lien direct → p04.
-     Le bloc des avis (E10) arrive au lot P2. -->
+     Notes et avis (lot P2, Figma 06) : S10-01 (donner ou modifier son avis, seulement si le jeu a été lancé),
+     S10-02 (moyenne, nombre d'avis, derniers commentaires, lien vers p06), S10-03 (signaler). -->
 <html lang="fr">
 <head>
   <meta charset="utf-8">
@@ -78,7 +79,8 @@
       Play.icone(favori ? "coeurPlein" : "coeur", favori ? "f-primary" : "f-play-text") + "</button>" +
       '<button class="bouton-icone" id="partager" aria-label="Partager">' + Play.icone("partager") + "</button></div>";
     if (partenaire.mention) html += '<p class="fourni-par">Fourni par ' + partenaire.nom + "</p>";
-    html += '<p class="note-fiche">' + Play.etoiles(jeu.note, 14) + "<b>" + Play.note(jeu) + "</b> · " + jeu.avis + " avis</p>";
+    const moyenne = Play.moyenne(jeu);
+    html += '<button class="note-fiche" id="vers-avis">' + Play.etoiles(moyenne.note, 14) + "<b>" + Play.note(jeu) + "</b> · " + moyenne.nombre + " avis</button>";
     html += '<div class="badges-play"><span class="badge-play">' + Play.icone("gratuit", "f-play-free") + "Gratuit</span>" +
       (Play.infosPays().badgeData ? '<span class="badge-play">' + Play.icone("data", "f-play-free") + "Sans consommation de data</span>" : "") +
       "</div>";
@@ -104,8 +106,31 @@
         similaires.map((j) => Play.tuile(j, Play.url("p03-jeu.html", { jeu: jeu.id }))).join("") + "</div></section>";
     }
 
+    // Notes et avis (S10-01, S10-02, S10-03) : moyenne, nombre d'avis, derniers commentaires
+    const versAvis = Play.url("p06-avis.html", { jeu: jeu.id, depuis: depuis });
+    const versDonner = Play.url("p07-donner-avis.html", { jeu: jeu.id, depuis: depuis });
+    const mien = Play.monAvis(jeu.id);
+    html += '<hr class="separateur-play"><section id="avis">' +
+      '<h2 class="titre-play titre-avec-lien">Notes et avis <a href="' + versAvis + '" class="voir-tout-play">Voir tout' + Play.icone("chevron", "f-primary") + "</a></h2>" +
+      '<div class="resume-note"><b>' + Play.note(jeu) + "</b>" + Play.etoiles(moyenne.note, 24) + "</div>" +
+      '<p class="nombre-avis">' + moyenne.nombre + " avis</p>";
+    if (mien) {
+      html += '<a href="' + versDonner + '" class="bouton-clair">Modifier mon avis</a>';
+    } else if (Play.aLance(jeu.id)) {
+      html += '<a href="' + versDonner + '" class="bouton-clair">Donner mon avis</a>';
+    } else {
+      // Jamais lancé : impossible de noter (S10-01)
+      html += '<button class="bouton-clair" disabled>Donner mon avis</button>' +
+        '<p class="aide-avis">Lance le jeu au moins une fois pour pouvoir le noter.</p>';
+    }
+    if (mien) html += Play.carteAvis(Object.assign({ pseudo: Play.pseudo() }, mien), true);
+    html += Play.avisDesJoueurs(jeu).slice(0, 2).map((a) => Play.carteAvis(a, false)).join("");
+    html += '<a href="' + versAvis + '" class="lien-tous-avis">Voir tous les avis</a></section>';
+
     html += '<div class="fin-contenu"></div>';
     document.getElementById("page").innerHTML = html;
+    Play.brancherAvis(document.getElementById("avis"), jeu);
+    document.getElementById("vers-avis").addEventListener("click", () => document.getElementById("avis").scrollIntoView({ behavior: "smooth" }));
 
     if (jeu.video) document.getElementById("lecture").addEventListener("click", lancerVideo);
     document.getElementById("favori").addEventListener("click", () => {

@@ -392,8 +392,18 @@ Entrée : 00c, tuile « Jouer » → p01. Thème sombre, pas de barre du bas. Le
 ### p03 `p03-jeu.html?jeu=…&depuis=…` — Fiche jeu
 - Référence : Figma 04 et 05 (feuille posée sur l'accueil).
 - US : S07-01 à S07-05, S09-01, S06-01 (lien direct `via=lien`), S08-04.
-- Éléments : vidéo lancée à la demande ou visuel ; genre, nom, favori, partage (feuille du téléphone simulée) ; « Fourni par Kora Games » pour ce seul partenaire ; note et nombre d'avis ; badges « Gratuit » et, selon le pays, « Sans consommation de data » ; accroche, description, langues, joueurs, mode ; galerie ; jeux similaires ; bouton « Jouer » toujours visible. Bloc des avis : lot P2.
-- Liens : fermer (voile ou poignée) → page d'origine ; « Jouer » → p05, ou p04 pour un hub sans lien direct ; jeux similaires → p03.
+- Éléments : vidéo lancée à la demande ou visuel ; genre, nom, favori, partage (feuille du téléphone simulée) ; « Fourni par Kora Games » pour ce seul partenaire ; note et nombre d'avis ; badges « Gratuit » et, selon le pays, « Sans consommation de data » ; accroche, description, langues, joueurs, mode ; galerie ; jeux similaires ; notes et avis (Figma 06 : moyenne, nombre d'avis, « Donner mon avis » ou « Modifier mon avis », mon avis, 2 derniers commentaires, « Signaler ») ; bouton « Jouer » toujours visible.
+- Liens : fermer (voile ou poignée) → page d'origine ; « Jouer » → p05, ou p04 pour un hub sans lien direct ; jeux similaires → p03 ; « Voir tout » et « Voir tous les avis » → p06 ; « Donner mon avis » → p07.
+
+### p06 `p06-avis.html?jeu=…` — Tous les avis
+- Pas d'écran Figma pour la liste : composants de Figma 06. US : S10-01, S10-02, S10-03.
+- Éléments : moyenne, nombre d'avis et de commentaires, répartition des notes ; « Donner mon avis » (inactif si le jeu n'a jamais été lancé) ; mon avis en tête avec « Modifier » et « Supprimer » ; tous les commentaires, du plus récent au plus ancien, avec « Lire la suite » et « Signaler » (motif : insultant, hors sujet, publicité, autre).
+- Liens : retour → p03 ; « Modifier » / « Donner mon avis » → p07 (retour sur p06).
+
+### p07 `p07-donner-avis.html?jeu=…` — Donner ou modifier son avis
+- Pas d'écran Figma. US : S10-01.
+- Éléments : jeu, 1 à 5 étoiles avec libellé, commentaire facultatif (500 caractères, compteur), pseudonyme de publication, « Publier » (inactif sans note), « Supprimer mon avis » pour un avis existant. Jeu jamais lancé : message « Joue d'abord une partie » et « Revenir au jeu ».
+- Liens : retour et « Publier » → p03 (ou p06 si l'on en vient).
 
 ### p04 `p04-transition.html?jeu=…` — Transition vers un hub sans lien direct
 - Pas d'écran Figma. US : S08-02.
@@ -410,7 +420,9 @@ Entrée : 00c, tuile « Jouer » → p01. Thème sombre, pas de barre du bas. Le
 00c ─« Jouer »─► p01 Accueil ─┬─► p02 Genre ─► p03
                   ▲           └─► p03 Fiche ─┬─ jeux similaires ─► p03
                   │ retour Max it             ├─ « Jouer » (mini app, hub avec lien) ─► p05 ─« Quitter »─► p03
-                  00c                         └─ « Jouer » (hub sans lien) ─► p04 ─► p05 (accueil du hub) ─► p03
+                  00c                         ├─ « Jouer » (hub sans lien) ─► p04 ─► p05 (accueil du hub) ─► p03
+                                              ├─ « Voir tout » ─► p06 Tous les avis ─► p07 ─► p06
+                                              └─ « Donner mon avis » ─► p07 ─« Publier »─► p03
 Lien partagé ─► p03 (fermer → p01) ; lien vers un jeu indisponible ─► p01 avec message
 ```
 
@@ -418,9 +430,9 @@ Lien partagé ─► p03 (fermer → p01) ; lien vers un jeu indisponible ─►
 | Lot | Écrans | État |
 |---|---|---|
 | P1 | `data-play.js`, `play.js`, section « Play » de tokens.css et style.css, 00c (« Jouer »), p01 à p05, menu de démo (pays, nouveau joueur, jeu indisponible, liens partagés), test `outils/parcours-play.html` | terminé |
-| P2 | Avis : bloc de la fiche (p03), p06 tous les avis, p07 donner son avis, signalement | à venir |
+| P2 | Avis : bloc de la fiche (p03), p06 tous les avis, p07 donner son avis, signalement ; vérifications ajoutées à `outils/parcours-play.html` | terminé |
 
-### Couverture des US MVP de Play (lot P1)
+### Couverture des US MVP de Play
 | US | Couverture | Écrans | Limites et remarques |
 |---|---|---|---|
 | S06-01 | En partie | 00c, p01, p03 | Pays et compte Max it simulés (menu de démo) ; textes en français seulement. |
@@ -434,4 +446,6 @@ Lien partagé ─► p03 (fermer → p01) ; lien vers un jeu indisponible ─►
 | S08-04 | En partie | toutes | Indisponibilité forcée par le menu de démo, pas par de vrais échecs d'ouverture. |
 | S09-01 | En partie | p03, p01 | Favoris mémorisés dans le navigateur, pas sur le compte Max it. |
 | S09-02, S09-03 | Couvertes | p01 | — |
-| S10-01 à S10-03 | À venir | — | Lot P2. |
+| S10-01 | Couverte | p03, p06, p07 | Avis publié tout de suite sous le pseudonyme (choix CLAUDE.md) ; mémorisé dans le navigateur. |
+| S10-02 | Couverte | p03, p06 | Commentaires des autres joueurs fictifs ; la répartition des notes est calculée autour de la moyenne. |
+| S10-03 | En partie | p03, p06 | Motif et marque « en cours d'examen » ; la modération (S04-01) relève du back-office. |

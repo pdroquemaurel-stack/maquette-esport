@@ -65,6 +65,86 @@ const Play = (function () {
   }
 
   /* =====================================================================
+     Avis des joueurs (E10)
+     ===================================================================== */
+
+  /* Pseudonyme du joueur (compte Max it), sous lequel ses avis sont publiés */
+  function pseudo() { return Etat.get("pseudo") || PLAY.joueur.pseudo; }
+
+  /* Le joueur ne peut noter qu'un jeu qu'il a lancé au moins une fois (S10-01) */
+  function aLance(id) { return idsLances().includes(id); }
+
+  /* Avis du joueur, par jeu : mémorisés, sinon ceux du début de la démo */
+  function tousMesAvis() {
+    const valeur = Etat.get("playAvis");
+    if (valeur) return Object.assign({}, valeur);
+    return Etat.get("playNouveau") ? {} : Object.assign({}, PLAY.joueur.avis);
+  }
+  function monAvis(id) { return tousMesAvis()[id] || null; }
+  /* Un seul avis par jeu : un nouvel avis remplace le précédent */
+  function enregistrerAvis(id, note, texte) {
+    const avis = tousMesAvis();
+    avis[id] = { note: note, texte: texte, date: aujourdhui() };
+    Etat.set("playAvis", avis);
+  }
+  function supprimerAvis(id) {
+    const avis = tousMesAvis();
+    delete avis[id];
+    Etat.set("playAvis", avis);
+  }
+
+  function aujourdhui() {
+    const d = new Date();
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  }
+  /* « 2026-10-02 » → « 02/10/2026 » */
+  function dateCourte(iso) { return iso.split("-").reverse().join("/"); }
+
+  /* Nombre tiré du nom du jeu : sélection d'avis stable d'une page à l'autre */
+  function graine(texte) { return texte.split("").reduce((n, c) => (n * 31 + c.charCodeAt(0)) % 9973, 7); }
+
+  /* Commentaires des autres joueurs, du plus récent au plus ancien */
+  function avisDesJoueurs(j) {
+    const pool = PLAY.avisJoueurs;
+    const g = graine(j.id);
+    const nombre = 6 + (g % 5);
+    const liste = [];
+    for (let i = 0; i < nombre; i++) {
+      const modele = pool[(g + i * 5) % pool.length];
+      const date = new Date(2026, 9, 8 - i * 4 - (g % 3));
+      liste.push({
+        id: j.id + "-" + i,
+        pseudo: modele.pseudo,
+        note: modele.note,
+        texte: modele.texte,
+        date: date.getFullYear() + "-" + String(date.getMonth() + 1).padStart(2, "0") + "-" + String(date.getDate()).padStart(2, "0")
+      });
+    }
+    return liste;
+  }
+
+  /* Note moyenne et nombre d'avis, avis du joueur compris (S10-02) */
+  function moyenne(j) {
+    const mien = monAvis(j.id);
+    if (!mien) return { note: j.note, nombre: j.avis };
+    return { note: (j.note * j.avis + mien.note) / (j.avis + 1), nombre: j.avis + 1 };
+  }
+  function note(j) { return moyenne(j).note.toFixed(1).replace(".", ","); }
+
+  /* Répartition des notes de 5 à 1 étoiles, en pourcentage, autour de la moyenne */
+  function repartition(j) {
+    const m = moyenne(j).note;
+    const poids = [5, 4, 3, 2, 1].map((k) => Math.exp(-Math.pow(k - m, 2) / 0.9));
+    const total = poids.reduce((a, b) => a + b, 0);
+    return poids.map((p) => Math.round(p / total * 100));
+  }
+
+  /* Signalements envoyés par le joueur (S10-03) */
+  function idsSignales() { return (Etat.get("playSignales") || []).slice(); }
+  function estSignale(idAvis) { return idsSignales().includes(idAvis); }
+  function signaler(idAvis) { Etat.set("playSignales", idsSignales().concat(idAvis)); }
+
+  /* =====================================================================
      Sections de l'accueil
      ===================================================================== */
 
@@ -179,7 +259,6 @@ const Play = (function () {
     }
     return html + "</span>";
   }
-  function note(j) { return j.note.toFixed(1).replace(".", ","); }
 
   /* =====================================================================
      Pictogrammes des genres (grille de l'accueil, style de la maquette Figma :
@@ -370,12 +449,13 @@ const Play = (function () {
       '<div class="carrousel rangee-play">' + jeux.map((j) => tuile(j, origine)).join("") + "</div></section>";
   }
 
-  /* Feuille du bas (partage…). contenu : HTML ; renvoie le voile pour la fermer */
-  function feuille(contenu, etiquette) {
+  /* Feuille du bas. contenu : HTML ; classe : « feuille-sombre » pour une feuille de Play
+     (la feuille de partage, elle, est celle du téléphone). Renvoie le voile pour la fermer. */
+  function feuille(contenu, etiquette, classe) {
     const telephone = document.querySelector(".telephone");
     const voile = document.createElement("div");
     voile.className = "voile ouvert";
-    voile.innerHTML = '<div class="feuille" role="dialog" aria-modal="true" aria-label="' + etiquette + '">' +
+    voile.innerHTML = '<div class="feuille ' + (classe || "") + '" role="dialog" aria-modal="true" aria-label="' + etiquette + '">' +
       '<div class="poignee"></div>' + contenu + "</div>";
     voile.addEventListener("click", (evenement) => {
       if (evenement.target === voile || evenement.target.closest("[data-fermer]")) voile.remove();
@@ -384,9 +464,69 @@ const Play = (function () {
     return voile;
   }
 
+  /* ---------- Avis (style de reference/figma-play/06-avis.png) ---------- */
+
+  /* Initiales du pseudonyme pour l'avatar : « Salma_ElA » → « SE » */
+  function initiales(nom) {
+    const morceaux = nom.split(/[_.\s]+/).filter(Boolean);
+    return (morceaux.length > 1 ? morceaux[0][0] + morceaux[1][0] : morceaux[0].slice(0, 2)).toUpperCase();
+  }
+
+  /* Carte d'un avis. mien : avis du joueur (pas de signalement) ; actions : HTML ajouté en bas */
+  function carteAvis(avis, mien, actions) {
+    const long = avis.texte.length > 110;
+    let pied = "";
+    if (mien) pied = actions || "";
+    else if (estSignale(avis.id)) pied = '<span class="avis-signale">Signalé · en cours d\'examen</span>';
+    else pied = '<button class="lien-avis lien-signaler" data-signaler="' + avis.id + '">Signaler</button>';
+    return '<article class="avis-play' + (mien ? " avis-mien" : "") + '">' +
+      '<div class="avis-tete"><span class="avatar-play" aria-hidden="true">' + initiales(avis.pseudo) + "</span>" +
+      '<div class="avis-auteur"><span class="avis-nom">' + avis.pseudo + (mien ? " <small>· Ton avis</small>" : "") + "</span>" +
+      '<span class="avis-note">' + etoiles(avis.note, 18) + '<span class="avis-date">' + dateCourte(avis.date) + "</span></span></div></div>" +
+      (avis.texte ? '<p class="avis-texte' + (long ? " replie" : "") + '">' + avis.texte + "</p>" +
+        (long ? '<button class="lien-avis" data-lire-suite>Lire la suite</button>' : "") : "") +
+      '<div class="avis-pied">' + pied + "</div>" +
+      "</article>";
+  }
+
+  /* Gestes communs aux listes d'avis : « Lire la suite » et « Signaler » (S10-03) */
+  function brancherAvis(conteneur, j) {
+    conteneur.querySelectorAll("[data-lire-suite]").forEach((bouton) => bouton.addEventListener("click", () => {
+      bouton.previousElementSibling.classList.remove("replie");
+      bouton.remove();
+    }));
+    conteneur.querySelectorAll("[data-signaler]").forEach((bouton) => bouton.addEventListener("click", () => {
+      ouvrirSignalement(avisDesJoueurs(j).find((a) => a.id === bouton.dataset.signaler));
+    }));
+  }
+
+  /* Feuille de signalement : motif obligatoire, puis envoi en modération */
+  function ouvrirSignalement(avis) {
+    const motifs = ["Insultant", "Hors sujet", "Publicité", "Autre"];
+    const voile = feuille(
+      '<p class="demo-titre">Signaler cet avis</p>' +
+      '<p class="demo-aide">L\'avis de ' + avis.pseudo + " sera examiné par l'équipe Max it de ton pays.</p>" +
+      '<div class="motifs-play" role="radiogroup" aria-label="Motif">' + motifs.map((m) =>
+        '<label class="motif-play"><input type="radio" name="motif" value="' + m + '"><span>' + m + "</span></label>").join("") + "</div>" +
+      '<button class="bouton bouton-primaire bouton-pleine-largeur" id="envoyer-signalement" disabled>Envoyer le signalement</button>' +
+      '<button class="bouton bouton-secondaire bouton-pleine-largeur bouton-annuler" data-fermer>Annuler</button>',
+      "Signaler un avis",
+      "feuille-sombre"
+    );
+    const envoyer = voile.querySelector("#envoyer-signalement");
+    voile.querySelectorAll('input[name="motif"]').forEach((r) => r.addEventListener("change", () => { envoyer.disabled = false; }));
+    envoyer.addEventListener("click", () => {
+      voile.remove();
+      signaler(avis.id);
+      Nav.toast("Avis signalé : il sera examiné");
+    });
+  }
+
   return {
     pays, infosPays, jeu, partenaire, genre, disponible, catalogue,
     recents, favoris, estFavori, basculerFavori, enregistrerLancement,
+    pseudo, aLance, monAvis, enregistrerAvis, supprimerAvis, dateCourte, avisDesJoueurs, moyenne, repartition,
+    estSignale, carteAvis, brancherAvis,
     aLaUne, recommandes, nouveautes, populaires, genresVisibles, jeuxDuGenre, similaires,
     ici, depuis, url, lienFiche, jeuDeLaPage, monter,
     icone, etoiles, note, pictoGenre, visuel, tuile, rangee, feuille
