@@ -263,6 +263,22 @@ const PLAY = {
   ]
 };
 
+/* Visuels fournis (dossier images/play) : une image par jeu, affichée partout où le jeu apparaît
+   (tuiles, carte « À la une », en-tête de la fiche, première capture de la galerie, partie simulée),
+   recadrée au centre sans déformation. Les jeux sans image gardent leur dessin SVG.
+   Pour changer un visuel : remplacer le fichier en gardant son nom, puis reconstruire le fichier unique. */
+PLAY.images = {
+  "bloc-mania": "images/play/bloc-mania.jpg",
+  "commando-lagune": "images/play/commando-lagune.jpg",
+  "foot-lions": "images/play/foot-lions.jpg",
+  "ludo-famille": "images/play/ludo-famille.jpg",
+  "ninja-sahel": "images/play/ninja-sahel.jpg",
+  "rallye-dunes": "images/play/rallye-dunes.jpg",
+  "robots-furie": "images/play/robots-furie.jpg",
+  "taxi-brousse": "images/play/taxi-brousse.jpg",
+  "tresor-baobab": "images/play/tresor-baobab.jpg"
+};
+
 /* Texte de l'écran de transition (S02-01, S08-02) : saisi sur la fiche de chaque jeu d'un hub
    sans lien direct. Ici, rédigé à partir du genre et du nom du jeu. */
 PLAY.jeux.forEach((jeu) => {

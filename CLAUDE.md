@@ -57,6 +57,11 @@ continue de mener à la plateforme e-sport, qui ne doit pas être modifiée.
 - Les jeux ne sont pas jouables. « Jouer » ouvre un écran de jeu simulé : écran de chargement,
   puis une illustration « partie en cours » avec un bouton pour quitter, qui ramène à la fiche.
 - Noms de jeux et de partenaires fictifs (pas de marques réelles). Icônes des jeux en SVG.
+- Visuels des jeux : une image par jeu dans images/play/<id>.jpg (déclarée dans PLAY.images de
+  js/data-play.js), utilisée partout où le jeu apparaît ; sans image, le dessin SVG s'affiche.
+  Exception validée le 2026-10-09 : certaines images fournies montrent des titres ou logos de jeux
+  réels (commando-lagune, ninja-sahel, rallye-dunes, robots-furie, taxi-brousse) ; usage interne
+  de la maquette uniquement.
 - Catalogue fictif : environ 30 jeux répartis dans les 10 genres, 3 partenaires fictifs, dont
   un en modèle A (une mini app par jeu) et deux en modèle B (hub), l'un avec lien direct et
   l'autre sans.
