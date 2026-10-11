@@ -24,7 +24,7 @@ En-tête : cloche → 25 Notifications.
 ### 00c `00c-maxit-gaming.html` — Game corner
 - Référence : `reference/03-gaming.png` (thème sombre).
 - Éléments : retour, recherche ; titre « Game corner » ; tuiles Play, Gameshop, Esport ; « Discover » ; « Continue playing ».
-- Liens : Esport → 02 au premier accès, sinon 03 ; Jouer → p01 (Play) ; Gameshop et visuel « Discover » → s01 (Shop, voir ecrans-shop.md) ; retour → 00b.
+- Liens : Esport → 02 au premier accès, sinon 03 ; Jouer → p01 (Max it Gaming Play) ; Gameshop et visuel « Discover » → s01 (Shop, voir ecrans-shop.md) ; retour → 00b.
 - État (menu de démo) : compte Max it suspendu → message « Accès aux tournois impossible » au lieu d'entrer dans la plateforme (S01-01).
 
 ---
@@ -373,83 +373,105 @@ S02-01, S03-01, S03-02, S07-04, S08-01, S08-03, S08-05, S09-01, S09-03, et la pa
 
 ---
 
-# Play — mini app des mini-jeux (2e chantier)
+# Max it Gaming Play — mini app des mini-jeux (2e chantier)
 
-Source : `reference/backlog-play.html`, Epics « Front — mini app Play » (E06 à E10). Visuels de référence : `reference/figma-play/` (et `reference/05-fiche-jeu-suite.png`). Arbitrages Figma / backlog : voir CLAUDE.md.
-Données fictives (back-office simulé) : `js/data-play.js` ; fonctions communes : `js/play.js` ; couleurs et tailles : section « Play » de `css/tokens.css`.
-Entrée : 00c, tuile « Jouer » → p01. Thème sombre, pas de barre du bas. Les numéros d'US ci-dessous sont ceux du backlog Play.
+Source : `reference/backlog-play.html` (version de référence du 2026-10-11), Epics « Front » E06 à E11. Visuels de référence : `reference/figma-play/` pour la mise en page et les composants ; direction visuelle « kid & family friendly » validée le 2026-10-11 (fond clair, couleurs vives, coins arrondis, police ronde Nunito, micro-animations douces, ton bienveillant). Arbitrages : voir CLAUDE.md.
+Données fictives (back-office simulé) : `js/data-play.js` ; textes en français, anglais et arabe : `js/textes-play.js` ; fonctions communes : `js/play.js` ; fiche jeu (p03 et pv3) : `js/play-fiche.js` ; couleurs et tailles : section « Play » de `css/tokens.css` ; police : `fonts/` (licence OFL).
+Entrée : 00c, tuile « Jouer » → p01. Pas de barre du bas. Langue (menu de démo) : français, anglais ou arabe, lu de droite à gauche. Les numéros d'US ci-dessous sont ceux du backlog Play.
+Pseudos : au MVP, pas de profil joueur ; un pseudo généré (« Joueur4821 ») s'affiche dans les classements et sous les avis. Sur les écrans V2, le pseudo choisi s'affiche et ouvre le profil.
 
-### p01 `p01-accueil.html` — Accueil de Play
-- Référence : Figma 01 et 02.
-- US : S06-01, S06-02, S06-03, S06-04, S09-01, S09-02, S09-03, S08-04.
-- Éléments : retour vers Max it, illustration, « Bienvenue sur Play » ; Récemment joués (dès la première partie) ; À la une (une carte) ; Recommandés pour toi ; Mes favoris (dès le premier favori) ; Nouveautés ; Populaires ici ; grille des genres du pays et « Tous les jeux ». Avec `?indispo=1` : message « Ce jeu n'est pas disponible pour le moment ».
-- Liens : retour → 00c ; tuiles et carte → p03 ; genres → p02.
+### p01 `p01-accueil.html` — Accueil
+- Référence : Figma 01 et 02 (mise en page). US : S06-01, S06-02, S06-03, S06-04, S03-01, S03-03, S03-04, S03-05, S09-01, S09-02, S08-03.
+- Éléments : retour vers Max it, illustration (objets de jeu qui flottent), « Bienvenue sur Play » ; dans l'ordre : jeu à la une (une carte) ; récemment joués (dès la première partie) ; Recommandé pour vous (sélection du pays, toujours visible) ; mes favoris (dès le premier favori) ; nouveautés ; une rangée par genre du pays, avec pastille et « Voir tout ». Avec `?indispo=1` : message « Ce jeu n'est pas disponible pour le moment ».
+- Liens : retour → 00c ; tuiles et carte → p03 ; « Voir tout » → p02.
 
 ### p02 `p02-genre.html?genre=sport` — Page d'un genre (`?genre=tous` : tout le catalogue)
 - Pas d'écran Figma. US : S06-03, S06-04.
-- Éléments : nom du genre, nombre de jeux, grille des jeux du pays par popularité.
+- Éléments : nom du genre, bandeau avec sa pastille et le nombre de jeux, grille des jeux du pays par popularité.
 - Liens : retour → p01 ; tuiles → p03.
 
 ### p03 `p03-jeu.html?jeu=…&depuis=…` — Fiche jeu
-- Référence : Figma 04 et 05 (feuille posée sur l'accueil).
-- US : S07-01 à S07-05, S09-01, S06-01 (lien direct `via=lien`), S08-04.
-- Éléments : vidéo lancée à la demande ou visuel ; genre, nom, favori, partage (feuille du téléphone simulée) ; « Fourni par Kora Games » pour ce seul partenaire ; note et nombre d'avis ; badges « Gratuit » et, selon le pays, « Sans consommation de data » ; accroche, description, langues, joueurs, mode ; galerie ; jeux similaires ; notes et avis (Figma 06 : moyenne, nombre d'avis, « Donner mon avis » ou « Modifier mon avis », mon avis, 2 derniers commentaires, « Signaler ») ; bouton « Jouer » toujours visible.
-- Liens : fermer (voile ou poignée) → page d'origine ; « Jouer » → p05, ou p04 pour un hub sans lien direct ; jeux similaires → p03 ; « Voir tout » et « Voir tous les avis » → p06 ; « Donner mon avis » → p07.
+- Référence : Figma 04 et 05 (feuille posée sur l'accueil). US : S07-01, S07-02, S07-04, S07-05, S07-06, S07-07, S09-01, S06-01 (lien direct `via=lien`), S08-01, S08-03, S10-01 à S10-04.
+- Éléments : vidéo lancée à la demande ou visuel ; genre, nom, favori, partage ; « Fourni par Kora Games » pour ce seul partenaire ; note et nombre d'avis ; accroche, description, langues, joueurs, mode ; **classements** (onglets du jour, de la semaine, de tous les temps ; joueurs du pays ; podium à médailles ; ma place et un encouragement ; absent pour un jeu dont le partenaire ne transmet pas les scores) ; galerie ; jeux similaires ; notes et avis ; « Signaler un problème avec ce jeu » ; bouton « Jouer » toujours visible. Pas de badges au MVP (V2 : pv3).
+- Partage : feuille du téléphone simulée ; ce que reçoit l'ami se montre par le menu de démo (ami avec Max it → p03 ; sans Max it → p09).
+- Liens : fermer (voile ou poignée) → page d'origine ; « Jouer » → p05, toujours directement ; « Voir le classement complet » → p08 ; jeux similaires → p03 ; « Voir tout » et « Voir tous les avis » → p06 ; « Donner mon avis » → p07 ; « Signaler » → p10.
+
+### p05 `p05-partie.html?jeu=…` — Jeu simulé
+- Pas d'écran Figma. US : S08-01, S08-02.
+- Éléments : chargement, puis « partie en cours ». Mini app d'un seul jeu (modèle A) : capsule « Quitter » de la mini app. Jeu de hub (modèle B) : barre du hub du partenaire, ouvert directement sur le jeu, et bouton de sortie de Max it « Retour à Play » au-dessus. Le lancement alimente les récents et les classements.
+- Liens : « Quitter » ou bouton de sortie → fiche du jeu (p03, ou pv3 si l'on en vient).
 
 ### p06 `p06-avis.html?jeu=…` — Tous les avis
 - Pas d'écran Figma pour la liste : composants de Figma 06. US : S10-01, S10-02, S10-03.
-- Éléments : moyenne, nombre d'avis et de commentaires, répartition des notes ; « Donner mon avis » (inactif si le jeu n'a jamais été lancé) ; mon avis en tête avec « Modifier » et « Supprimer » ; tous les commentaires, du plus récent au plus ancien, avec « Lire la suite » et « Signaler » (motif : insultant, hors sujet, publicité, autre).
+- Éléments : moyenne, nombre d'avis et de commentaires, répartition des notes ; « Donner mon avis » (inactif si le jeu n'a jamais été lancé) ; mon avis en tête avec « Modifier » et « Supprimer » ; commentaires des joueurs du pays, sous pseudo généré, avec « Lire la suite » et « Signaler » (motif : insultant, hors sujet, publicité, autre) ; un avis signalé disparaît aussitôt, avec un message de confirmation.
 - Liens : retour → p03 ; « Modifier » / « Donner mon avis » → p07 (retour sur p06).
 
 ### p07 `p07-donner-avis.html?jeu=…` — Donner ou modifier son avis
 - Pas d'écran Figma. US : S10-01.
-- Éléments : jeu, 1 à 5 étoiles avec libellé, commentaire facultatif (500 caractères, compteur), pseudonyme de publication, « Publier » (inactif sans note), « Supprimer mon avis » pour un avis existant. Jeu jamais lancé : message « Joue d'abord une partie » et « Revenir au jeu ».
+- Éléments : jeu, 1 à 5 étoiles avec libellé, commentaire facultatif (500 caractères, compteur), pseudo de publication, « Publier » (inactif sans note), « Supprimer mon avis ». Jeu jamais lancé : « Joue d'abord une partie » et « Revenir au jeu ».
 - Liens : retour et « Publier » → p03 (ou p06 si l'on en vient).
 
-### p04 `p04-transition.html?jeu=…` — Transition vers un hub sans lien direct
-- Pas d'écran Figma. US : S08-02.
-- Éléments : hub, texte « où trouver le jeu » de la fiche, « Continuer », « Revenir à la fiche ».
-- Liens : « Continuer » → p05 (accueil du hub) ; retour → p03.
+### p08 `p08-classement.html?jeu=…&periode=semaine` — Classement complet
+- Pas d'écran Figma. US : S07-04.
+- Éléments : jeu et pays ; onglets jour, semaine, tout temps ; période en cours ou précédente (hier, semaine dernière) ; règle de remise à zéro ; les 100 premiers (médailles pour le podium, ma ligne surlignée) ; ma position épinglée en bas, même au-delà de la 100ᵉ place.
+- Liens : retour → p03.
 
-### p05 `p05-partie.html?jeu=…` — Jeu simulé
-- Pas d'écran Figma. US : S08-01, S08-03 (et S08-02 avec `mode=hub`).
-- Éléments : barre Max it avec « Quitter » au-dessus du jeu ; chargement puis « partie en cours » ; avec `mode=hub`, accueil du hub où le joueur choisit le jeu. Le lancement alimente les récents et les recommandations.
-- Liens : « Quitter » → p03 du jeu.
+### p09 `p09-store.html?store=android` (ou `ios`) — Max it dans le store
+- Pas d'écran Figma. US : S07-07.
+- Éléments : page de Max it dans Google Play ou l'App Store (simulée, sans logo) ; « Installer », installation, « Ouvrir ».
+- Liens : « Ouvrir » → 00a (accueil de Max it : la fiche du jeu partagé n'est pas conservée) ; retour → page précédente.
+
+### p10 `p10-signaler-jeu.html?jeu=…` — Signaler un problème avec un jeu
+- Pas d'écran Figma. US : S10-04.
+- Éléments : 5 raisons (ne se lance pas, plante ou bloque, contenu inapproprié, trop de publicité, autre) ; commentaire facultatif, obligatoire pour « autre » ; confirmation après l'envoi ; un même jeu une fois par jour.
+- Liens : retour et « Retour au jeu » → p03.
+
+### Écrans V2 (hors parcours MVP, étiquette « V2 », ouverts depuis le menu de démo)
+- **pv1 `pv1-profil.html`** (`?joueur=…` : un autre joueur) — S11-01, S11-02 : pseudo (commun avec les tournois), série de jours, parties jouées (total, semaine), jeux différents, genre préféré, temps de jeu (total et par jeu), favoris, avis, meilleures positions. Liens : jeux → pv3 ; retour → page précédente.
+- **pv2 `pv2-assistant.html`** — S09-04 : conversation avec l'assistant IA de Max it ; idées de demandes ; réponses en tuiles de jeux du catalogue disponible dans le pays, chacune avec un lien vers sa fiche (pv3). Compréhension simulée par mots-clés (genre, solo ou à plusieurs, langue, enfant).
+- **pv3 `pv3-fiche-badges.html?jeu=…`** — S07-03 : la fiche p03 avec les badges « Gratuit », « Sans pub » et « Sans consommation de data » (au Sénégal) ; pseudos choisis, qui ouvrent pv1. Les écrans p06, p07, p08 et p10 ouverts depuis pv3 restent en V2 (`v2=1`).
 
 ### Schéma de navigation de Play
 ```
-00c ─« Jouer »─► p01 Accueil ─┬─► p02 Genre ─► p03
+00c ─« Jouer »─► p01 Accueil ─┬─ « Voir tout » ─► p02 Genre ─► p03
                   ▲           └─► p03 Fiche ─┬─ jeux similaires ─► p03
-                  │ retour Max it             ├─ « Jouer » (mini app, hub avec lien) ─► p05 ─« Quitter »─► p03
-                  00c                         ├─ « Jouer » (hub sans lien) ─► p04 ─► p05 (accueil du hub) ─► p03
+                  │ retour Max it             ├─ « Jouer » (mini app ou hub) ─► p05 ─« Quitter » / sortie Max it ─► p03
+                  00c                         ├─ « Voir le classement complet » ─► p08 ─► p03
                                               ├─ « Voir tout » ─► p06 Tous les avis ─► p07 ─► p06
-                                              └─ « Donner mon avis » ─► p07 ─« Publier »─► p03
-Lien partagé ─► p03 (fermer → p01) ; lien vers un jeu indisponible ─► p01 avec message
+                                              ├─ « Donner mon avis » ─► p07 ─« Publier »─► p03
+                                              └─ « Signaler » ─► p10 ─► p03
+Lien partagé : ami avec Max it ─► p03 (fermer → p01) ; ami sans Max it ─► p09 store ─« Ouvrir »─► 00a
+Lien vers un jeu indisponible ─► p01 avec message
+V2 (menu de démo) : pv3 ─ pseudo ─► pv1 ; pv2 ─ tuile ─► pv3
 ```
 
-**Visuels des jeux de Play** : une image par jeu dans `images/play/<id>.jpg`, déclarée dans `PLAY.images` (`js/data-play.js`). Elle sert partout où le jeu apparaît (tuiles, carte « À la une », en-tête et première capture de la fiche, partie simulée), recadrée au centre sans déformation ; les captures 2 et 3 de la galerie et les jeux sans image gardent leur dessin SVG. Pour changer un visuel : remplacer le fichier en gardant son nom (ou ajouter une ligne à `PLAY.images`), puis reconstruire le fichier unique. 9 jeux ont une image : bloc-mania, commando-lagune, foot-lions, ludo-famille, ninja-sahel, rallye-dunes, robots-furie, taxi-brousse, tresor-baobab.
+**Visuels des jeux de Play** : une image par jeu dans `images/play/<id>.jpg`, déclarée dans `PLAY.images` (`js/data-play.js`). Elle sert partout où le jeu apparaît (tuiles, carte « à la une », en-tête et première capture de la fiche, partie simulée), recadrée au centre sans déformation ; les captures 2 et 3 de la galerie et les jeux sans image gardent leur dessin SVG (dégradé de deux couleurs de genre, bulles douces). Pour changer un visuel : remplacer le fichier en gardant son nom (ou ajouter une ligne à `PLAY.images`), puis reconstruire le fichier unique. 9 jeux ont une image : bloc-mania, commando-lagune, foot-lions, ludo-famille, ninja-sahel, rallye-dunes, robots-furie, taxi-brousse, tresor-baobab.
 
 ### Avancement de Play
 | Lot | Écrans | État |
 |---|---|---|
-| P1 | `data-play.js`, `play.js`, section « Play » de tokens.css et style.css, 00c (« Jouer »), p01 à p05, menu de démo (pays, nouveau joueur, jeu indisponible, liens partagés), test `outils/parcours-play.html` | terminé |
-| P2 | Avis : bloc de la fiche (p03), p06 tous les avis, p07 donner son avis, signalement ; vérifications ajoutées à `outils/parcours-play.html` | terminé |
+| P1 | `data-play.js`, `play.js`, section « Play » de tokens.css et style.css, 00c (« Jouer »), p01 à p05, menu de démo, test `outils/parcours-play.html` | terminé |
+| P2 | Avis : bloc de la fiche (p03), p06 tous les avis, p07 donner son avis, signalement | terminé |
 | P3 | Visuels des jeux en image (`images/play/`) pour 9 jeux, intégrés au fichier unique | terminé |
+| P4 | Nouveau backlog : ordre de l'accueil et rangées par genre, classements (p03, p08), partage en deux parcours (p09), lancement direct (p04 supprimé, sortie Max it des hubs), signaler un jeu (p10), avis signalé masqué, pseudos générés, langues FR / EN / AR, écrans V2 (pv1 à pv3), direction « kid & family friendly » | terminé |
 
-### Couverture des US MVP de Play
+### Couverture des US de Play
 | US | Couverture | Écrans | Limites et remarques |
 |---|---|---|---|
-| S06-01 | En partie | 00c, p01, p03 | Pays et compte Max it simulés (menu de démo) ; textes en français seulement. |
-| S06-02 | Couverte | p01 | Ordre de Figma : Récemment joués avant l'éditorial. |
-| S06-03 | Couverte (arbitrage) | p01, p02 | Grille des genres de Figma à la place des rangées par genre. |
-| S06-04 | Couverte | p01, p02, p03 | — |
-| S07-01 à S07-04 | Couvertes | p03 | Vidéo simulée (30 s), sans fichier. |
-| S07-05 | En partie | p03 | Feuille de partage simulée ; ce que voit une personne sans Max it n'est pas maquetté (question ouverte). |
-| S08-01 | En partie | p03, p05 | Jeux simulés ; classement et défis des hubs non montrés ; statistiques : back-office. |
-| S08-02, S08-03 | Couvertes | p04, p05 | — |
-| S08-04 | En partie | toutes | Indisponibilité forcée par le menu de démo, pas par de vrais échecs d'ouverture. |
-| S09-01 | En partie | p03, p01 | Favoris mémorisés dans le navigateur, pas sur le compte Max it. |
-| S09-02, S09-03 | Couvertes | p01 | — |
-| S10-01 | Couverte | p03, p06, p07 | Avis publié tout de suite sous le pseudonyme (choix CLAUDE.md) ; mémorisé dans le navigateur. |
-| S10-02 | Couverte | p03, p06 | Commentaires des autres joueurs fictifs ; la répartition des notes est calculée autour de la moyenne. |
-| S10-03 | En partie | p03, p06 | Motif et marque « en cours d'examen » ; la modération (S04-01) relève du back-office. |
+| S06-01 | En partie | 00c, p01, p03 | Pays et langue simulés par le menu de démo. |
+| S06-02 | Couverte | p01 | Ordre du backlog. |
+| S06-03 | Couverte | p01, p02 | Rangées par genre et « Voir tout ». |
+| S06-04 | Couverte | p01, p02, p03 | Icône, nom, note. |
+| S07-01, S07-02, S07-05 | Couvertes | p03 | Vidéo simulée (30 s), sans fichier. |
+| S07-03 (V2) | Couverte à part | pv3 | Badges hors parcours MVP. |
+| S07-04 | Couverte | p03, p08 | Scores fictifs ; remise à zéro décrite, pas simulée dans le temps. |
+| S07-06, S07-07 | Couvertes | p03, p09, 00a | Ce que reçoit l'ami : menu de démo. Le décompte des installations (S05-02) relève du back-office. |
+| S08-01, S08-02 | Couvertes | p03, p05 | Jeux simulés ; classement et défis des hubs non montrés. |
+| S08-03 | En partie | toutes | Indisponibilité forcée par le menu de démo, pas par de vrais échecs d'ouverture. |
+| S09-01, S09-02 | Couvertes | p03, p01 | Mémorisés dans le navigateur, pas sur le compte Max it. |
+| S09-03 (V2) | Non maquettée | — | Au MVP, « Recommandé pour vous » est la sélection du pays (S03-04). |
+| S09-04 (V2) | Couverte à part | pv2 | Assistant simulé par mots-clés. |
+| S10-01, S10-02 | Couvertes | p03, p06, p07 | Avis sous pseudo généré, publiés tout de suite. |
+| S10-03 | Couverte | p03, p06 | La modération (S04-01) relève du back-office. |
+| S10-04 | Couverte | p03, p10 | — |
+| S11-01, S11-02 (V2) | Couvertes à part | pv1, pv3 | Le choix et la modification du pseudo ne sont pas maquettés. |

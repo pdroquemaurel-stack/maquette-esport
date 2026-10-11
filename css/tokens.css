@@ -119,41 +119,75 @@
   --avatar-size: 36px;
 
   /* =====================================================================
-     Play (mini-jeux) — relevé dans reference/figma-play (thème sombre)
+     Play (mini-jeux) — direction « kid & family friendly » (validée le 2026-10-11)
+     Fond clair, couleurs vives et chaleureuses, orange Max it en accent.
+     Mise en page et composants d'après reference/figma-play ; couleurs propres à Play.
      ===================================================================== */
-  /* ---- Couleurs ---- */
-  --play-bg: #121212;                /* fond des écrans Play */
-  --play-sheet: #1c1c1c;             /* feuille de la fiche jeu */
-  --play-surface: #262626;           /* encarts, cases d'information */
-  --play-tile: #3a3532;              /* tuiles de la grille des genres (gris chaud) */
-  --play-chip: #3a3735;              /* étiquette de genre, badges */
-  --play-divider: #2e2e2e;           /* séparateurs de la fiche */
-  --play-handle: #5a5a5a;            /* poignée de la feuille */
-  --play-text: #ffffff;
-  --play-text-secondary: #b8b8b8;    /* sous-titres, description */
-  --play-text-muted: #8a8a8a;
-  --play-free: #6cc3f2;              /* « Gratuit » sous les tuiles, dates des avis */
-  --play-star: #ffc21a;              /* étoiles des notes */
-  --play-button-light: #ececec;      /* bouton secondaire clair (« Donner mon avis ») */
-  --play-on-light: #111111;
-  --play-pattern-a: rgba(168, 133, 216, 0.22);  /* motif de l'en-tête : violet */
-  --play-pattern-b: rgba(255, 121, 0, 0.22);    /* motif de l'en-tête : orange */
-  --play-scrim: rgba(0, 0, 0, 0.6);  /* voile sur l'accueil derrière la fiche */
-  --play-shade: rgba(0, 0, 0, 0.72); /* dégradé sous le texte des cartes */
+  /* ---- Couleurs : fonds et textes ---- */
+  --play-bg: #fff8ee;                /* fond crème des écrans Play */
+  --play-sheet: #ffffff;             /* feuille de la fiche jeu, cartes */
+  --play-surface: #fff1e0;           /* encarts, cases d'information (pêche clair) */
+  --play-tile: #ffe9d1;              /* fond des pastilles, onglets inactifs */
+  --play-chip: #f3e6d6;              /* étiquettes, étoiles vides, boutons inactifs */
+  --play-divider: #f0e2cf;           /* séparateurs, bordures douces */
+  --play-handle: #dccbb6;            /* poignée de la feuille */
+  --play-text: #2b2233;              /* texte principal (contraste 14:1 sur le crème) */
+  --play-text-secondary: #5c5266;    /* sous-titres, descriptions (7:1) */
+  --play-text-muted: #6f6579;        /* légendes (5:1) */
+  --play-on-accent: #2b2233;         /* texte sur l'orange : foncé, contraste 6:1 */
+  --play-on-color: #ffffff;          /* pictogrammes blancs sur les couleurs de genre */
+  --play-accent-soft: #ffe2c4;       /* surbrillance orange douce (ma ligne au classement) */
+  --play-star: #ffb400;              /* étoiles des notes */
+  --play-free: #1f7a4d;              /* « Gratuit », confirmations (vert foncé lisible) */
+  --play-free-soft: #ddf4e6;
+  --play-alert: #c62828;             /* erreur de formulaire (commentaire obligatoire) */
+  --play-v2: #6b4fd8;                /* étiquette « V2 » des écrans hors MVP */
+  --play-v2-soft: #ece6ff;
+  --play-scrim: rgba(43, 34, 51, 0.45);  /* voile derrière la fiche */
+  --play-shade: rgba(0, 0, 0, 0.6);      /* dégradé sous le texte des cartes (aussi utilisé par le Shop) */
+  --play-shadow: 0 6px 18px rgba(120, 72, 20, 0.12);   /* ombre douce des cartes */
+  --play-shadow-cta: 0 6px 16px rgba(255, 121, 0, 0.35);
+  --play-shadow-haut: 0 -6px 16px rgba(120, 72, 20, 0.08);  /* barre fixée en bas */
 
-  /* ---- Tailles ---- */
-  --play-font-title: 22px;           /* « Bienvenue sur Play », nom du jeu */
-  --play-font-section: 19px;         /* titres de section */
+  /* ---- Médailles du classement ---- */
+  --play-or: #ffc83d;
+  --play-argent: #c9d3df;
+  --play-bronze: #e4a06a;
+
+  /* ---- Couleurs des genres : vive (pastille, visuels) et douce (fond) ---- */
+  --play-g-action: #ff6b5b;      --play-g-action-soft: #ffe3df;      /* corail */
+  --play-g-arcade: #9b6cf0;      --play-g-arcade-soft: #eee6ff;      /* violet */
+  --play-g-course: #2fa8f0;      --play-g-course-soft: #ddf1fd;      /* bleu ciel */
+  --play-g-puzzle: #2ebd85;      --play-g-puzzle-soft: #dcf5ea;      /* vert */
+  --play-g-casual: #ff78b0;      --play-g-casual-soft: #ffe4f0;      /* rose */
+  --play-g-sport: #ffb400;       --play-g-sport-soft: #fff1c9;       /* jaune soleil */
+  --play-g-cartes: #14b8b0;      --play-g-cartes-soft: #d6f5f3;      /* turquoise */
+  --play-g-quiz: #5b7cfa;        --play-g-quiz-soft: #e3e9ff;        /* bleu roi */
+  --play-g-aventure: #e08a3c;    --play-g-aventure-soft: #fcebd9;    /* caramel */
+  --play-g-strategie: #7bbf3a;   --play-g-strategie-soft: #ebf6dd;   /* vert pomme */
+
+  /* ---- Typographie : ronde et lisible (Nunito, dossier fonts/, licence OFL) ----
+     L'arabe, absent de Nunito, s'affiche avec la police arabe du téléphone. */
+  --play-font-family: "Nunito", "Segoe UI", "Noto Sans Arabic", Tahoma, system-ui, sans-serif;
+  --play-font-hero: 26px;            /* « Bienvenue sur Play » */
+  --play-font-title: 24px;           /* nom du jeu, titres d'écran */
+  --play-font-section: 21px;         /* titres de section */
+  --play-font-body: 16px;            /* texte courant */
+  --play-font-small: 14px;           /* légendes : jamais plus petit */
   --play-font-tile: 16px;            /* nom sous une tuile */
-  --play-radius-card: 12px;          /* tuiles, cartes, visuels */
-  --play-radius-button: 10px;        /* bouton « Jouer » */
-  --play-tile-width: 160px;          /* tuile de jeu : 160 × 150 */
-  --play-tile-height: 150px;
+
+  /* ---- Formes et tailles : coins bien arrondis, zones tactiles larges ---- */
+  --play-radius-card: 22px;          /* tuiles, cartes, visuels */
+  --play-radius-small: 14px;         /* vignettes, encarts */
+  --play-radius-button: 999px;       /* boutons en pilule */
+  --play-touch: 48px;                /* zone tactile minimale */
+  --play-tile-width: 156px;          /* tuile de jeu : 156 × 146 */
+  --play-tile-height: 146px;
   --play-card-height: 300px;         /* carte « à la une » */
-  --play-genre-size: 76px;           /* case de la grille des genres */
-  --play-hero-height: 330px;         /* visuel en tête de la fiche */
-  --play-gallery-width: 220px;       /* capture de la galerie : 220 × 330 */
-  --play-gallery-height: 330px;
-  --play-cta-height: 50px;           /* bouton « Jouer » */
-  --play-sheet-top: 76px;            /* haut de la feuille de la fiche, sous la barre d'état */
+  --play-genre-size: 44px;           /* pastille de genre */
+  --play-hero-height: 300px;         /* visuel en tête de la fiche */
+  --play-gallery-width: 200px;       /* capture de la galerie : 200 × 300 */
+  --play-gallery-height: 300px;
+  --play-cta-height: 56px;           /* bouton « Jouer » */
+  --play-sheet-top: 64px;            /* haut de la feuille de la fiche, sous la barre d'état */
 }

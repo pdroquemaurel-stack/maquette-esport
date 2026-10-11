@@ -25,9 +25,12 @@ const fichiersEcrans = Object.values(ECRANS).filter((e) => e.pret).map((e) => e.
 
 /* ---- Ressources communes ---- */
 const CSS = { tokens: lire("css/tokens.css"), style: lire("css/style.css") };
+/* Polices (dossier fonts/, citées par css/style.css) : intégrées dans la feuille de style */
+CSS.style = CSS.style.replace(/url\("\.\.\/(fonts\/[\w.-]+\.woff2)"\)/g, (m, chemin) =>
+  'url("data:font/woff2;base64,' + fs.readFileSync(path.join(RACINE, chemin)).toString("base64") + '")');
 const JS = {
   data: lire("js/data.js"), nav: nav, esport: lire("js/esport.js"), demo: lire("js/demo.js"),
-  "data-play": lire("js/data-play.js"), play: lire("js/play.js"),
+  "data-play": lire("js/data-play.js"), "textes-play": lire("js/textes-play.js"), play: lire("js/play.js"), "play-fiche": lire("js/play-fiche.js"),
   "data-shop": lire("js/data-shop.js"), shop: lire("js/shop.js")
 };
 

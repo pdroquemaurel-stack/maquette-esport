@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<!-- Écran pv2 (V2) — Recommandations par l'assistant IA de Max it (pv2-assistant.html).
+     Écran à part, hors du parcours MVP : ouvert depuis le menu de démo (rubrique « Écrans V2 »).
+     Pas d'écran Figma : bulles de conversation et tuiles de jeux de Play.
+     US : S09-04 — le joueur décrit ce qu'il cherche en langage courant (français, anglais ou arabe) ;
+     l'assistant ne propose que des jeux du catalogue de Max it Gaming Play disponibles dans le pays
+     (jamais un jeu masqué) ; chaque jeu s'affiche avec sa tuile et un lien vers sa fiche ;
+     il s'appuie sur le genre, le mode solo ou multijoueur, les langues et la note moyenne.
+     L'assistant est simulé : des mots-clés du message choisissent les critères. -->
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Assistant Max it (V2)</title>
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-zone="play">
+<div class="cadre">
+  <div class="telephone play">
+    <div class="barre-etat" data-heure="9:30"></div>
+    <header class="entete-simple-play">
+      <a href="p01-accueil.html" class="retour-play" data-action="retour" data-repli="p01" data-t-aria="commun.retour"></a>
+      <h1 id="titre"></h1>
+    </header>
+    <main class="contenu" id="page"><div class="conversation" id="conversation" aria-live="polite"></div><div class="fin-contenu"></div></main>
+    <div class="barre-action barre-play">
+      <form class="saisie-assistant" id="formulaire">
+        <input type="text" id="message" autocomplete="off" maxlength="200">
+        <button class="bouton-rond-play" type="submit" id="envoyer">
+          <svg viewBox="0 0 24 24" aria-hidden="true" class="f-play-on-accent miroir"><path d="M3 20.5 21 12 3 3.5 3 10l12 2-12 2z"/></svg>
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="js/data-play.js"></script>
+<script src="js/textes-play.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/play.js"></script>
+<script src="js/demo.js"></script>
+<script>
+  /* Mots-clés (français, anglais, arabe), sans accents, pour simuler la compréhension de l'assistant */
+  const GENRES = {
+    sport: ["foot", "soccer", "basket", "billard", "sport", "ballon", "كرة", "رياضة"],
+    course: ["course", "voiture", "auto", "moto", "rallye", "parking", "conduire", "racing", "race", "car ", "cars", "driving", "سيارة", "سباق"],
+    puzzle: ["puzzle", "reflexion", "logique", "bloc", "casse-tete", "brain", "لغز", "ألغاز"],
+    cartes: ["carte", "solitaire", "dames", "ludo", "plateau", "card", "board", "ورق"],
+    quiz: ["quiz", "mot", "question", "culture", "word", "trivia", "مسابقة", "كلمات"],
+    action: ["action", "combat", "ninja", "robot", "fight", "أكشن"],
+    arcade: ["arcade", "retro", "serpent", "snake", "آركيد"],
+    casual: ["cuisine", "chat ", "bulle", "detente", "relax", "casual", "cook", "طبخ"],
+    aventure: ["aventure", "tresor", "explor", "enigme", "adventure", "treasure", "مغامرة", "كنز"],
+    strategie: ["strategie", "defense", "royaume", "gestion", "strategy", "tower", "استراتيجية"]
+  };
+  const SOLO = ["seul", "solo", "alone", "myself", "وحدي"];
+  const MULTI = ["deux", " 2", "amis", "ami ", "famille", "plusieurs", "multi", "together", "friend", "two", "family", "شخصين", "أصدقاء", "عائلة", "لشخصين"];
+  const ENFANT = ["petit", "enfant", "kid", "child", "little", "facile", "easy", "الصغير", "طفل"];
+  const LANGUES = { ar: ["arabe", "arabic", "العربية", "عربي"], en: ["anglais", "english", "الإنجليزية"] };
+
+  function contient(texte, mots) { return mots.some((m) => texte.includes(m)); }
+
+  /* Jeux proposés : catalogue disponible dans le pays (jamais un jeu masqué), filtré par les critères,
+     les mieux notés en premier */
+  function recommander(message) {
+    const texte = " " + message.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "") + " ";
+    const genres = Object.keys(GENRES).filter((g) => contient(texte, GENRES[g]));
+    if (contient(texte, ENFANT) && !genres.length) genres.push("puzzle", "casual", "cartes");
+    const mode = contient(texte, MULTI) ? "multi" : contient(texte, SOLO) ? "solo" : null;
+    const langue = Object.keys(LANGUES).find((l) => contient(texte, LANGUES[l]));
+
+    let jeux = Play.catalogue()
+      .filter((j) => !genres.length || genres.includes(j.genre))
+      .filter((j) => !mode || j.mode === mode)
+      .filter((j) => !langue || j.langues.includes(langue))
+      .sort((a, b) => b.note - a.note);
+    const trouve = jeux.length > 0 && (genres.length || mode || langue);
+    if (!trouve) jeux = Play.parPopularite(Play.catalogue());
+    return { trouve: trouve, jeux: jeux.slice(0, 4) };
+  }
+
+  /* Bulles de la conversation */
+  const conversation = document.getElementById("conversation");
+  let historique = [];   // messages du joueur, pour redessiner la conversation au changement de langue
+
+  function bulleAssistant(contenu) {
+    return '<div class="bulle bulle-assistant"><span class="auteur-bulle">' + Play.icone("etincelles", "f-play-v2") + Play.t("assistant.titre") + "</span>" + contenu + "</div>";
+  }
+  function reponse(message) {
+    const t = Play.t;
+    const r = recommander(message);
+    const tuiles = r.jeux.map((j) => Play.tuile(j, null, "pv3-fiche-badges.html?jeu=" + j.id,
+      '<span class="lien-fiche-assistant">' + t("assistant.voirFiche") + "</span>")).join("");
+    return bulleAssistant("<p>" + (r.trouve ? t("assistant.reponse", { n: r.jeux.length }) : t("assistant.rien")) + "</p>" +
+      '<div class="carrousel rangee-play">' + tuiles + "</div>");
+  }
+  function bulleJoueur(message) {
+    const span = document.createElement("div");
+    span.className = "bulle bulle-joueur";
+    span.textContent = message;
+    return span.outerHTML;
+  }
+
+  function accueil() {
+    const t = Play.t;
+    return bulleAssistant("<p>" + t("assistant.bonjour") + "</p>") +
+      '<div class="idees-assistant">' + t("assistant.idees").map((idee) => '<button class="idee-assistant" type="button">' + idee + "</button>").join("") + "</div>";
+  }
+
+  function rendre() {
+    const t = Play.t;
+    document.querySelector(".retour-play").innerHTML = Play.icone("retour");
+    document.getElementById("titre").innerHTML = t("assistant.titre") + " " + Play.etiquetteV2();
+    document.getElementById("message").placeholder = t("assistant.placeholder");
+    document.getElementById("message").setAttribute("aria-label", t("assistant.placeholder"));
+    document.getElementById("envoyer").setAttribute("aria-label", t("assistant.envoyer"));
+    conversation.innerHTML = accueil() + historique.map((m) => bulleJoueur(m) + reponse(m)).join("");
+    brancherIdees();
+  }
+
+  function brancherIdees() {
+    conversation.querySelectorAll(".idee-assistant").forEach((b) => b.addEventListener("click", () => envoyer(b.textContent)));
+  }
+
+  /* Envoi : bulle du joueur, l'assistant « écrit », puis répond avec des tuiles */
+  function envoyer(message) {
+    message = message.trim();
+    if (!message) return;
+    conversation.insertAdjacentHTML("beforeend", bulleJoueur(message));
+    conversation.insertAdjacentHTML("beforeend", '<div class="bulle bulle-assistant" id="ecrit" aria-label="' + Play.t("assistant.ecrit") + '">' +
+      '<span class="ecrit"><i></i><i></i><i></i></span></div>');
+    defiler();
+    setTimeout(() => {
+      document.getElementById("ecrit").remove();
+      historique.push(message);
+      conversation.insertAdjacentHTML("beforeend", reponse(message));
+      defiler();
+    }, 900);
+  }
+  function defiler() {
+    const page = document.getElementById("page");
+    page.scrollTo({ top: page.scrollHeight, behavior: "smooth" });
+  }
+
+  document.getElementById("formulaire").addEventListener("submit", (evenement) => {
+    evenement.preventDefault();
+    const champ = document.getElementById("message");
+    envoyer(champ.value);
+    champ.value = "";
+  });
+  Play.monter(rendre);
+</script>
+</body>
+</html>

@@ -899,9 +899,30 @@ svg { display: block; flex-shrink: 0; }
 .points small { font-weight: var(--font-weight-medium); color: var(--color-text-muted); font-size: var(--font-size-xs); }
 
 /* =====================================================================
-   Play — mini app des mini-jeux (p01 à p05), d'après reference/figma-play
-   Thème sombre ; couleurs et tailles propres à Play : section « Play » de tokens.css.
+   Max it Gaming Play — mini app des mini-jeux (p01 à p10, pv1 à pv3)
+   Direction « kid & family friendly » : fond clair, couleurs vives, coins arrondis, typographie ronde,
+   micro-animations douces. Mise en page d'après reference/figma-play ; couleurs et tailles :
+   section « Play » de tokens.css. Propriétés logiques (inline-start / end) : la mise en page
+   se retourne seule en arabe (dir="rtl").
    ===================================================================== */
+
+/* Police ronde Nunito (dossier fonts/, licence OFL) : latin et latin étendu (« 12ᵉ ») */
+@font-face {
+  font-family: "Nunito";
+  font-style: normal;
+  font-weight: 400 800;
+  font-display: swap;
+  src: url("../fonts/nunito-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Nunito";
+  font-style: normal;
+  font-weight: 400 800;
+  font-display: swap;
+  src: url("../fonts/nunito-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
 
 /* Classes de remplissage propres à Play */
 .f-play-text { fill: var(--play-text); }
@@ -909,190 +930,307 @@ svg { display: block; flex-shrink: 0; }
 .f-play-star { fill: var(--play-star); }
 .f-play-chip { fill: var(--play-chip); }
 .f-play-free { fill: var(--play-free); }
-.f-play-on-light { fill: var(--play-on-light); }
+.f-play-white { fill: var(--play-on-color); }
+.f-play-on-accent { fill: var(--play-on-accent); }
+.f-play-v2 { fill: var(--play-v2); }
 
-.telephone.play { background: var(--play-bg); color: var(--play-text); }
-.play .barre-etat { background: var(--play-bg); }
+.telephone.play {
+  background: var(--play-bg);
+  color: var(--play-text);
+  font-family: var(--play-font-family);
+  font-size: var(--play-font-body);
+  line-height: 1.45;
+}
+.play button, .play input, .play textarea { font-family: inherit; }
+.play .barre-etat { background: var(--play-bg); color: var(--play-text); }
 .play .barre-etat svg .f-text,
 .play .demo-bouton .f-text { fill: var(--play-text); }
-.play .toast { background: var(--play-button-light); color: var(--play-on-light); }
+.play .toast {
+  bottom: calc(var(--play-cta-height) + var(--space-8));
+  background: var(--play-text);
+  color: var(--play-sheet);
+  font-size: var(--play-font-small);
+  font-weight: var(--font-weight-bold);
+  border-radius: var(--play-radius-small);
+}
+/* Arabe : les icônes qui montrent une direction (retour, chevron) se retournent */
+[dir="rtl"] .miroir { transform: scaleX(-1); }
+
+/* Retour tactile doux sur tout ce qui se touche */
+.play a, .play button { -webkit-tap-highlight-color: transparent; }
+.tuile-play, .carte-une-play, .bouton-jouer, .bouton-doux, .bouton-rond-play, .onglet-play,
+.option-partage, .raison-play, .motif-play, .idee-assistant, .retour-play {
+  transition: transform .15s ease, box-shadow .15s ease, background-color .15s ease;
+}
+.tuile-play:active, .carte-une-play:active, .bouton-jouer:active, .bouton-doux:active, .bouton-rond-play:active,
+.onglet-play:active, .option-partage:active, .raison-play:active, .idee-assistant:active, .retour-play:active {
+  transform: scale(.96);
+}
+.play :focus-visible { outline: 3px solid var(--color-primary); outline-offset: 2px; border-radius: var(--play-radius-small); }
+
+/* Apparition douce des sections, l'une après l'autre */
+@keyframes play-apparait { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+.section-play { animation: play-apparait .4s ease-out both; }
+.section-play:nth-of-type(2) { animation-delay: .05s; }
+.section-play:nth-of-type(3) { animation-delay: .1s; }
+.section-play:nth-of-type(4) { animation-delay: .15s; }
+.section-play:nth-of-type(n+5) { animation-delay: .2s; }
 
 /* Visuels des jeux (SVG dessinés par js/play.js) */
 .visuel-play { display: block; width: 100%; height: 100%; }
 /* Image fournie : couvre tout le bloc sans déformation, recadrée au centre */
 .visuel-image-play { object-fit: cover; object-position: center; }
-.visuel-play .p1 { fill: var(--play-text); }
+.visuel-play .p1 { fill: var(--play-on-color); }
 .visuel-play .p2 { fill: var(--vj-sombre); }
 .visuel-play .p3 { fill: var(--vj-clair); }
-.visuel-play .t1 { stroke: var(--play-text); }
+.visuel-play .t1 { stroke: var(--play-on-color); }
 .visuel-play .t2 { stroke: var(--vj-sombre); }
 
-/* ============ En-tête de l'accueil : motif, illustration, bienvenue ============ */
+/* Pastille d'un genre : pictogramme blanc sur la couleur du genre (--gc) */
+.pastille-genre {
+  width: var(--play-genre-size);
+  height: var(--play-genre-size);
+  flex-shrink: 0;
+  border-radius: var(--radius-round);
+  background: var(--gc);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.pastille-genre svg { width: 62%; height: 62%; }
+.picto-genre .g1 { fill: var(--play-on-color); }
+.picto-genre .g2 { fill: var(--gc); }
+.picto-genre .gs1 { stroke: var(--play-on-color); }
+.picto-genre .gs2 { stroke: var(--gc); }
+.pastille-titre { width: 34px; height: 34px; }
+
+/* Étiquette « V2 » : écrans et blocs hors du parcours MVP */
+.etiquette-v2 {
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--play-v2-soft);
+  color: var(--play-v2);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: .02em;
+  vertical-align: middle;
+}
+
+/* ============ En-tête de l'accueil : retour, illustration, bienvenue ============ */
 .entete-play {
   position: relative;
   overflow: hidden;
-  padding: 0 var(--page-gutter) var(--space-2);
+  padding: 0 var(--page-gutter) var(--space-6);
+  border-radius: 0 0 36px 36px;
+  background: var(--play-surface);
   text-align: center;
 }
-.entete-play .motif { position: absolute; inset: 0; width: 100%; height: 100%; }
-.entete-play .motif .m1 { stroke: var(--play-pattern-a); }
-.entete-play .motif .m2 { stroke: var(--play-pattern-b); }
 .retour-play {
   position: relative;
-  width: var(--touch-target);
-  height: var(--touch-target);
-  margin-left: calc(-1 * var(--space-2));
+  z-index: 1;
+  width: var(--play-touch);
+  height: var(--play-touch);
+  border-radius: var(--radius-round);
+  background: var(--play-sheet);
+  box-shadow: var(--play-shadow);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 .retour-play svg { width: var(--icon-size); height: var(--icon-size); }
-.illustration-play { position: relative; width: 220px; height: 180px; margin: 0 auto; }
-.illustration-play .i-bleu { fill: var(--color-game-blue); }
-.illustration-play .i-violet { fill: var(--color-game-purple); }
-.illustration-play .i-nuit { fill: var(--color-game-blue-bg); }
-.illustration-play .i-sombre { fill: var(--color-surface-dark); }
-.illustration-play .i-gris { fill: var(--illu-gray-dark); }
-.illustration-play .i-or { fill: var(--illu-gold); }
-.illustration-play .i-or-clair { fill: var(--illu-gold-light); }
-.illustration-play .i-rose { fill: var(--illu-neon-pink); }
-.illustration-play .i-violet-fonce { fill: var(--illu-purple-deep); }
-.illustration-play .i-blanc { fill: var(--play-text); }
-.illustration-play .s-bleu { stroke: var(--color-game-blue); }
+.entete-play .retour-play { margin-top: var(--space-1); }
+.illustration-play { position: relative; width: 260px; height: 150px; margin: calc(-1 * var(--space-6)) auto 0; }
+.illustration-play .flotte { animation: play-flotte 4s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+.illustration-play .flotte-2 { animation-delay: -1.3s; }
+.illustration-play .flotte-3 { animation-delay: -2.6s; }
+@keyframes play-flotte { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+.illustration-play .i-orange { fill: var(--color-primary); }
+.illustration-play .i-jaune { fill: var(--play-g-sport); }
+.illustration-play .i-vert { fill: var(--play-g-puzzle); }
+.illustration-play .i-rose { fill: var(--play-g-casual); }
+.illustration-play .i-bleu { fill: var(--play-g-course); }
+.illustration-play .i-turquoise { fill: var(--play-g-cartes); }
+.illustration-play .i-violet { fill: var(--play-g-arcade); }
+.illustration-play .i-blanc { fill: var(--play-sheet); }
+.illustration-play .i-texte { fill: var(--play-text); }
+.illustration-play .s-blanc { stroke: var(--play-sheet); }
 .entete-play h1 {
   position: relative;
-  font-size: var(--play-font-title);
-  line-height: var(--line-height-tight);
-  margin-top: var(--space-3);
+  font-size: var(--play-font-hero);
+  font-weight: 800;
+  line-height: 1.15;
+  margin-top: var(--space-2);
 }
-.entete-play p { position: relative; color: var(--play-text-secondary); margin-top: var(--space-1); }
+.entete-play p { position: relative; color: var(--play-text-secondary); margin-top: var(--space-1); font-size: var(--play-font-body); }
 
 /* ============ Titres et rangées ============ */
 .titre-play {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
   font-size: var(--play-font-section);
-  font-weight: var(--font-weight-bold);
-  line-height: var(--line-height-tight);
+  font-weight: 800;
+  line-height: 1.2;
   padding: 0 var(--page-gutter);
-  margin: var(--space-8) 0 var(--space-4);
+  margin: var(--space-8) 0 var(--space-3);
 }
-.rangee-play { gap: var(--space-3); }
+.titre-play > span:not(.pastille-genre) { flex: 1; min-width: 0; }
+.voir-tout-play {
+  margin-inline-start: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  min-height: var(--play-touch);
+  padding-inline-start: var(--space-2);
+  font-size: var(--play-font-small);
+  font-weight: 800;
+  color: var(--play-text);
+  white-space: nowrap;
+}
+.voir-tout-play svg { width: 18px; height: 18px; }
+.rangee-play { gap: var(--space-3); padding-top: var(--space-1); padding-bottom: var(--space-3); }
 
-/* Tuile d'un jeu : visuel 160 × 150, nom, « Gratuit » et note (S06-04) */
-.tuile-play { width: var(--play-tile-width); display: flex; flex-direction: column; gap: 2px; }
+/* Tuile d'un jeu : carte blanche, visuel arrondi, nom et note (S06-04) */
+.tuile-play {
+  width: var(--play-tile-width);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-2) var(--space-2) var(--space-3);
+  border-radius: var(--play-radius-card);
+  background: var(--play-sheet);
+  box-shadow: var(--play-shadow);
+}
 .visuel-tuile {
   display: block;
   width: 100%;
-  aspect-ratio: 160 / 150;
-  border-radius: var(--play-radius-card);
+  aspect-ratio: 156 / 146;
+  border-radius: 16px;
   overflow: hidden;
   margin-bottom: var(--space-2);
 }
 .tuile-nom {
+  padding: 0 var(--space-1);
   font-size: var(--play-font-tile);
-  line-height: var(--line-height-tight);
+  font-weight: 800;
+  line-height: 1.2;
   overflow-wrap: anywhere;
 }
-.tuile-meta { display: flex; align-items: center; gap: var(--space-2); font-size: 12px; color: var(--play-free); }
-.tuile-note { display: inline-flex; align-items: center; gap: 2px; color: var(--play-text-secondary); }
-.tuile-note svg { width: 12px; height: 12px; }
+.tuile-note {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 0 var(--space-1);
+  font-size: var(--play-font-small);
+  font-weight: 700;
+  color: var(--play-text-secondary);
+}
+.tuile-note svg { width: 15px; height: 15px; }
 
 /* Grille de tuiles (page d'un genre) */
 .grille-play {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: var(--space-5) var(--space-3);
+  gap: var(--space-4) var(--space-3);
   padding: 0 var(--page-gutter);
 }
 .grille-play .tuile-play { width: auto; min-width: 0; }
 
-/* ============ Carte « à la une » (style des cartes « Discover » de Figma) ============ */
+/* ============ Carte « jeu à la une » (style des cartes « Discover » de Figma) ============ */
 .carte-une-play {
   position: relative;
   display: block;
   height: var(--play-card-height);
   margin: 0 var(--page-gutter);
-  border-radius: var(--play-radius-card);
+  border-radius: 28px;
   overflow: hidden;
+  box-shadow: var(--play-shadow);
 }
 .carte-une-play .visuel-play { position: absolute; inset: 0; }
 .carte-une-play::after {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, transparent 45%, var(--play-shade));
+  background: linear-gradient(180deg, transparent 40%, var(--play-shade));
 }
-/* Limité à la carte de Play : la carte « à la une » de l'e-sport (03) et du Shop garde son texte sous le visuel */
-.carte-une-play .carte-une-texte { position: absolute; left: var(--space-4); right: var(--space-4); bottom: var(--space-5); z-index: 1; }
-.carte-une-play .carte-une-texte h3 { font-size: var(--play-font-title); line-height: var(--line-height-tight); }
-.carte-une-play .carte-une-texte p { margin-top: var(--space-2); font-size: var(--font-size-md); }
-
-/* ============ Grille des genres (S06-03) ============ */
-.grille-genres {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: var(--space-4) var(--space-3);
-  padding: 0 var(--page-gutter);
-}
-.genre-play {
+.carte-une-play .carte-une-texte {
+  position: absolute;
+  inset-inline: var(--space-5);
+  bottom: var(--space-5);
+  z-index: 1;
+  color: var(--play-on-color);
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-2);
-  font-size: var(--font-size-sm);
-  color: var(--play-text-secondary);
-  text-align: center;
-  min-width: 0;
+  align-items: flex-end;
+  gap: var(--space-3);
 }
-.genre-icone {
-  width: 100%;
-  max-width: var(--play-genre-size);
-  aspect-ratio: 1;
-  border-radius: var(--play-radius-card);
-  background: var(--play-tile);
-  display: flex;
+.carte-une-texte div { flex: 1; min-width: 0; }
+.carte-une-play .carte-une-texte h3 { font-size: var(--play-font-title); font-weight: 800; line-height: 1.15; }
+.carte-une-play .carte-une-texte p { margin-top: var(--space-1); font-size: var(--play-font-body); }
+.pilule-une {
+  flex-shrink: 0;
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
+  min-height: 44px;
+  padding: 0 var(--space-4);
+  border-radius: var(--play-radius-button);
+  background: var(--color-primary);
+  color: var(--play-on-accent);
+  font-weight: 800;
 }
-.genre-icone svg { width: 44px; height: 44px; }
-.picto-genre .g1 { fill: var(--color-primary); }
-.picto-genre .g2 { fill: var(--play-text); }
-.picto-genre .g3 { fill: var(--play-text-muted); }
-.picto-genre .gs2 { stroke: var(--play-text); }
 
-/* ============ Message (jeu indisponible, S08-04) et sections vides ============ */
+/* ============ Message (jeu indisponible, S08-03) ============ */
 .message-play {
   display: flex;
   gap: var(--space-3);
   align-items: flex-start;
-  margin: var(--space-3) var(--page-gutter) 0;
-  padding: var(--space-3) var(--space-3) var(--space-3) var(--space-4);
+  margin: var(--space-4) var(--page-gutter) 0;
+  padding: var(--space-4);
   border-radius: var(--play-radius-card);
-  background: var(--play-surface);
-  font-size: var(--font-size-sm);
+  background: var(--play-sheet);
+  box-shadow: var(--play-shadow);
+  font-size: var(--play-font-small);
 }
-.message-play > svg { width: 20px; height: 20px; margin-top: 1px; }
+.message-play > svg { width: 24px; height: 24px; }
 .message-play div { flex: 1; min-width: 0; }
-.message-play strong { display: block; font-size: var(--font-size-md); }
+.message-play strong { display: block; font-size: var(--play-font-body); font-weight: 800; }
 .message-play p { color: var(--play-text-secondary); }
-.message-play .bouton-icone { width: 32px; height: 32px; margin: -4px -4px 0 0; }
-.message-play .bouton-icone svg { width: 18px; height: 18px; }
+.message-play .bouton-icone { width: 40px; height: 40px; margin: -8px; }
+.message-play .bouton-icone svg { width: 20px; height: 20px; }
 
-/* ============ En-tête simple (page d'un genre, transition) ============ */
+/* ============ En-tête simple (genre, avis, classement, signalement, V2) ============ */
 .entete-simple-play {
-  height: var(--top-bar-height);
+  min-height: 64px;
   flex-shrink: 0;
   display: flex;
   align-items: center;
-  gap: var(--space-1);
-  padding: 0 var(--space-2);
+  gap: var(--space-3);
+  padding: var(--space-2) var(--page-gutter);
 }
-.entete-simple-play .retour-play { margin-left: 0; }
 .entete-simple-play h1 {
-  font-size: var(--font-size-xl);
-  line-height: var(--line-height-tight);
+  flex: 1;
+  min-width: 0;
+  font-size: var(--play-font-title);
+  font-weight: 800;
+  line-height: 1.15;
   overflow-wrap: anywhere;
 }
-.sous-titre-play { padding: 0 var(--page-gutter) var(--space-5); color: var(--play-text-secondary); font-size: var(--font-size-sm); }
+.sous-titre-play { padding: 0 var(--page-gutter) var(--space-4); color: var(--play-text-secondary); font-size: var(--play-font-small); }
+
+/* Bandeau d'un genre (p02) : grande pastille sur fond doux de la couleur du genre */
+.bandeau-genre {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin: 0 var(--page-gutter) var(--space-5);
+  padding: var(--space-4) var(--space-5);
+  border-radius: var(--play-radius-card);
+  background: var(--gs);
+}
+.bandeau-genre .pastille-genre { width: 64px; height: 64px; }
+.bandeau-genre p { font-weight: 700; color: var(--play-text); }
 
 /* ============ Fiche jeu : feuille posée sur l'accueil (Figma 04 à 06) ============ */
 .zone-fiche { position: relative; flex: 1; min-height: 0; }
@@ -1102,38 +1240,39 @@ svg { display: block; flex-shrink: 0; }
   width: 230px;
   height: var(--play-card-height);
   flex-shrink: 0;
-  border-radius: var(--play-radius-card);
+  border-radius: 28px;
   overflow: hidden;
 }
 .fond-fiche::after { content: ""; position: absolute; inset: 0; background: var(--play-scrim); }
 .feuille-fiche {
   position: absolute;
   top: var(--play-sheet-top);
-  left: 0;
-  right: 0;
+  inset-inline: 0;
   bottom: 0;
   display: flex;
   flex-direction: column;
   background: var(--play-sheet);
-  border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;
+  border-radius: 32px 32px 0 0;
   overflow: hidden;
+  animation: play-monte .35s ease-out both;
 }
+@keyframes play-monte { from { transform: translateY(40px); opacity: .6; } to { transform: none; opacity: 1; } }
 .poignee-play {
   display: block;
   flex-shrink: 0;
-  width: 64px;
+  width: 72px;
   padding: var(--space-3) 0;
   margin: 0 auto;
 }
 .poignee-play::before {
   content: "";
   display: block;
-  height: 5px;
+  height: 6px;
   border-radius: var(--radius-pill);
   background: var(--play-handle);
 }
 .feuille-fiche .contenu { padding: 0 var(--page-gutter); }
-.feuille-fiche .titre-play { padding: 0; margin: 0 0 var(--space-4); }
+.feuille-fiche .titre-play { padding: 0; margin: 0 0 var(--space-3); }
 .feuille-fiche .carrousel { margin: 0 calc(-1 * var(--page-gutter)); }
 
 /* Visuel ou vidéo en tête de fiche : la vidéo ne démarre qu'à la demande (S07-02) */
@@ -1141,7 +1280,7 @@ svg { display: block; flex-shrink: 0; }
   position: relative;
   width: 100%;
   height: var(--play-hero-height);
-  border-radius: var(--play-radius-card);
+  border-radius: 26px;
   overflow: hidden;
 }
 .media-fiche .visuel-play { position: absolute; inset: 0; }
@@ -1153,80 +1292,115 @@ svg { display: block; flex-shrink: 0; }
   align-items: center;
   justify-content: center;
   gap: var(--space-2);
-  font-weight: var(--font-weight-bold);
-  font-size: var(--font-size-sm);
+  color: var(--play-on-color);
+  font-weight: 800;
+  font-size: var(--play-font-small);
+  text-shadow: 0 1px 4px var(--play-shade);
 }
 .bouton-lecture .rond {
-  width: 52px;
-  height: 52px;
+  width: 64px;
+  height: 64px;
   border-radius: var(--radius-round);
-  background: var(--play-text);
+  background: var(--play-sheet);
+  box-shadow: var(--play-shadow);
   display: flex;
   align-items: center;
   justify-content: center;
+  animation: play-respire 2.4s ease-in-out infinite;
 }
-.bouton-lecture .rond svg { width: 26px; height: 26px; }
+@keyframes play-respire { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
+.bouton-lecture .rond svg { width: 30px; height: 30px; }
+[dir="rtl"] .bouton-lecture .rond svg { transform: none; }
 .lecteur-play {
   position: absolute;
-  left: 0;
-  right: 0;
+  inset-inline: 0;
   bottom: 0;
   display: flex;
   align-items: center;
   gap: var(--space-3);
   padding: var(--space-6) var(--space-3) var(--space-3);
   background: linear-gradient(180deg, transparent, var(--play-shade));
-  font-size: var(--font-size-xs);
+  color: var(--play-on-color);
+  font-size: var(--play-font-small);
 }
-.lecteur-play .bouton-icone { width: 36px; height: 36px; }
-.lecteur-play .bouton-icone svg { width: 22px; height: 22px; }
-.lecteur-play .piste { flex: 1; height: 4px; border-radius: var(--radius-pill); background: var(--play-handle); overflow: hidden; }
+.lecteur-play .bouton-icone { width: var(--play-touch); height: var(--play-touch); }
+.lecteur-play .bouton-icone svg { width: 24px; height: 24px; }
+.lecteur-play .piste { flex: 1; height: 6px; border-radius: var(--radius-pill); background: var(--play-handle); overflow: hidden; }
 .lecteur-play .piste i { display: block; height: 100%; width: 0; background: var(--color-primary); transition: width 1s linear; }
-.lecteur-play .temps { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.lecteur-play .temps { font-variant-numeric: tabular-nums; white-space: nowrap; direction: ltr; }
 
-/* En-tête de la fiche : genre, nom, actions, note, badges (S07-01, S07-03) */
+/* En-tête de la fiche : genre, nom, actions, note (S07-01) */
 .puce-genre {
   display: inline-flex;
   align-items: center;
-  height: 28px;
-  padding: 0 var(--space-3);
+  gap: var(--space-2);
+  min-height: 34px;
+  padding-inline: 4px var(--space-3);
   margin-top: var(--space-4);
   border-radius: var(--radius-pill);
-  background: var(--play-chip);
-  font-size: var(--font-size-sm);
+  background: var(--gs);
+  font-size: var(--play-font-small);
+  font-weight: 800;
 }
-.titre-fiche { display: flex; align-items: center; gap: var(--space-1); margin-top: var(--space-2); }
-.titre-fiche h1 { flex: 1; min-width: 0; font-size: var(--play-font-title); line-height: var(--line-height-tight); overflow-wrap: anywhere; }
-.titre-fiche .bouton-icone:last-child { margin-right: calc(-1 * var(--space-2)); }
-.fourni-par { font-size: var(--font-size-sm); color: var(--play-text-secondary); margin-top: 2px; }
-.note-fiche { display: flex; align-items: center; gap: var(--space-2); margin-top: var(--space-2); font-size: var(--font-size-sm); color: var(--play-text-secondary); }
-.note-fiche b { color: var(--play-text); }
+.puce-genre .pastille-genre { width: 26px; height: 26px; }
+.titre-fiche { display: flex; align-items: center; gap: var(--space-2); margin-top: var(--space-2); }
+.titre-fiche h1 { flex: 1; min-width: 0; font-size: var(--play-font-title); font-weight: 800; line-height: 1.15; overflow-wrap: anywhere; }
+.bouton-rond-play {
+  width: var(--play-touch);
+  height: var(--play-touch);
+  flex-shrink: 0;
+  border-radius: var(--radius-round);
+  background: var(--play-surface);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.bouton-rond-play svg { width: 24px; height: 24px; }
+.bouton-rond-play[aria-pressed="true"] { background: var(--play-accent-soft); }
+@keyframes play-pop { 0% { transform: scale(1); } 40% { transform: scale(1.3); } 100% { transform: scale(1); } }
+.bouton-rond-play.pop svg { animation: play-pop .35s ease-out; }
+.fourni-par { font-size: var(--play-font-small); color: var(--play-text-secondary); margin-top: 2px; }
+.note-fiche {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 40px;
+  margin-top: var(--space-1);
+  font-size: var(--play-font-small);
+  color: var(--play-text-secondary);
+}
+.note-fiche b { color: var(--play-text); font-size: var(--play-font-body); }
 .etoiles { display: inline-flex; gap: 1px; }
-.badges-play { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-3); }
+
+/* Badges (V2, S07-03) : Gratuit, Sans pub, Sans consommation de data */
+.badges-play { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin-top: var(--space-2); }
 .badge-play {
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
-  height: 28px;
+  min-height: 32px;
   padding: 0 var(--space-3);
   border-radius: var(--radius-pill);
-  background: var(--play-chip);
-  font-size: 12px;
-  font-weight: var(--font-weight-bold);
+  background: var(--play-free-soft);
+  color: var(--play-free);
+  font-size: var(--play-font-small);
+  font-weight: 800;
 }
-.badge-play svg { width: 14px; height: 14px; }
+.badge-play svg { width: 16px; height: 16px; }
 
-.separateur-play { height: 1px; background: var(--play-divider); margin: var(--space-5) 0; border: 0; }
-.accroche-play { font-size: var(--font-size-lg); font-weight: var(--font-weight-bold); margin-bottom: var(--space-2); }
+.separateur-play { height: 2px; background: var(--play-divider); margin: var(--space-6) 0; border: 0; border-radius: 1px; }
+.accroche-play { font-size: 19px; font-weight: 800; margin-bottom: var(--space-2); }
 .description-play { color: var(--play-text-secondary); }
 
-/* Informations du jeu (S07-02) */
+/* Informations du jeu (S07-02) : trois cases colorées */
 .infos-jeu { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-2); margin-top: var(--space-4); }
-.infos-jeu div { min-width: 0; padding: var(--space-2) var(--space-3); border-radius: var(--play-radius-card); background: var(--play-surface); }
-.infos-jeu dt { font-size: 12px; color: var(--play-text-muted); }
-.infos-jeu dd { font-size: var(--font-size-sm); font-weight: var(--font-weight-bold); line-height: var(--line-height-tight); overflow-wrap: anywhere; }
+.infos-jeu div { min-width: 0; padding: var(--space-3); border-radius: 18px; background: var(--play-surface); }
+.infos-jeu div:nth-child(2) { background: var(--play-g-course-soft); }
+.infos-jeu div:nth-child(3) { background: var(--play-g-puzzle-soft); }
+.infos-jeu dt { font-size: 13px; font-weight: 700; color: var(--play-text-muted); }
+.infos-jeu dd { font-size: var(--play-font-small); font-weight: 800; line-height: 1.25; overflow-wrap: anywhere; }
 
-/* Galerie : captures 220 × 330 */
+/* Galerie : captures 200 × 300 */
 .capture-play {
   width: var(--play-gallery-width);
   height: var(--play-gallery-height);
@@ -1234,248 +1408,410 @@ svg { display: block; flex-shrink: 0; }
   overflow: hidden;
 }
 
-/* Bouton « Jouer » toujours visible en bas de la fiche (S07-01) */
-.barre-action.barre-play { background: var(--play-sheet); box-shadow: none; }
+/* Lien « Signaler un problème » en bas de la fiche (S10-04) */
+.lien-signaler-jeu {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: var(--play-touch);
+  margin-top: var(--space-5);
+  color: var(--play-text-secondary);
+  font-size: var(--play-font-small);
+  font-weight: 700;
+  text-decoration: underline;
+}
+.lien-signaler-jeu svg { width: 18px; height: 18px; }
+
+/* Bouton « Jouer » toujours visible en bas de la fiche (S07-01) : grande pilule orange */
+.barre-action.barre-play { background: var(--play-sheet); box-shadow: var(--play-shadow-haut); }
 .bouton-jouer {
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: var(--space-2);
   width: 100%;
-  height: var(--play-cta-height);
+  min-height: var(--play-cta-height);
+  padding: 0 var(--space-5);
   border-radius: var(--play-radius-button);
   background: var(--color-primary);
-  color: var(--color-text);
-  font-size: var(--font-size-lg);
-  font-weight: var(--font-weight-bold);
+  color: var(--play-on-accent);
+  box-shadow: var(--play-shadow-cta);
+  font-size: 19px;
+  font-weight: 800;
 }
-.bouton-jouer:active { background: var(--color-primary-pressed); }
-.bouton-jouer-secondaire {
+.bouton-jouer svg { width: 24px; height: 24px; }
+.bouton-jouer:disabled { background: var(--play-chip); color: var(--play-text-muted); box-shadow: none; cursor: default; }
+/* Bouton secondaire doux (pêche) */
+.bouton-doux {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 100%;
-  min-height: var(--touch-target);
-  margin-top: var(--space-2);
+  min-height: 52px;
+  margin-top: var(--space-3);
+  padding: 0 var(--space-5);
+  border-radius: var(--play-radius-button);
+  background: var(--play-surface);
+  color: var(--play-text);
+  font-size: var(--play-font-body);
+  font-weight: 800;
+}
+.bouton-doux:disabled { background: var(--play-chip); color: var(--play-text-muted); cursor: default; }
+
+/* ============ Classements (S07-04) : ludiques et encourageants ============ */
+.onglets-play {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-1);
+  padding: var(--space-1);
+  border-radius: var(--play-radius-button);
+  background: var(--play-surface);
+}
+.onglet-play {
+  min-height: 44px;
+  padding: 0 var(--space-1);
+  border-radius: var(--play-radius-button);
+  font-size: var(--play-font-small);
+  font-weight: 800;
   color: var(--play-text-secondary);
-  font-weight: var(--font-weight-bold);
+  line-height: 1.1;
 }
+.onglet-play[aria-selected="true"] { background: var(--play-sheet); color: var(--play-text); box-shadow: var(--play-shadow); }
+.pays-classement { display: flex; align-items: center; gap: var(--space-1); margin-top: var(--space-3); font-size: var(--play-font-small); color: var(--play-text-secondary); }
+.pays-classement svg { width: 16px; height: 16px; }
 
-/* Feuille de partage (feuille système du téléphone, S07-05) */
-.apercu-partage { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-5); }
-.apercu-partage .vignette-partage { width: 52px; height: 52px; border-radius: var(--radius-sm); overflow: hidden; flex-shrink: 0; }
-.apercu-partage div { min-width: 0; }
-.apercu-partage strong { display: block; }
-.apercu-partage small { color: var(--color-text-secondary); overflow-wrap: anywhere; }
-.options-partage { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-3); margin-bottom: var(--space-5); }
-.option-partage { display: flex; flex-direction: column; align-items: center; gap: var(--space-1); font-size: var(--font-size-xs); text-align: center; }
-.option-partage span {
-  width: 52px;
-  height: 52px;
-  border-radius: var(--radius-round);
-  background: var(--color-surface-warm);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+/* Podium : les trois premiers, le premier au milieu et plus haut */
+.podium {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  align-items: end;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
 }
-.option-partage svg { width: 24px; height: 24px; }
-
-/* ============ Écran de transition d'un hub sans lien direct (S08-02) ============ */
-.transition-play { padding: var(--space-6) var(--page-gutter); text-align: center; }
-.logo-hub {
-  width: 88px;
-  height: 88px;
-  margin: 0 auto var(--space-5);
-  border-radius: var(--radius-lg);
-  background: var(--play-surface);
+.marche {
   display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.logo-hub svg { width: 44px; height: 44px; }
-.transition-play h2 { font-size: var(--play-font-title); line-height: var(--line-height-tight); }
-.transition-play > p { color: var(--play-text-secondary); margin-top: var(--space-2); }
-.ou-trouver {
-  display: flex;
-  gap: var(--space-3);
-  align-items: center;
-  margin-top: var(--space-6);
-  padding: var(--space-4);
-  border-radius: var(--play-radius-card);
-  background: var(--play-surface);
-  text-align: left;
-}
-.ou-trouver .vignette-cible { width: 56px; height: 56px; border-radius: var(--radius-sm); overflow: hidden; flex-shrink: 0; }
-.ou-trouver p { font-size: var(--font-size-sm); }
-
-/* ============ Jeu simulé (S08-01, S08-03) ============ */
-.barre-maxit {
-  height: 52px;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  padding: 0 var(--space-3);
-  background: var(--color-bg-dark);
-  border-bottom: 1px solid var(--play-divider);
-  position: relative;
-  z-index: 5;
-}
-.quitter-jeu {
-  display: inline-flex;
+  flex-direction: column;
   align-items: center;
   gap: var(--space-1);
-  min-height: 36px;
-  padding: 0 var(--space-3) 0 var(--space-2);
-  border-radius: var(--radius-pill);
-  background: var(--color-glass-dark);
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-bold);
-}
-.quitter-jeu svg { width: 18px; height: 18px; }
-.barre-maxit .nom-jeu { min-width: 0; font-size: var(--font-size-sm); color: var(--play-text-secondary); text-align: right; overflow-wrap: anywhere; }
-.ecran-jeu { position: relative; flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: none; }
-.ecran-jeu::-webkit-scrollbar { display: none; }
-.chargement-jeu { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-3); padding: var(--space-6); text-align: center; }
-.chargement-jeu .vignette-cible { width: 112px; height: 112px; border-radius: var(--radius-lg); overflow: hidden; }
-.chargement-jeu strong { font-size: var(--font-size-lg); }
-.chargement-jeu small { color: var(--play-text-secondary); }
-.barre-chargement { width: 200px; height: 6px; border-radius: var(--radius-pill); background: var(--play-surface); overflow: hidden; }
-.barre-chargement i { display: block; height: 100%; width: 0; background: var(--color-primary); animation: charge-play 1.6s ease-out forwards; }
-@keyframes charge-play { to { width: 100%; } }
-.partie-jeu { position: absolute; inset: 0; }
-.partie-jeu .visuel-play { position: absolute; inset: 0; }
-.hud-jeu { position: absolute; top: var(--space-3); left: var(--space-3); right: var(--space-3); display: flex; justify-content: space-between; }
-.hud-jeu span, .etiquette-simulee {
-  padding: var(--space-1) var(--space-3);
-  border-radius: var(--radius-pill);
-  background: var(--play-shade);
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-bold);
-}
-.etiquette-simulee {
-  position: absolute;
-  left: var(--space-6);
-  right: var(--space-6);
-  bottom: var(--space-6);
-  border-radius: var(--play-radius-card);
-  padding: var(--space-3) var(--space-4);
+  min-width: 0;
   text-align: center;
-  font-weight: var(--font-weight-regular);
+  animation: play-apparait .45s ease-out both;
 }
-.etiquette-simulee b { display: block; }
-
-/* Accueil du hub partenaire (après l'écran de transition) */
-.hub-jeu { padding: var(--space-5) var(--page-gutter); }
-.hub-tete { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-2); }
-.hub-tete .logo-hub { width: 48px; height: 48px; margin: 0; border-radius: var(--radius-sm); }
-.hub-tete .logo-hub svg { width: 26px; height: 26px; }
-.hub-tete strong { font-size: var(--font-size-xl); }
-.hub-aide { color: var(--play-text-secondary); font-size: var(--font-size-sm); }
-.hub-onglet { font-size: var(--font-size-sm); font-weight: var(--font-weight-bold); color: var(--color-primary); margin: var(--space-5) 0 var(--space-2); }
-.hub-grille { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-3); }
-.hub-grille button { display: flex; flex-direction: column; gap: var(--space-1); font-size: 12px; text-align: left; min-width: 0; overflow-wrap: anywhere; }
-.hub-grille .visuel-hub { width: 100%; aspect-ratio: 1; border-radius: var(--radius-sm); overflow: hidden; }
-
-/* ============ Avis des joueurs (lot P2, d'après reference/figma-play/06-avis.png) ============ */
-.bouton-jouer:disabled { background: var(--play-chip); color: var(--play-text-muted); cursor: default; }
-
-/* Titre « Notes et avis » avec « Voir tout » (texte blanc, chevron orange) */
-.titre-avec-lien { display: flex; align-items: center; }
-.voir-tout-play {
-  margin-left: auto;
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  min-height: var(--touch-target);
-  font-size: var(--font-size-md);
-  font-weight: var(--font-weight-bold);
-}
-.voir-tout-play svg { width: 18px; height: 18px; }
-
-/* Moyenne en grand, étoiles et nombre d'avis */
-.resume-note { display: flex; align-items: center; gap: var(--space-3); }
-.resume-note b { font-size: var(--font-size-display); line-height: 1; }
-.nombre-avis { font-size: var(--font-size-sm); margin-top: var(--space-2); }
-
-/* Bouton clair « Donner mon avis » (Figma : « Write a review ») */
-.bouton-clair {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.marche-1 { order: 2; animation-delay: .15s; }
+.marche-2 { order: 1; animation-delay: .05s; }
+.marche-3 { order: 3; animation-delay: .25s; }
+.marche .nom-podium { max-width: 100%; font-size: var(--play-font-small); font-weight: 800; overflow-wrap: anywhere; line-height: 1.2; }
+.marche .score-podium { font-size: 13px; color: var(--play-text-secondary); font-weight: 700; direction: ltr; }
+.socle {
   width: 100%;
-  min-height: 48px;
-  margin-top: var(--space-4);
-  border-radius: var(--play-radius-button);
-  background: var(--play-button-light);
-  color: var(--play-on-light);
-  font-size: var(--font-size-lg);
-  font-weight: var(--font-weight-bold);
+  border-radius: 18px 18px 8px 8px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: var(--space-2);
+  font-size: 22px;
+  font-weight: 800;
 }
-.bouton-clair:disabled { background: var(--play-chip); color: var(--play-text-muted); cursor: default; }
-.aide-avis { font-size: var(--font-size-sm); color: var(--play-text-secondary); margin-top: var(--space-2); }
-.aide-avis b { color: var(--play-text); }
+.marche-1 .socle { height: 72px; background: var(--play-g-sport-soft); }
+.marche-2 .socle { height: 52px; background: var(--play-g-course-soft); }
+.marche-3 .socle { height: 40px; background: var(--play-g-aventure-soft); }
 
-/* Carte d'un avis : avatar à initiales, pseudonyme, étoiles, date, texte */
-.avis-play { padding: var(--space-4) 0; border-bottom: 1px solid var(--play-divider); }
-.avis-tete { display: flex; align-items: flex-start; gap: var(--space-3); }
-.avatar-play {
-  width: 40px;
-  height: 40px;
-  flex-shrink: 0;
-  border-radius: var(--radius-round);
+/* Médailles : ruban et disque or, argent ou bronze */
+.medaille { position: relative; width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.medaille svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.medaille .ruban { fill: var(--play-g-quiz); }
+.medaille-1 .disque { fill: var(--play-or); }
+.medaille-2 .disque { fill: var(--play-argent); }
+.medaille-3 .disque { fill: var(--play-bronze); }
+.medaille b { position: relative; top: 5px; font-size: 13px; font-weight: 800; color: var(--play-text); }
+.marche .medaille { width: 44px; height: 44px; animation: play-balance 3s ease-in-out infinite; }
+.marche .medaille b { font-size: 15px; top: 6px; }
+@keyframes play-balance { 0%, 100% { transform: rotate(-4deg); } 50% { transform: rotate(4deg); } }
+
+/* Ma place : carte orange douce, mise en avant */
+.ma-place {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--play-radius-card);
+  background: var(--play-accent-soft);
+}
+.ma-place .rang-moi {
+  min-width: 52px;
+  height: 52px;
+  padding: 0 var(--space-1);
+  border-radius: var(--radius-pill);
   background: var(--color-primary);
-  color: var(--color-text);
-  font-size: var(--font-size-lg);
+  color: var(--play-on-accent);
+  font-size: 17px;
+  font-weight: 800;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
-.avis-mien .avatar-play { background: var(--play-button-light); color: var(--play-on-light); }
-.avis-auteur { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-.avis-nom { font-size: var(--font-size-md); overflow-wrap: anywhere; }
-.avis-nom small { color: var(--play-text-secondary); font-size: var(--font-size-sm); }
-.avis-note { display: flex; align-items: center; gap: var(--space-3); }
-.avis-date { font-size: var(--font-size-sm); color: var(--play-free); }
-.avis-texte { margin-top: var(--space-3); font-size: var(--font-size-sm); color: var(--play-text-secondary); overflow-wrap: anywhere; }
-.avis-texte.replie { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.avis-pied { display: flex; gap: var(--space-4); }
-.avis-pied:empty { display: none; }
-.lien-avis {
-  min-height: 32px;
-  margin-top: var(--space-1);
-  font-size: var(--font-size-sm);
-  color: var(--play-text-secondary);
-  text-decoration: underline;
-}
-.lien-signaler { color: var(--play-text-muted); }
-.avis-signale { display: inline-block; margin-top: var(--space-2); font-size: var(--font-size-xs); color: var(--play-text-muted); }
-.lien-tous-avis {
-  display: inline-flex;
-  align-items: center;
-  min-height: var(--touch-target);
-  margin-top: var(--space-2);
-  font-weight: var(--font-weight-bold);
-  text-decoration: underline;
-}
+.ma-place .rang-moi svg { width: 26px; height: 26px; }
+.ma-place p { flex: 1; min-width: 0; font-weight: 800; line-height: 1.3; }
+.ma-place small { display: block; font-weight: 700; color: var(--play-text-secondary); font-size: 13px; }
 
-/* Feuille de Play (signalement) : thème sombre */
-.feuille.feuille-sombre { background: var(--play-sheet); color: var(--play-text); }
-.feuille-sombre .poignee { background: var(--play-handle); }
-.feuille-sombre .demo-aide { color: var(--play-text-secondary); }
-.feuille-sombre .bouton-secondaire { background: var(--play-surface); color: var(--play-text); border-color: var(--play-surface); }
-.feuille-sombre .bouton-primaire:disabled { background: var(--play-chip); color: var(--play-text-muted); border-color: var(--play-chip); }
-.bouton-annuler { margin-top: var(--space-2); }
-.motifs-play { display: flex; flex-direction: column; margin-bottom: var(--space-5); }
+/* Liste du classement : lignes arrondies, la mienne surlignée */
+.liste-classement { list-style: none; display: flex; flex-direction: column; gap: var(--space-2); }
+.ligne-classement {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 56px;
+  padding: var(--space-2) var(--space-3);
+  border-radius: 18px;
+  background: var(--play-sheet);
+}
+.ligne-classement.ligne-moi { background: var(--play-accent-soft); box-shadow: inset 0 0 0 2px var(--color-primary); }
+.rang-play {
+  width: 36px;
+  flex-shrink: 0;
+  text-align: center;
+  font-size: var(--play-font-small);
+  font-weight: 800;
+  color: var(--play-text-secondary);
+}
+.nom-classement { flex: 1; min-width: 0; font-weight: 700; overflow-wrap: anywhere; }
+.score-classement { font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; direction: ltr; }
+.pastille-toi {
+  display: inline-block;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--color-primary);
+  color: var(--play-on-accent);
+  font-size: 12px;
+  font-weight: 800;
+}
+.lien-pseudo { text-decoration: underline; text-decoration-color: var(--color-primary); text-underline-offset: 3px; }
+
+/* Écran du classement complet (p08) */
+.page-classement { padding: 0 var(--page-gutter); }
+.jeu-classement { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-4); }
+.jeu-classement .vignette-cible { width: 56px; height: 56px; border-radius: var(--play-radius-small); overflow: hidden; flex-shrink: 0; }
+.jeu-classement strong { display: block; font-size: 18px; font-weight: 800; }
+.jeu-classement small { color: var(--play-text-secondary); font-size: var(--play-font-small); }
+.periodes-play { display: flex; gap: var(--space-2); margin-top: var(--space-3); }
+.periode-play {
+  min-height: 40px;
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-pill);
+  border: 2px solid var(--play-divider);
+  font-size: var(--play-font-small);
+  font-weight: 800;
+  color: var(--play-text-secondary);
+}
+.periode-play[aria-pressed="true"] { border-color: var(--color-primary); background: var(--play-accent-soft); color: var(--play-text); }
+.raz-classement { margin-top: var(--space-2); font-size: var(--play-font-small); color: var(--play-text-secondary); }
+.titre-liste { margin: var(--space-6) 0 var(--space-3); font-size: 18px; font-weight: 800; }
+/* Ma position, épinglée en bas de l'écran du classement */
+.barre-ma-place { background: var(--play-bg); box-shadow: var(--play-shadow-haut); }
+.barre-ma-place .ma-place { margin-top: 0; }
+
+/* ============ Feuilles de Play (partage, signalement d'un avis) ============ */
+.feuille.feuille-play { background: var(--play-sheet); color: var(--play-text); border-radius: 32px 32px 0 0; font-family: var(--play-font-family); }
+.feuille-play .poignee { width: 56px; height: 6px; background: var(--play-handle); }
+.feuille-titre { font-size: 21px; font-weight: 800; }
+.feuille-aide { color: var(--play-text-secondary); font-size: var(--play-font-small); margin: var(--space-1) 0 var(--space-4); }
+.motifs-play { display: flex; flex-direction: column; gap: var(--space-2); margin-bottom: var(--space-5); }
 .motif-play {
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  min-height: var(--touch-target);
-  border-bottom: 1px solid var(--play-divider);
+  min-height: 52px;
+  padding: 0 var(--space-4);
+  border-radius: 18px;
+  background: var(--play-surface);
+  font-weight: 700;
   cursor: pointer;
 }
-.motif-play input { width: 20px; height: 20px; accent-color: var(--color-primary); }
+.motif-play input, .raison-play input { width: 22px; height: 22px; accent-color: var(--color-primary); flex-shrink: 0; }
+
+/* Partage (S07-06, S07-07) : feuille système du téléphone */
+.apercu-partage { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3); border-radius: 18px; background: var(--play-surface); }
+.apercu-partage .vignette-partage { width: 56px; height: 56px; border-radius: var(--play-radius-small); overflow: hidden; flex-shrink: 0; }
+.apercu-partage div { min-width: 0; }
+.apercu-partage strong { display: block; font-weight: 800; }
+.apercu-partage small { color: var(--play-text-secondary); overflow-wrap: anywhere; font-size: 13px; }
+.aide-partage { margin: var(--space-3) 0 var(--space-4); font-size: var(--play-font-small); color: var(--play-text-secondary); }
+.options-partage { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-2); margin-bottom: var(--space-2); }
+.option-partage { display: flex; flex-direction: column; align-items: center; gap: var(--space-1); font-size: 13px; font-weight: 700; text-align: center; line-height: 1.2; }
+.option-partage span {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-round);
+  background: var(--play-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.option-partage svg { width: 26px; height: 26px; }
+
+/* ============ Jeu simulé (S08-01, S08-02) ============ */
+.ecran-jeu { position: relative; flex: 1; min-height: 0; overflow: hidden; }
+/* Chargement : pictogramme qui sautille et trois points */
+.chargement-jeu { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-4); padding: var(--space-6); text-align: center; }
+.chargement-jeu .vignette-cible { width: 120px; height: 120px; border-radius: 30px; overflow: hidden; box-shadow: var(--play-shadow); animation: play-saute 1s ease-in-out infinite; }
+@keyframes play-saute { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+.chargement-jeu strong { font-size: 21px; font-weight: 800; }
+.chargement-jeu small { color: var(--play-text-secondary); font-size: var(--play-font-body); }
+.points-chargement { display: flex; gap: var(--space-2); }
+.points-chargement i { width: 12px; height: 12px; border-radius: var(--radius-round); background: var(--color-primary); animation: play-point 1s ease-in-out infinite; }
+.points-chargement i:nth-child(2) { animation-delay: .15s; background: var(--play-g-sport); }
+.points-chargement i:nth-child(3) { animation-delay: .3s; background: var(--play-g-puzzle); }
+@keyframes play-point { 0%, 100% { transform: scale(.6); opacity: .5; } 50% { transform: scale(1); opacity: 1; } }
+.partie-jeu { position: absolute; inset: 0; }
+.partie-jeu .visuel-play { position: absolute; inset: 0; }
+.hud-jeu { position: absolute; top: var(--space-3); inset-inline: var(--space-3); display: flex; justify-content: space-between; gap: var(--space-2); }
+.hud-jeu span, .etiquette-simulee {
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-pill);
+  background: var(--play-shade);
+  color: var(--play-on-color);
+  font-size: var(--play-font-small);
+  font-weight: 800;
+}
+.etiquette-simulee {
+  position: absolute;
+  inset-inline: var(--space-6);
+  bottom: var(--space-6);
+  border-radius: var(--play-radius-card);
+  padding: var(--space-3) var(--space-4);
+  text-align: center;
+  font-weight: 600;
+}
+.etiquette-simulee b { display: block; font-size: var(--play-font-body); }
+
+/* Mini app d'un seul jeu (modèle A) : capsule de fermeture de la mini app, en haut */
+.capsule-miniapp {
+  position: absolute;
+  top: var(--space-2);
+  inset-inline-end: var(--space-3);
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  border-radius: var(--radius-pill);
+  background: var(--play-sheet);
+  box-shadow: var(--play-shadow);
+}
+.capsule-miniapp a {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: var(--play-touch);
+  padding: 0 var(--space-4);
+  font-weight: 800;
+  font-size: var(--play-font-small);
+}
+.capsule-miniapp svg { width: 20px; height: 20px; }
+
+/* Hub partenaire (modèle B) : barre du hub, et bouton de sortie de Max it au-dessus */
+.barre-hub {
+  flex-shrink: 0;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0 var(--space-3);
+  background: var(--play-sheet);
+  border-bottom: 2px solid var(--play-divider);
+  font-weight: 800;
+}
+.barre-hub .logo-hub {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: var(--play-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.barre-hub .logo-hub svg { width: 18px; height: 18px; }
+.barre-hub span { flex: 1; min-width: 0; }
+.barre-hub .menu-hub { width: 40px; height: 40px; border-radius: var(--radius-round); display: flex; align-items: center; justify-content: center; }
+.barre-hub .menu-hub svg { width: 20px; height: 20px; }
+.sortie-maxit {
+  position: absolute;
+  top: calc(var(--status-bar-height) + 52px + var(--space-3));
+  inset-inline-start: var(--space-3);
+  z-index: 6;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--play-touch);
+  padding: 0 var(--space-4) 0 var(--space-2);
+  padding-inline: var(--space-2) var(--space-4);
+  border-radius: var(--play-radius-button);
+  background: var(--color-primary);
+  color: var(--play-on-accent);
+  box-shadow: var(--play-shadow-cta);
+  font-weight: 800;
+}
+.sortie-maxit .rond {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-round);
+  background: var(--play-sheet);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.sortie-maxit svg { width: 20px; height: 20px; }
+
+/* ============ Avis des joueurs (d'après reference/figma-play/06-avis.png) ============ */
+.resume-note { display: flex; align-items: center; gap: var(--space-3); }
+.resume-note b { font-size: 40px; font-weight: 800; line-height: 1; }
+.nombre-avis { font-size: var(--play-font-small); color: var(--play-text-secondary); margin-top: var(--space-1); }
+.aide-avis { font-size: var(--play-font-small); color: var(--play-text-secondary); margin-top: var(--space-2); }
+.aide-avis b { color: var(--play-text); }
+
+/* Carte d'un avis : avatar coloré à initiales, pseudo, étoiles, date, texte */
+.avis-play { margin-top: var(--space-3); padding: var(--space-4); border-radius: var(--play-radius-card); background: var(--play-surface); }
+.avis-mien { background: var(--play-accent-soft); }
+.avis-tete { display: flex; align-items: flex-start; gap: var(--space-3); }
+.avatar-play {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: var(--radius-round);
+  background: var(--av);
+  color: var(--play-text);          /* texte foncé : lisible sur toutes les couleurs de genre */
+  font-size: 16px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.avis-auteur { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.avis-nom { font-weight: 800; overflow-wrap: anywhere; }
+.avis-nom small { color: var(--play-text-secondary); font-size: var(--play-font-small); font-weight: 700; }
+.avis-note { display: flex; align-items: center; gap: var(--space-3); }
+.avis-date { font-size: 13px; color: var(--play-text-muted); }
+.avis-texte { margin-top: var(--space-3); font-size: var(--play-font-body); color: var(--play-text-secondary); overflow-wrap: anywhere; text-align: start; }
+[dir="rtl"] .avis-texte { text-align: right; }
+.avis-texte.replie { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.avis-pied { display: flex; gap: var(--space-4); }
+.avis-pied:empty { display: none; }
+.lien-avis {
+  min-height: 40px;
+  font-size: var(--play-font-small);
+  font-weight: 700;
+  color: var(--play-text-secondary);
+  text-decoration: underline;
+}
+.lien-tous-avis {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--play-touch);
+  margin-top: var(--space-2);
+  font-weight: 800;
+  text-decoration: underline;
+}
 
 /* Page de tous les avis (p06) */
 .synthese-avis {
@@ -1486,43 +1822,220 @@ svg { display: block; flex-shrink: 0; }
   margin: 0 var(--page-gutter);
   padding: var(--space-4);
   border-radius: var(--play-radius-card);
-  background: var(--play-surface);
+  background: var(--play-sheet);
+  box-shadow: var(--play-shadow);
 }
 .repartition { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
-.ligne-repartition { display: flex; align-items: center; gap: var(--space-2); font-size: var(--font-size-xs); color: var(--play-text-secondary); }
-.barre-note { flex: 1; height: 6px; border-radius: var(--radius-pill); background: var(--play-chip); overflow: hidden; }
-.barre-note i { display: block; height: 100%; background: var(--play-star); }
+.ligne-repartition { display: flex; align-items: center; gap: var(--space-2); font-size: 13px; font-weight: 700; color: var(--play-text-secondary); }
+.barre-note { flex: 1; height: 8px; border-radius: var(--radius-pill); background: var(--play-chip); overflow: hidden; }
+.barre-note i { display: block; height: 100%; border-radius: var(--radius-pill); background: var(--play-star); }
 .actions-avis { padding: 0 var(--page-gutter); }
-.liste-avis { padding: var(--space-2) var(--page-gutter) 0; }
+.liste-avis { padding: var(--space-1) var(--page-gutter) 0; }
 
 /* Formulaire d'avis (p07) */
 .jeu-avis { display: flex; align-items: center; gap: var(--space-3); padding: 0 var(--page-gutter); }
-.jeu-avis .vignette-cible { width: 56px; height: 56px; border-radius: var(--radius-sm); overflow: hidden; flex-shrink: 0; }
+.jeu-avis .vignette-cible { width: 60px; height: 60px; border-radius: var(--play-radius-small); overflow: hidden; flex-shrink: 0; }
 .jeu-avis div { min-width: 0; }
-.jeu-avis strong { display: block; font-size: var(--font-size-lg); }
-.jeu-avis small { color: var(--play-text-secondary); }
+.jeu-avis strong { display: block; font-size: 18px; font-weight: 800; }
+.jeu-avis small { color: var(--play-text-secondary); font-size: var(--play-font-small); }
 .formulaire-avis { padding: 0 var(--page-gutter); }
-.formulaire-avis .titre-play { padding: 0; margin: var(--space-6) 0 var(--space-3); }
-.formulaire-avis .titre-play small { font-size: var(--font-size-sm); font-weight: var(--font-weight-regular); color: var(--play-text-secondary); }
-.choix-etoiles { display: flex; gap: var(--space-2); }
-.choix-etoiles button { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; }
-.choix-etoiles svg { width: 40px; height: 40px; }
-.libelle-note { margin-top: var(--space-2); font-size: var(--font-size-sm); color: var(--play-text-secondary); }
+.formulaire-avis .titre-play { padding: 0; margin: var(--space-6) 0 var(--space-3); font-size: 19px; }
+.formulaire-avis .titre-play small { font-size: var(--play-font-small); font-weight: 600; color: var(--play-text-secondary); }
+.choix-etoiles { display: flex; gap: var(--space-1); }
+.choix-etoiles button { width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; border-radius: var(--radius-round); }
+.choix-etoiles svg { width: 46px; height: 46px; transition: transform .15s ease; }
+.choix-etoiles button[aria-checked="true"] svg { animation: play-pop .35s ease-out; }
+.libelle-note { margin-top: var(--space-2); font-weight: 800; color: var(--play-text-secondary); }
 .champ-avis {
   width: 100%;
   padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--play-chip);
-  border-radius: var(--play-radius-card);
-  background: var(--play-surface);
+  border: 2px solid var(--play-divider);
+  border-radius: 18px;
+  background: var(--play-sheet);
   color: var(--play-text);
   font: inherit;
   resize: none;
 }
 .champ-avis:focus { outline: 0; border-color: var(--color-primary); }
 .champ-avis::placeholder { color: var(--play-text-muted); }
-.compteur { text-align: right; font-size: var(--font-size-xs); color: var(--play-text-muted); margin-top: var(--space-1); }
-.lien-supprimer { margin-top: var(--space-4); color: var(--color-primary); }
+.champ-avis.en-erreur { border-color: var(--play-alert); }
+.compteur { text-align: end; font-size: 13px; color: var(--play-text-muted); margin-top: var(--space-1); direction: ltr; }
+[dir="rtl"] .compteur { text-align: left; }
+.lien-supprimer { margin-top: var(--space-4); color: var(--play-alert); }
 .formulaire-avis + .message-play, .jeu-avis + .message-play { margin-top: var(--space-5); }
+
+/* ============ Signaler un jeu (S10-04) ============ */
+.page-signaler { padding: 0 var(--page-gutter); }
+.page-signaler h2 { font-size: 19px; font-weight: 800; margin: var(--space-5) 0 var(--space-3); }
+.raisons-play { display: flex; flex-direction: column; gap: var(--space-2); border: 0; }
+.raison-play {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 56px;
+  padding: 0 var(--space-4);
+  border-radius: 18px;
+  background: var(--play-sheet);
+  box-shadow: var(--play-shadow);
+  font-weight: 700;
+  cursor: pointer;
+}
+.raison-play:has(input:checked) { box-shadow: inset 0 0 0 2px var(--color-primary); background: var(--play-accent-soft); }
+.erreur-play { margin-top: var(--space-2); color: var(--play-alert); font-size: var(--play-font-small); font-weight: 700; }
+/* Confirmation : grand cercle vert et coche */
+.confirmation-play { padding: var(--space-10) var(--space-6) 0; text-align: center; }
+.confirmation-play .rond-ok {
+  width: 96px;
+  height: 96px;
+  margin: 0 auto var(--space-5);
+  border-radius: var(--radius-round);
+  background: var(--play-free-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: play-pop .5s ease-out;
+}
+.confirmation-play .rond-ok svg { width: 52px; height: 52px; }
+.confirmation-play h2 { font-size: var(--play-font-title); font-weight: 800; line-height: 1.2; }
+.confirmation-play p { color: var(--play-text-secondary); margin-top: var(--space-2); }
+
+/* ============ Page de Max it dans le store du téléphone (S07-07) ============ */
+.telephone.store { background: var(--color-bg); color: var(--color-text); font-family: var(--font-family); }
+.store .barre-etat { background: var(--color-bg); }
+.entete-store { display: flex; align-items: center; gap: var(--space-2); min-height: 56px; padding: 0 var(--space-2); font-weight: var(--font-weight-bold); }
+.entete-store a { width: var(--touch-target); height: var(--touch-target); display: flex; align-items: center; justify-content: center; }
+.entete-store svg { width: 24px; height: 24px; }
+.store-app { display: flex; gap: var(--space-4); padding: var(--space-4) var(--page-gutter); }
+.icone-app {
+  width: 80px;
+  height: 80px;
+  flex-shrink: 0;
+  border-radius: 20px;
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  font-size: 30px;
+  font-weight: var(--font-weight-bold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.store-app h1 { font-size: var(--font-size-xxl); line-height: var(--line-height-tight); }
+.store-app p { color: var(--color-success-dark); font-weight: var(--font-weight-bold); font-size: var(--font-size-sm); }
+.store-infos { display: flex; justify-content: space-around; padding: var(--space-2) var(--page-gutter); border-block: 1px solid var(--color-border); font-size: var(--font-size-sm); color: var(--color-text-secondary); text-align: center; }
+.store-infos b { display: block; color: var(--color-text); }
+.store-action { padding: var(--space-4) var(--page-gutter); }
+.bouton-store {
+  width: 100%;
+  min-height: 48px;
+  border-radius: var(--radius-pill);
+  background: var(--color-success-dark);
+  color: var(--color-on-primary);
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.store-ios .bouton-store { background: var(--color-info); }
+.bouton-store:disabled { opacity: .7; cursor: default; }
+.store-progression { height: 4px; margin-top: var(--space-3); border-radius: var(--radius-pill); background: var(--color-border); overflow: hidden; }
+.store-progression i { display: block; height: 100%; width: 0; background: var(--color-success-dark); animation: charge-play 1.6s ease-out forwards; }
+.store-ios .store-progression i { background: var(--color-info); }
+@keyframes charge-play { to { width: 100%; } }
+.store-description { padding: 0 var(--page-gutter); color: var(--color-text-secondary); }
+.store-captures { display: flex; gap: var(--space-2); padding: var(--space-4) var(--page-gutter); overflow: hidden; }
+.store-captures span { width: 110px; height: 200px; flex-shrink: 0; border-radius: var(--radius-sm); background: var(--color-surface-warm); }
+.store-captures span:nth-child(2) { background: var(--color-primary-soft); }
+.aide-store { margin: var(--space-2) var(--page-gutter) var(--space-6); padding: var(--space-3); border-radius: var(--radius-sm); background: var(--color-bg-muted); font-size: var(--font-size-sm); color: var(--color-text-secondary); }
+
+/* ============ Profil joueur (V2, S11-01, S11-02) ============ */
+.carte-profil {
+  margin: 0 var(--page-gutter);
+  padding: var(--space-5);
+  border-radius: 28px;
+  background: var(--play-surface);
+  text-align: center;
+}
+.carte-profil .avatar-play { width: 88px; height: 88px; margin: 0 auto var(--space-3); font-size: 30px; box-shadow: var(--play-shadow); }
+.carte-profil h2 { font-size: var(--play-font-title); font-weight: 800; overflow-wrap: anywhere; }
+.carte-profil p { color: var(--play-text-secondary); font-size: var(--play-font-small); margin-top: var(--space-1); }
+.serie-profil {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-top: var(--space-3);
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-pill);
+  background: var(--play-sheet);
+  font-weight: 800;
+}
+.serie-profil svg { width: 20px; height: 20px; fill: var(--color-primary); }
+.stats-profil { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); padding: 0 var(--page-gutter); }
+.stat-profil { min-width: 0; padding: var(--space-4); border-radius: var(--play-radius-card); background: var(--play-sheet); box-shadow: var(--play-shadow); }
+.stat-profil b { display: block; font-size: 26px; font-weight: 800; line-height: 1.1; overflow-wrap: anywhere; }
+.stat-profil span { display: block; font-size: var(--play-font-small); font-weight: 700; color: var(--play-text-secondary); }
+.stat-profil small { display: block; font-size: 13px; color: var(--play-text-muted); }
+.stat-profil:nth-child(4n+1) { background: var(--play-g-sport-soft); }
+.stat-profil:nth-child(4n+2) { background: var(--play-g-course-soft); }
+.stat-profil:nth-child(4n+3) { background: var(--play-g-puzzle-soft); }
+.stat-profil:nth-child(4n+4) { background: var(--play-g-casual-soft); }
+.liste-profil { list-style: none; display: flex; flex-direction: column; gap: var(--space-2); padding: 0 var(--page-gutter); }
+.ligne-profil { display: flex; align-items: center; gap: var(--space-3); min-height: 64px; padding: var(--space-2) var(--space-3); border-radius: 18px; background: var(--play-sheet); box-shadow: var(--play-shadow); }
+.ligne-profil .vignette-cible { width: 44px; height: 44px; border-radius: 12px; overflow: hidden; flex-shrink: 0; }
+.ligne-profil div { flex: 1; min-width: 0; }
+.ligne-profil strong { display: block; font-weight: 800; overflow-wrap: anywhere; }
+.ligne-profil small { color: var(--play-text-secondary); font-size: 13px; }
+.ligne-profil .valeur { font-weight: 800; white-space: nowrap; }
+.aide-v2 { margin: var(--space-6) var(--page-gutter) 0; font-size: var(--play-font-small); color: var(--play-text-secondary); text-align: center; }
+
+/* ============ Assistant IA de Max it (V2, S09-04) ============ */
+.conversation { padding: 0 var(--page-gutter); display: flex; flex-direction: column; gap: var(--space-3); }
+.bulle {
+  max-width: 88%;
+  padding: var(--space-3) var(--space-4);
+  border-radius: 22px;
+  animation: play-apparait .3s ease-out both;
+}
+.bulle-assistant { align-self: flex-start; background: var(--play-sheet); box-shadow: var(--play-shadow); border-end-start-radius: 6px; }
+.bulle-joueur { align-self: flex-end; background: var(--color-primary); color: var(--play-on-accent); font-weight: 700; border-end-end-radius: 6px; }
+.bulle-assistant .auteur-bulle { display: flex; align-items: center; gap: var(--space-1); font-size: 13px; font-weight: 800; color: var(--play-v2); margin-bottom: 2px; }
+.bulle-assistant .auteur-bulle svg { width: 16px; height: 16px; }
+.bulle .rangee-play { margin: var(--space-3) calc(-1 * var(--space-4)) 0; padding-inline: var(--space-4); }
+.bulle .tuile-play { box-shadow: none; background: var(--play-surface); width: 140px; }
+.lien-fiche-assistant { display: block; margin-top: var(--space-1); padding: 0 var(--space-1); font-size: 13px; font-weight: 800; color: var(--play-text); text-decoration: underline; text-decoration-color: var(--color-primary); }
+.ecrit { display: inline-flex; gap: var(--space-1); }
+.ecrit i { width: 8px; height: 8px; border-radius: var(--radius-round); background: var(--play-text-muted); animation: play-point 1s ease-in-out infinite; }
+.ecrit i:nth-child(2) { animation-delay: .15s; }
+.ecrit i:nth-child(3) { animation-delay: .3s; }
+.idees-assistant { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.idee-assistant {
+  min-height: 44px;
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-pill);
+  border: 2px solid var(--play-divider);
+  background: var(--play-sheet);
+  font-size: var(--play-font-small);
+  font-weight: 700;
+}
+.saisie-assistant { display: flex; gap: var(--space-2); align-items: center; }
+.saisie-assistant input {
+  flex: 1;
+  min-width: 0;
+  min-height: 52px;
+  padding: 0 var(--space-4);
+  border: 2px solid var(--play-divider);
+  border-radius: var(--radius-pill);
+  background: var(--play-sheet);
+  color: var(--play-text);
+  font-size: var(--play-font-body);
+}
+.saisie-assistant input:focus { outline: 0; border-color: var(--color-primary); }
+.saisie-assistant .bouton-rond-play { width: 52px; height: 52px; background: var(--color-primary); }
+
+/* Animations coupées si le téléphone demande de réduire les mouvements */
+@media (prefers-reduced-motion: reduce) {
+  .play *, .play *::before, .play *::after { animation: none !important; transition: none !important; }
+}
 
 /* =====================================================================
    Shop — boutique de jeux de Max it (3e chantier)

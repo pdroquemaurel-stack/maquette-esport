@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<!-- Écran pv3 (V2) — Fiche jeu avec badges (pv3-fiche-badges.html?jeu=foot-lions).
+     Écran à part, hors du parcours MVP : ouvert depuis le menu de démo (rubrique « Écrans V2 »)
+     et depuis les autres écrans V2. Même fiche que p03 (js/play-fiche.js), avec en plus :
+     - S07-03 (V2) : badges « Gratuit » (tous les jeux), « Sans pub » (selon la fiche du jeu, S02-05)
+       et « Sans consommation de data » (selon le pays et le jeu : au Sénégal dans la démo) ;
+     - S11-01, S11-02 (V2) : pseudos choisis, qui ouvrent le profil du joueur (classements, avis). -->
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fiche jeu (V2)</title>
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-zone="play">
+<div class="cadre">
+  <div class="telephone play">
+    <div class="barre-etat" data-heure="9:30"></div>
+    <div class="zone-fiche">
+      <!-- L'accueil, assombri, derrière la feuille : le toucher ferme la fiche -->
+      <a class="fond-fiche" id="fond"></a>
+      <div class="feuille-fiche">
+        <a class="poignee-play" id="poignee"></a>
+        <main class="contenu" id="page"></main>
+        <div class="barre-action barre-play"><a class="bouton-jouer" id="jouer"></a></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/data-play.js"></script>
+<script src="js/textes-play.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/play.js"></script>
+<script src="js/play-fiche.js"></script>
+<script src="js/demo.js"></script>
+<script>
+  Fiche.monter({ v2: true });
+</script>
+</body>
+</html>

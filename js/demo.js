@@ -42,16 +42,26 @@ const Demo = (function () {
     { libelle: "Nouvelle notification", action: "notification", aide: "Arrive sur l'écran affiché en moins de 5 s" }
   ];
 
-  /* Play (mini-jeux) : bascules et raccourcis propres à la mini app.
+  /* Max it Gaming Play (mini-jeux) : bascules et raccourcis propres à la mini app.
      etat : valeurs à forcer avant d'ouvrir l'écran. */
   const BASCULES_PLAY = [
-    { cle: "playNouveau", libelle: "Nouveau joueur", aide: "Ni jeux récents, ni favoris, ni avis" },
+    { cle: "playNouveau", libelle: "Nouveau joueur", aide: "Ni jeux récents, ni favoris, ni avis, pas encore classé" },
     { cle: "playIndispo", libelle: "Jeu momentanément indisponible", aide: "« Bloc Mania » disparaît de Play" }
   ];
   const RACCOURCIS_PLAY = [
-    { libelle: "Ouverture par lien partagé", ecran: "p03", params: { jeu: "rallye-dunes", via: "lien" } },
+    { libelle: "Lien partagé : l'ami a Max it", ecran: "p03", params: { jeu: "rallye-dunes", via: "lien" } },
+    { libelle: "Lien partagé : l'ami n'a pas Max it (Android)", ecran: "p09", params: { store: "android" } },
+    { libelle: "Lien partagé : l'ami n'a pas Max it (iPhone)", ecran: "p09", params: { store: "ios" } },
     { libelle: "Lien vers un jeu indisponible", ecran: "p03", params: { jeu: "bloc-mania", via: "lien" }, etat: { playIndispo: true } }
   ];
+  /* Écrans V2 de Play : à part, hors du parcours MVP */
+  const ECRANS_V2_PLAY = [
+    { libelle: "Mon profil joueur", ecran: "pv1" },
+    { libelle: "Profil d'un autre joueur", ecran: "pv1", params: { joueur: "Salma_ElA" } },
+    { libelle: "Assistant IA : recommandations", ecran: "pv2" },
+    { libelle: "Fiche avec badges et profils", ecran: "pv3", params: { jeu: "foot-lions" } }
+  ];
+  const LANGUES_PLAY = [{ code: "fr", libelle: "Français" }, { code: "en", libelle: "English" }, { code: "ar", libelle: "العربية" }];
 
   /* Shop (boutique de jeux) : bascules et raccourcis propres à la mini app */
   const BASCULES_SHOP = [
@@ -117,19 +127,26 @@ const Demo = (function () {
     };
     BASCULES.forEach(bascule);
 
-    // Play (mini-jeux) : pays, nouveau joueur, jeu indisponible, liens partagés
+    // Max it Gaming Play (mini-jeux) : langue, pays, nouveau joueur, jeu indisponible, liens partagés, écrans V2
     const senegal = Etat.get("playPays") === "SN";
-    html += '<p class="demo-groupe">Play (mini-jeux)</p>' +
+    const langue = Etat.get("playLangue") || "fr";
+    html += '<p class="demo-groupe">Max it Gaming Play (mini-jeux)</p>' +
+      '<div class="segment" role="radiogroup" aria-label="Langue de Play">' + LANGUES_PLAY.map((l) =>
+        '<button role="radio" data-langue="' + l.code + '" lang="' + l.code + '" aria-checked="' + (langue === l.code) + '" class="' + (langue === l.code ? "actif" : "") + '">' + l.libelle + "</button>"
+      ).join("") + "</div>" +
+      '<p class="demo-aide">Langue de Max it, reprise par Play ; l’arabe se lit de droite à gauche.</p>' +
       '<div class="segment" role="radiogroup" aria-label="Pays du joueur dans Play">' +
       '<button role="radio" data-pays="MA" aria-checked="' + !senegal + '" class="' + (senegal ? "" : "actif") + '">Maroc</button>' +
       '<button role="radio" data-pays="SN" aria-checked="' + senegal + '" class="' + (senegal ? "actif" : "") + '">Sénégal</button>' +
       "</div>" +
-      '<p class="demo-aide">Au Sénégal, les fiches affichent le badge « Sans consommation de data ».</p>';
+      '<p class="demo-aide">Classements, avis et sélection propres au pays. Le Sénégal a la gratuité de la data (badge V2).</p>';
     BASCULES_PLAY.forEach(bascule);
-    RACCOURCIS_PLAY.forEach((r, i) => {
-      html += '<button class="demo-ligne" data-raccourci-play="' + i + '">' +
-        "<span>" + r.libelle + "<small>Écran " + r.ecran + " · " + ECRANS[r.ecran].titre + "</small></span>" + ICONE_FLECHE + "</button>";
-    });
+    const lignePlay = (r, attribut, i) => '<button class="demo-ligne" ' + attribut + '="' + i + '">' +
+      "<span>" + r.libelle + "<small>Écran " + r.ecran + " · " + ECRANS[r.ecran].titre + "</small></span>" + ICONE_FLECHE + "</button>";
+    RACCOURCIS_PLAY.forEach((r, i) => { html += lignePlay(r, "data-raccourci-play", i); });
+    html += '<p class="demo-groupe">Max it Gaming Play : écrans V2</p>' +
+      '<p class="demo-aide">Hors parcours MVP : profil joueur, assistant IA, badges.</p>';
+    ECRANS_V2_PLAY.forEach((r, i) => { html += lignePlay(r, "data-v2-play", i); });
 
     // Shop (boutique de jeux) : premier achat, liens directs
     html += '<p class="demo-groupe">Shop (boutique de jeux)</p>';
@@ -181,6 +198,13 @@ const Demo = (function () {
       return ouvrir();
     }
 
+    const langue = cible.closest("[data-langue]");
+    if (langue) {
+      Etat.set("playLangue", langue.dataset.langue);
+      Nav.toast("Play : " + langue.textContent);
+      return ouvrir();
+    }
+
     const pays = cible.closest("[data-pays]");
     if (pays) {
       Etat.set("playPays", pays.dataset.pays);
@@ -192,7 +216,7 @@ const Demo = (function () {
     if (bascule) {
       const cle = bascule.dataset.bascule;
       // Nouveau joueur : l'historique de Play repart de zéro (ou de l'historique de départ)
-      if (cle === "playNouveau") ["playRecents", "playLances", "playFavoris", "playAvis"].forEach((c) => Etat.set(c, null));
+      if (cle === "playNouveau") ["playRecents", "playLances", "playFavoris", "playAvis", "playJeuxSignales"].forEach((c) => Etat.set(c, null));
       Etat.set(cle, !Etat.get(cle));
       return ouvrir();
     }
@@ -203,6 +227,13 @@ const Demo = (function () {
       Object.keys(r.etat || {}).forEach((cle) => Etat.set(cle, r.etat[cle]));
       fermer();
       return Nav.aller(r.ecran, null, r.params);
+    }
+
+    const ecranV2 = cible.closest("[data-v2-play]");
+    if (ecranV2) {
+      const r = ECRANS_V2_PLAY[Number(ecranV2.dataset.v2Play)];
+      fermer();
+      return Nav.aller(r.ecran, null, r.params || null);
     }
 
     const raccourciShop = cible.closest("[data-raccourci-shop]");

@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <!-- Écran p06 — Tous les avis d'un jeu (p06-avis.html?jeu=foot-lions&depuis=p01-accueil.html).
      Pas d'écran Figma pour la liste complète : composants repris de reference/figma-play/06-avis.png.
-     US : S10-02 (note moyenne, nombre d'avis, liste complète), S10-01 (mon avis : modifier, supprimer ;
-     donner un avis seulement si le jeu a été lancé), S10-03 (signaler un avis, avec motif). -->
+     US : S10-02 (note moyenne, nombre d'avis, liste complète, avis du pays), S10-01 (mon avis : modifier,
+     supprimer ; donner un avis seulement si le jeu a été lancé ; pseudo généré tant que le profil n'existe pas),
+     S10-03 (signaler un avis : il disparaît aussitôt de la liste, avec un message de confirmation). -->
 <html lang="fr">
 <head>
   <meta charset="utf-8">
@@ -16,14 +17,15 @@
   <div class="telephone play">
     <div class="barre-etat" data-heure="9:30"></div>
     <header class="entete-simple-play">
-      <a class="retour-play" id="retour" aria-label="Retour à la fiche du jeu"></a>
-      <h1 id="titre">Notes et avis</h1>
+      <a class="retour-play" id="retour"></a>
+      <h1 data-t="avis.titre">Notes et avis</h1>
     </header>
     <main class="contenu" id="page"></main>
   </div>
 </div>
 
 <script src="js/data-play.js"></script>
+<script src="js/textes-play.js"></script>
 <script src="js/nav.js"></script>
 <script src="js/play.js"></script>
 <script src="js/demo.js"></script>
@@ -33,52 +35,56 @@
   function rendre() {
     if (!jeu) return;
     if (!Play.disponible(jeu)) return ouvrirPage("p01-accueil.html?indispo=1");
-    document.title = "Avis · " + jeu.nom;
+    const t = Play.t;
+    document.title = t("avis.titre") + " · " + jeu.nom;
 
-    const fiche = Play.url("p03-jeu.html", { jeu: jeu.id, depuis: Play.depuis() });
+    const fiche = Play.v2() ? "pv3-fiche-badges.html?jeu=" + jeu.id : Play.url("p03-jeu.html", { jeu: jeu.id, depuis: Play.depuis() });
     // p07 revient ici après la publication (retour=avis)
     const versDonner = Play.url("p07-donner-avis.html", { jeu: jeu.id, depuis: Play.depuis(), retour: "avis" });
-    document.getElementById("retour").innerHTML = Play.icone("retour");
-    document.getElementById("retour").href = fiche;
+    const retour = document.getElementById("retour");
+    retour.innerHTML = Play.icone("retour");
+    retour.href = fiche;
+    retour.setAttribute("aria-label", t("commun.retour"));
 
     const moyenne = Play.moyenne(jeu);
     const mien = Play.monAvis(jeu.id);
-    const avis = Play.avisDesJoueurs(jeu);
+    const avis = Play.avisVisibles(jeu);
     let html = '<p class="sous-titre-play">' + jeu.nom + "</p>";
 
     // Résumé : moyenne, étoiles, nombre d'avis et répartition des notes
     html += '<section class="synthese-avis"><div><div class="resume-note"><b>' + Play.note(jeu) + "</b></div>" +
-      Play.etoiles(moyenne.note, 16) + '<p class="nombre-avis">' + moyenne.nombre + " avis · " + (avis.length + (mien ? 1 : 0)) + " commentaires</p></div>" +
-      '<div class="repartition" aria-label="Répartition des notes">' + Play.repartition(jeu).map((pct, i) =>
+      Play.etoiles(moyenne.note, 18) + '<p class="nombre-avis">' + t("avis.resume", { n: moyenne.nombre, c: avis.length + (mien ? 1 : 0) }) + "</p></div>" +
+      '<div class="repartition" aria-label="' + t("avis.repartition") + '">' + Play.repartition(jeu).map((pct, i) =>
         '<div class="ligne-repartition"><span>' + (5 - i) + '</span><span class="barre-note"><i style="width:' + pct + '%"></i></span></div>'
       ).join("") + "</div></section>";
 
     // Donner son avis (seulement après avoir lancé le jeu) ou le modifier
     html += '<div class="actions-avis">';
-    if (mien) html += '<a href="' + versDonner + '" class="bouton-clair">Modifier mon avis</a>';
-    else if (Play.aLance(jeu.id)) html += '<a href="' + versDonner + '" class="bouton-clair">Donner mon avis</a>';
-    else html += '<button class="bouton-clair" disabled>Donner mon avis</button><p class="aide-avis">Lance le jeu au moins une fois pour pouvoir le noter.</p>';
+    if (mien) html += '<a href="' + versDonner + '" class="bouton-doux">' + t("avis.modifier") + "</a>";
+    else if (Play.aLance(jeu.id)) html += '<a href="' + versDonner + '" class="bouton-doux">' + t("avis.donner") + "</a>";
+    else html += '<button class="bouton-doux" disabled>' + t("avis.donner") + '</button><p class="aide-avis">' + t("avis.lanceDabord") + "</p>";
     html += "</div>";
 
-    // Mon avis en tête, puis tous les commentaires, du plus récent au plus ancien
+    // Mon avis en tête, puis les commentaires visibles, du plus récent au plus ancien
     html += '<section class="liste-avis" id="liste">';
     if (mien) {
       html += Play.carteAvis(Object.assign({ pseudo: Play.pseudo() }, mien), true,
-        '<a href="' + versDonner + '" class="lien-avis">Modifier</a><button class="lien-avis" id="supprimer">Supprimer</button>');
+        '<a href="' + versDonner + '" class="lien-avis">' + t("avis.modifierCourt") + '</a><button class="lien-avis" id="supprimer">' + t("avis.supprimer") + "</button>");
     }
     html += avis.map((a) => Play.carteAvis(a, false)).join("");
     html += "</section>";
     html += '<div class="fin-contenu"></div>';
     document.getElementById("page").innerHTML = html;
 
-    Play.brancherAvis(document.getElementById("liste"), jeu);
+    // Un avis signalé disparaît aussitôt : la page est redessinée (S10-03)
+    Play.brancherAvis(document.getElementById("liste"), jeu, rendre);
     const supprimer = document.getElementById("supprimer");
     if (supprimer) supprimer.addEventListener("click", () => Nav.dialogue({
-      titre: "Supprimer ton avis ?",
-      texte: "Ta note et ton commentaire sur " + jeu.nom + " seront retirés. Tu pourras en donner un nouveau.",
+      titre: t("avis.supprimerTitre"),
+      texte: t("avis.supprimerTexte", { nom: jeu.nom }),
       boutons: [
-        { libelle: "Supprimer", primaire: true, action: () => { Play.supprimerAvis(jeu.id); Nav.toast("Avis supprimé"); } },
-        { libelle: "Annuler" }
+        { libelle: t("avis.supprimer"), primaire: true, action: () => { Play.supprimerAvis(jeu.id); Nav.toast(t("avis.supprime")); } },
+        { libelle: t("commun.annuler") }
       ]
     }));
   }

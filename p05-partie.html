@@ -1,10 +1,11 @@
 <!DOCTYPE html>
-<!-- Écran p05 — Jeu simulé (p05-partie.html?jeu=rallye-dunes ; « mode=hub » après l'écran de transition).
+<!-- Écran p05 — Jeu simulé (p05-partie.html?jeu=rallye-dunes&depuis=… ; « retour=v2 » : lancé depuis l'écran V2 pv3).
      Pas d'écran Figma. Les jeux ne sont pas jouables : chargement, puis illustration « partie en cours ».
-     Max it affiche au-dessus du jeu une barre avec « Quitter », qui ramène à la fiche du jeu.
-     US : S08-01 (mini app ou hub ouvert directement sur le jeu : aucune différence pour le joueur ;
-     lancement enregistré pour les récents et les recommandations), S08-02 (accueil du hub),
-     S08-03 (retour sur la fiche, identique pour une mini app et un hub). -->
+     « Jouer » ouvre toujours le jeu directement, sans écran intermédiaire (S08-01) :
+     - mini app d'un seul jeu (modèle A) : la mini app s'ouvre, fermée par sa capsule « Quitter » ;
+     - hub partenaire (modèle B) : le hub s'ouvre directement sur le jeu (lien direct), et Max it affiche
+       son propre bouton de sortie au-dessus de la mini app du partenaire (S08-02).
+     Dans les deux cas, quitter ramène à la fiche du jeu (S08-02) ; le lancement est enregistré (S08-01). -->
 <html lang="fr">
 <head>
   <meta charset="utf-8">
@@ -17,16 +18,13 @@
 <div class="cadre">
   <div class="telephone play">
     <div class="barre-etat" data-heure="9:30"></div>
-    <!-- Barre affichée par Max it au-dessus du jeu -->
-    <div class="barre-maxit">
-      <a class="quitter-jeu" id="quitter"></a>
-      <span class="nom-jeu" id="nom-jeu"></span>
-    </div>
+    <div id="barre-hub"></div>
     <main class="ecran-jeu" id="ecran"></main>
   </div>
 </div>
 
 <script src="js/data-play.js"></script>
+<script src="js/textes-play.js"></script>
 <script src="js/nav.js"></script>
 <script src="js/play.js"></script>
 <script src="js/demo.js"></script>
@@ -34,62 +32,50 @@
   const jeu = Play.jeuDeLaPage();
   const ecran = document.getElementById("ecran");
 
-  /* Chargement de la mini app (ou du hub), puis action suivante */
-  function charger(titre, sousTitre, vignette, suite) {
-    ecran.innerHTML = '<div class="chargement-jeu"><span class="vignette-cible">' + vignette + "</span>" +
-      "<strong>" + titre + "</strong><small>" + sousTitre + "</small>" +
-      '<span class="barre-chargement"><i></i></span></div>';
-    setTimeout(suite, 1700);
+  /* Fiche du jeu, où l'on revient en quittant (S08-02) */
+  function fiche() {
+    return Nav.param("retour") === "v2"
+      ? "pv3-fiche-badges.html?jeu=" + jeu.id
+      : Play.url("p03-jeu.html", { jeu: jeu.id, depuis: Play.depuis() });
   }
 
   /* Partie en cours (simulée) ; le lancement est enregistré (S08-01) */
-  function jouer(j) {
-    Play.enregistrerLancement(j.id);
-    document.getElementById("nom-jeu").textContent = j.nom;
-    ecran.innerHTML = '<div class="partie-jeu">' + Play.visuel(j, 370, 690, "partie") +
-      '<div class="hud-jeu"><span>Score 1 240</span><span>Niveau 3</span></div>' +
-      '<p class="etiquette-simulee"><b>Partie en cours</b>Jeu simulé : la maquette ne contient pas les jeux. Touche « Quitter » pour revenir à la fiche.</p>' +
-      "</div>";
-  }
-
-  /* Accueil du hub, après l'écran de transition (S08-02) : le joueur y retrouve le jeu */
-  function accueilHub() {
-    const partenaire = Play.partenaire(jeu);
-    const jeuxHub = PLAY.jeux.filter((j) => j.partenaire === jeu.partenaire && Play.disponible(j));
-    const genres = PLAY.genres.filter((g) => jeuxHub.some((j) => j.genre === g.id));
-    document.getElementById("nom-jeu").textContent = partenaire.nom;
-    ecran.innerHTML = '<div class="hub-jeu">' +
-      '<div class="hub-tete"><span class="logo-hub">' + Play.icone("hub", "f-primary") + "</span><strong>" + partenaire.nom + "</strong></div>" +
-      '<p class="hub-aide">' + jeu.transition + "</p>" +
-      genres.map((g) => '<p class="hub-onglet">' + g.nom + '</p><div class="hub-grille">' +
-        jeuxHub.filter((j) => j.genre === g.id).map((j) =>
-          '<button data-jeu="' + j.id + '"><span class="visuel-hub">' + Play.visuel(j, 100, 100, "tuile") + "</span>" + j.nom + "</button>"
-        ).join("") + "</div>"
-      ).join("") + "</div>";
-    ecran.querySelectorAll("[data-jeu]").forEach((bouton) => bouton.addEventListener("click", () => {
-      const choisi = Play.jeu(bouton.dataset.jeu);
-      charger(choisi.nom, partenaire.nom, Play.visuel(choisi, 112, 112, "tuile"), () => jouer(choisi));
-    }));
+  function jouer() {
+    const t = Play.t;
+    Play.enregistrerLancement(jeu.id);
+    ecran.insertAdjacentHTML("beforeend", '<div class="partie-jeu">' + Play.visuel(jeu, 390, 760, "partie") +
+      '<div class="hud-jeu"><span>' + t("partie.score") + " 1 240</span><span>" + t("partie.niveau") + " 3</span></div>" +
+      '<p class="etiquette-simulee"><b>' + t("partie.enCours") + "</b>" + t("partie.simulee") + "</p>" +
+      "</div>");
+    ecran.querySelector(".chargement-jeu").remove();
   }
 
   document.addEventListener("DOMContentLoaded", () => {
     if (!jeu) return;
-    // « Quitter » : retour sur la fiche du jeu, mini app comme hub (S08-03)
-    const quitter = document.getElementById("quitter");
-    quitter.innerHTML = Play.icone("fermer") + "Quitter";
-    quitter.href = Play.url("p03-jeu.html", { jeu: jeu.id, depuis: Play.depuis() });
-    document.getElementById("nom-jeu").textContent = jeu.nom;
-
+    Play.appliquerLangue();
+    const t = Play.t;
     const partenaire = Play.partenaire(jeu);
-    if (!partenaire.lienDirect && Nav.param("mode") !== "hub") {
-      // Hub sans lien direct : on passe toujours par l'écran de transition (S08-02)
-      ouvrirPage(Play.url("p04-transition.html", { jeu: jeu.id, depuis: Play.depuis() }));
-    } else if (!partenaire.lienDirect) {
-      charger(partenaire.nom, "Ouverture de l'accueil du hub", '<span class="logo-hub">' + Play.icone("hub", "f-primary") + "</span>", accueilHub);
+    document.title = jeu.nom;
+
+    if (partenaire.modele === "B") {
+      // Hub partenaire ouvert directement sur le jeu : barre du hub, et bouton de sortie de Max it au-dessus
+      document.getElementById("barre-hub").innerHTML = '<div class="barre-hub">' +
+        '<span class="logo-hub">' + Play.icone("hub", "f-primary") + "</span><span>" + partenaire.nom + "</span>" +
+        '<span class="menu-hub" aria-label="' + t("partie.menuHub") + '" role="img">' + Play.icone("hub", "f-play-muted") + "</span></div>";
+      document.querySelector(".telephone").insertAdjacentHTML("beforeend",
+        '<a class="sortie-maxit" id="quitter" href="' + fiche() + '" title="' + t("partie.sortieHubAide") + '">' +
+        '<span class="rond">' + Play.icone("retour", "f-primary") + "</span>" + t("partie.sortieHub") + "</a>");
     } else {
-      // Mini app du jeu, ou hub ouvert directement sur le jeu : même affichage (S08-01)
-      charger(jeu.nom, "Chargement du jeu", Play.visuel(jeu, 112, 112, "tuile"), () => jouer(jeu));
+      // Mini app du jeu : capsule de fermeture de la mini app
+      ecran.insertAdjacentHTML("beforeend", '<div class="capsule-miniapp"><a id="quitter" href="' + fiche() + '" aria-label="' + t("partie.quitterJeu") + '">' +
+        Play.icone("fermer") + t("partie.quitter") + "</a></div>");
     }
+
+    // Chargement, puis partie : le joueur ne voit aucune différence entre mini app et hub (S08-01)
+    ecran.insertAdjacentHTML("afterbegin", '<div class="chargement-jeu"><span class="vignette-cible">' + Play.visuel(jeu, 120, 120, "tuile") + "</span>" +
+      "<strong>" + jeu.nom + "</strong><small>" + t("partie.chargement") + "</small>" +
+      '<span class="points-chargement" aria-hidden="true"><i></i><i></i><i></i></span></div>');
+    setTimeout(jouer, 1600);
   });
 </script>
 </body>

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<!-- Écran p08 — Classement complet d'un jeu (p08-classement.html?jeu=foot-lions&periode=semaine&depuis=…),
+     ouvert par « Voir le classement complet » sur la fiche.
+     Pas d'écran Figma : composants de la fiche (onglets, médailles, lignes arrondies), ton encourageant.
+     US : S07-04 — classements du jour (remis à zéro à minuit), de la semaine (le lundi) et de tous les temps,
+     propres au pays du joueur ; les 100 premiers puis la position du joueur ; meilleur score de la période ;
+     pseudo généré tant que le profil n'existe pas ; classements précédents consultables (hier, semaine dernière) ;
+     pas de classement si le partenaire ne transmet pas les scores (retour à la fiche). -->
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Classement</title>
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-zone="play">
+<div class="cadre">
+  <div class="telephone play">
+    <div class="barre-etat" data-heure="9:30"></div>
+    <header class="entete-simple-play">
+      <a class="retour-play" id="retour" data-t-aria="commun.retour"></a>
+      <h1 data-t="classement.titreEcran">Classement</h1>
+    </header>
+    <main class="contenu" id="page"></main>
+    <!-- Ma position, toujours visible sous la liste -->
+    <div class="barre-action barre-ma-place" id="ma-place"></div>
+  </div>
+</div>
+
+<script src="js/data-play.js"></script>
+<script src="js/textes-play.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/play.js"></script>
+<script src="js/demo.js"></script>
+<script>
+  const jeu = Play.jeuDeLaPage();
+  let periode = Play.PERIODES.includes(Nav.param("periode")) ? Nav.param("periode") : "semaine";
+  let precedent = false;   // classement précédent : hier, ou la semaine dernière
+
+  function fiche() {
+    return Play.v2() ? "pv3-fiche-badges.html?jeu=" + jeu.id : Play.url("p03-jeu.html", { jeu: jeu.id, depuis: Play.depuis() });
+  }
+
+  function rendre() {
+    if (!jeu) return;
+    if (!Play.disponible(jeu)) return ouvrirPage("p01-accueil.html?indispo=1");
+    // Jeu sans scores transmis : pas de classement (S07-04)
+    if (!Play.aUnClassement(jeu)) return ouvrirPage(fiche());
+    const t = Play.t;
+    document.title = t("classement.titreEcran") + " · " + jeu.nom;
+    const retour = document.getElementById("retour");
+    retour.innerHTML = Play.icone("retour");
+    retour.href = fiche();
+    if (periode === "tout") precedent = false;
+
+    const c = Play.classement(jeu, periode, precedent);
+    let html = '<div class="page-classement">';
+
+    // Le jeu et le pays : on ne se compare qu'aux joueurs de son pays
+    html += '<div class="jeu-classement"><span class="vignette-cible">' + Play.visuel(jeu, 56, 56, "tuile") + "</span>" +
+      "<div><strong>" + jeu.nom + "</strong><small>" + t("classement.pays", { pays: Play.nomPays() }) + "</small></div></div>";
+
+    // Onglets : jour, semaine, tout temps
+    html += '<div class="onglets-play" role="tablist" aria-label="' + t("classement.titre") + '">' + Play.PERIODES.map((p) =>
+      '<button class="onglet-play" role="tab" data-periode="' + p + '" aria-selected="' + (p === periode) + '">' + t("classement." + p) + "</button>"
+    ).join("") + "</div>";
+
+    // Période en cours ou précédente (sauf « de tous les temps »)
+    if (periode !== "tout") {
+      html += '<div class="periodes-play">' +
+        '<button class="periode-play" data-precedent="non" aria-pressed="' + !precedent + '">' + t("classement.enCours") + "</button>" +
+        '<button class="periode-play" data-precedent="oui" aria-pressed="' + precedent + '">' +
+        t(periode === "jour" ? "classement.hier" : "classement.semaineDerniere") + "</button></div>";
+    }
+    html += '<p class="raz-classement">' + t({ jour: "classement.razJour", semaine: "classement.razSemaine", tout: "classement.razTout" }[periode]) +
+      (periode !== "tout" ? " " + t("classement.meilleurScore") : "") + "</p>";
+
+    // Les 100 premiers : médailles pour le podium, ma ligne surlignée
+    html += '<h2 class="titre-liste">' + t("classement.top") + "</h2>" +
+      '<ol class="liste-classement">' + c.liste.map((e) => Play.ligneClassement(e, periode)).join("") + "</ol>";
+    html += '<div class="fin-contenu"></div></div>';
+    document.getElementById("page").innerHTML = html;
+
+    // Puis ma position, épinglée en bas
+    document.getElementById("ma-place").innerHTML = Play.maPlace(c.moi, periode, precedent);
+
+    document.querySelectorAll("[data-periode]").forEach((b) => b.addEventListener("click", () => {
+      periode = b.dataset.periode;
+      precedent = false;
+      rendre();
+    }));
+    document.querySelectorAll("[data-precedent]").forEach((b) => b.addEventListener("click", () => {
+      precedent = b.dataset.precedent === "oui";
+      rendre();
+    }));
+  }
+  Play.monter(rendre);
+</script>
+</body>
+</html>

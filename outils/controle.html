@@ -54,18 +54,30 @@
       horloge: { reel: Date.now(), simule: "2026-10-09T21:40" } })],
     ["15-litige.html", { scenario: "litige-ouvert" }],
     ["10-equipe.html?id=t12", { scenario: "equipe-fermee" }],
-    // Play (lot P1) : accueil, genres, fiches (mini app, hub avec et sans lien direct), transition, partie
+    // Max it Gaming Play : accueil (nouveau joueur, Sénégal, arabe, jeu indisponible), genres
     "p01-accueil.html", ["p01-accueil.html", { playNouveau: true }], ["p01-accueil.html", { playPays: "SN" }],
+    ["p01-accueil.html", { playLangue: "ar" }], ["p01-accueil.html", { playLangue: "en" }],
     ["p01-accueil.html?indispo=1", { playIndispo: true }],
     "p02-genre.html?genre=sport", "p02-genre.html?genre=tous", ["p02-genre.html?genre=strategie", { playPays: "SN" }],
+    // Fiches : mini app avec mention, hub, hub sans scores (pas de classement), lien partagé, jeu jamais lancé, arabe
     "p03-jeu.html?jeu=rallye-dunes&depuis=p01-accueil.html", "p03-jeu.html?jeu=bloc-mania&depuis=p02-genre.html%3Fgenre%3Dpuzzle",
     ["p03-jeu.html?jeu=ludo-famille", { playPays: "SN" }], "p03-jeu.html?jeu=mot-juste&via=lien",
-    "p04-transition.html?jeu=ludo-famille&depuis=p01-accueil.html",
-    "p05-partie.html?jeu=rallye-dunes", "p05-partie.html?jeu=bloc-mania", "p05-partie.html?jeu=ludo-famille&mode=hub",
-    // Play (lot P2) : avis — fiche d'un jeu noté, d'un jeu jamais lancé, liste complète, formulaire
-    "p03-jeu.html?jeu=foot-lions", "p03-jeu.html?jeu=parking-pro",
+    "p03-jeu.html?jeu=foot-lions", "p03-jeu.html?jeu=parking-pro&periode=jour", ["p03-jeu.html?jeu=foot-lions", { playLangue: "ar" }],
+    // Partie : mini app (modèle A), hub (modèle B) avec bouton de sortie de Max it
+    "p05-partie.html?jeu=rallye-dunes", "p05-partie.html?jeu=bloc-mania", "p05-partie.html?jeu=ludo-famille",
+    // Avis
     "p06-avis.html?jeu=foot-lions&depuis=p01-accueil.html", "p06-avis.html?jeu=parking-pro", ["p06-avis.html?jeu=taxi-brousse", { playSignales: ["taxi-brousse-0"] }],
     "p07-donner-avis.html?jeu=bloc-mania", "p07-donner-avis.html?jeu=foot-lions&retour=avis", "p07-donner-avis.html?jeu=parking-pro",
+    // Classements, store, signalement d'un jeu
+    "p08-classement.html?jeu=foot-lions&periode=semaine", "p08-classement.html?jeu=foot-lions&periode=tout", "p08-classement.html?jeu=parking-pro&periode=jour",
+    ["p08-classement.html?jeu=foot-lions&periode=jour", { playNouveau: true }], ["p08-classement.html?jeu=rallye-dunes", { playLangue: "ar" }],
+    "p09-store.html?store=android", "p09-store.html?store=ios", ["p09-store.html?store=android", { playLangue: "ar" }],
+    "p10-signaler-jeu.html?jeu=bloc-mania", ["p10-signaler-jeu.html?jeu=bloc-mania", () => ({ playJeuxSignales: { "bloc-mania": new Date().toISOString().slice(0, 10) } })],
+    // Écrans V2 : profil (le mien, un autre joueur), assistant IA, fiche avec badges
+    "pv1-profil.html", "pv1-profil.html?joueur=Salma_ElA", ["pv1-profil.html", { playNouveau: true }], ["pv1-profil.html", { playLangue: "ar" }],
+    "pv2-assistant.html", ["pv2-assistant.html", { playLangue: "en" }],
+    "pv3-fiche-badges.html?jeu=foot-lions", ["pv3-fiche-badges.html?jeu=foot-lions", { playPays: "SN" }], "pv3-fiche-badges.html?jeu=ludo-famille",
+    "p08-classement.html?jeu=foot-lions&v2=1", "p06-avis.html?jeu=foot-lions&v2=1",
     // Shop (lot S1) : accueil (avec et sans achats, jeu non vendu), recherche, page d'un jeu, fiche produit
     "s01-accueil.html", ["s01-accueil.html", { shopPremierAchat: true }], "s01-accueil.html?absent=1",
     "s02-recherche.html", "s02-recherche.html?q=frifire", "s02-recherche.html?tag=promo", "s02-recherche.html?q=zzz",

@@ -1,7 +1,8 @@
 <!DOCTYPE html>
-<!-- Écran p02 — Page d'un genre (p02-genre.html?genre=sport), ou tout le catalogue (?genre=tous).
-     Pas d'écran Figma : composants repris de l'accueil (tuiles, thème sombre).
-     US : S06-03 (tous les jeux du genre dans le pays), S06-04 (tuiles) ; jeux indisponibles masqués (S08-04). -->
+<!-- Écran p02 — Page d'un genre (p02-genre.html?genre=sport), ouverte par « Voir tout » d'une rangée de l'accueil.
+     Pas d'écran Figma : composants repris de l'accueil (tuiles, pastille du genre).
+     US : S06-03 (tous les jeux du genre dans le pays), S06-04 (tuiles), S03-05 (par popularité) ;
+     jeux indisponibles masqués (S08-03). « ?genre=tous » : tout le catalogue. -->
 <html lang="fr">
 <head>
   <meta charset="utf-8">
@@ -15,7 +16,7 @@
   <div class="telephone play">
     <div class="barre-etat" data-heure="9:30"></div>
     <header class="entete-simple-play">
-      <a href="p01-accueil.html" class="retour-play" aria-label="Retour à l'accueil de Play"></a>
+      <a href="p01-accueil.html" class="retour-play" data-t-aria="genre.retour"></a>
       <h1 id="titre"></h1>
     </header>
     <main class="contenu" id="page"></main>
@@ -23,26 +24,29 @@
 </div>
 
 <script src="js/data-play.js"></script>
+<script src="js/textes-play.js"></script>
 <script src="js/nav.js"></script>
 <script src="js/play.js"></script>
 <script src="js/demo.js"></script>
 <script>
   function rendre() {
+    const t = Play.t;
     // Genre demandé ; inconnu → tout le catalogue
     const genre = Play.genre(Nav.param("genre"));
     const idGenre = genre ? genre.id : "tous";
     const jeux = Play.jeuxDuGenre(idGenre);
-    const titre = genre ? genre.nom : "Tous les jeux";
+    const titre = genre ? Play.nomGenre(genre.id) : t("commun.jeux", { n: jeux.length });
     document.title = titre;
 
     document.querySelector(".retour-play").innerHTML = Play.icone("retour");
     document.getElementById("titre").textContent = titre;
 
-    let html = '<p class="sous-titre-play">' + jeux.length + (jeux.length > 1 ? " jeux gratuits" : " jeu gratuit") +
-      " · les plus joués en premier</p>";
+    // Bandeau : grande pastille du genre sur sa couleur douce
+    let html = '<div class="bandeau-genre" style="--gs: ' + (genre ? "var(--play-g-" + genre.id + "-soft)" : "var(--play-surface)") + '">' +
+      Play.pastilleGenre(idGenre) + "<p>" + t("genre.nombre", { n: jeux.length }) + "</p></div>";
     html += jeux.length
-      ? '<div class="grille-play">' + jeux.map((j) => Play.tuile(j)).join("") + "</div>"
-      : '<p class="sous-titre-play">Aucun jeu de ce genre pour le moment. <a href="p01-accueil.html">Retour à l\'accueil</a></p>';
+      ? '<div class="grille-play section-play">' + jeux.map((j) => Play.tuile(j)).join("") + "</div>"
+      : '<p class="sous-titre-play">' + t("genre.vide") + ' <a href="p01-accueil.html">' + t("genre.retourAccueil") + "</a></p>";
     html += '<div class="fin-contenu"></div>';
     document.getElementById("page").innerHTML = html;
   }

@@ -39,23 +39,29 @@ la page d'offre, accès aux contenus. Le choix est mémorisé entre les pages.
 - Ne jamais modifier le dossier reference/.
 
 
-## Section Play — mini-jeux (2e chantier)
+## Section Play — Max it Gaming Play, mini-jeux (2e chantier)
 
 ### Objectif
-Maquette front office de Play, la mini app des mini-jeux dans Max it, décrite dans
-reference/backlog-play.html. Uniquement les Epics « Front — mini app Play » (E06 à E10).
-Le back-office (E01 à E05) n'est pas maquetté : son paramétrage est simulé dans js/data-play.js.
+Maquette front office de Max it Gaming Play, la mini app des mini-jeux dans Max it, décrite dans
+reference/backlog-play.html (version de référence depuis le 2026-10-11). Uniquement les Epics
+« Front » (E06 à E11). Le back-office (E01 à E05) n'est pas maquetté : son paramétrage est simulé
+dans js/data-play.js.
 
 ### Entrée
 Depuis 00c (univers gaming), le bouton « Jouer » ouvre l'accueil de Play. Le bouton « E-sport »
 continue de mener à la plateforme e-sport, qui ne doit pas être modifiée.
 
 ### Règles propres à Play
-- Fichiers préfixés « p » (p01-accueil.html, p02-genre.html…) ; données dans js/data-play.js.
+- Fichiers préfixés « p » (p01-accueil.html, p02-genre.html…) ; écrans V2 préfixés « pv » ;
+  données dans js/data-play.js ; textes de l'interface en français, anglais et arabe dans
+  js/textes-play.js ; fiche jeu commune à p03 et pv3 dans js/play-fiche.js.
 - Réutiliser tokens.css, style.css, nav.js et demo.js. Aucune couleur en dehors de tokens.css.
+  Ne pas modifier les composants partagés hors de Play : créer une variante propre à Play.
 - Play est une mini app : en-tête avec retour vers Max it, pas de barre du bas e-sport.
-- Les jeux ne sont pas jouables. « Jouer » ouvre un écran de jeu simulé : écran de chargement,
-  puis une illustration « partie en cours » avec un bouton pour quitter, qui ramène à la fiche.
+- Les jeux ne sont pas jouables. « Jouer » ouvre toujours le jeu directement, sans écran
+  intermédiaire (mini app comme hub) : écran de chargement, puis une illustration « partie en cours ».
+  Mini app : capsule « Quitter » ; hub : bouton de sortie de Max it au-dessus du hub. Les deux
+  ramènent à la fiche.
 - Noms de jeux et de partenaires fictifs (pas de marques réelles). Icônes des jeux en SVG.
 - Visuels des jeux : une image par jeu dans images/play/<id>.jpg (déclarée dans PLAY.images de
   js/data-play.js), utilisée partout où le jeu apparaît ; sans image, le dessin SVG s'affiche.
@@ -63,36 +69,49 @@ continue de mener à la plateforme e-sport, qui ne doit pas être modifiée.
   réels (commando-lagune, ninja-sahel, rallye-dunes, robots-furie, taxi-brousse) ; usage interne
   de la maquette uniquement.
 - Catalogue fictif : environ 30 jeux répartis dans les 10 genres, 3 partenaires fictifs, dont
-  un en modèle A (une mini app par jeu) et deux en modèle B (hub), l'un avec lien direct et
-  l'autre sans.
-- Choix pour les questions ouvertes du backlog : avis publiés tout de suite, affichés sous le
-  pseudonyme ; mention « Fourni par » active pour un partenaire et absente pour les autres ;
-  bouton « Quitter » affiché par Max it au-dessus du jeu.
+  un en modèle A (une mini app par jeu) et deux en modèle B (hub, ouverts par lien direct) ;
+  l'un des hubs ne transmet pas les scores (pas de classement sur ses jeux).
+- Choix pour les questions ouvertes du backlog : avis publiés tout de suite ; mention
+  « Fourni par » active pour un partenaire et absente pour les autres.
+- Pseudo : au MVP, pas de profil ; un pseudo généré (« Joueur4821 ») s'affiche dans les
+  classements et sous les avis.
+- Écrans V2 (profil joueur, assistant IA, badges) : à part, avec une étiquette « V2 », hors du
+  parcours MVP, ouverts depuis le menu de démo.
+- Langues : français, anglais et arabe (lecture de droite à gauche) ; propriétés CSS logiques.
+  Les noms, descriptions des jeux et les avis restent en français.
+
+### Direction visuelle « kid & family friendly » (validée le 2026-10-11)
+- Fond clair crème, couleurs vives et chaleureuses (une par genre), orange #FF7900 en accent,
+  texte foncé sur l'orange pour le contraste.
+- Police ronde Nunito (fonts/, licence OFL, intégrée au fichier unique) ; 16 px pour le texte,
+  14 px au minimum.
+- Coins bien arrondis (22 px), boutons en pilule, bouton « Jouer » de 56 px, zones tactiles de 48 px.
+- Pastilles de genre illustrées (sans personnage ni marque), micro-animations douces, coupées si
+  le téléphone demande moins de mouvements.
+- Ton simple, positif et bienveillant (tutoiement). Classements ludiques : podium à médailles,
+  ma place mise en avant avec un encouragement.
 
 ### Menu de démo — ajouts Play
-Nouveau joueur (ni récents ni favoris) ; pays avec ou sans badge « Sans consommation de data » ;
-jeu momentanément indisponible ; ouverture par lien partagé ; lien vers un jeu indisponible.
+Langue (français, anglais, arabe) ; pays (Maroc, Sénégal) ; nouveau joueur (ni récents ni favoris) ;
+jeu momentanément indisponible ; lien partagé reçu par un ami qui a Max it, ou qui ne l'a pas
+(Android, iPhone) ; lien vers un jeu indisponible ; écrans V2.
 
 ### Visuels de référence Figma
 - Les écrans de reference/figma-play/ sont la maquette de l'équipe UI : ils font foi pour la
-  mise en page, les composants, les couleurs et les textes de Play.
-- Reproduire ces écrans au plus près. Les couleurs et tailles propres à Play vont dans
-  css/tokens.css, dans une section « Play ».
+  mise en page et les composants de Play. Couleurs et ton : direction « kid & family friendly ».
+- Les couleurs et tailles propres à Play vont dans css/tokens.css, dans une section « Play ».
 - Si un écran Figma contredit le backlog, ou si une US n'a pas d'écran Figma, me le signaler
   au lieu de trancher seul.
 
 ### Arbitrages Figma / backlog (validés)
-- Accueil : ordre de Figma (récemment joués avant l'éditorial) ; une seule carte « à la une »
-  au style des cartes « Discover » ; grille de genres de Figma avec les 10 genres et
-  « Tous les jeux » (à la place des rangées par genre) ; ajout de Recommandés, Mes favoris,
-  Nouveautés et Populaires ici (au lieu de « Best reviewed ») au style de « Recently played ».
-- Tuile : image, nom, « Gratuit » et note moyenne. Titre de la mini app : « Play ».
-- Fiche jeu : ajout du favori, des badges, des langues, du nombre de joueurs, du mode solo ou
-  multijoueur, du nombre d'avis et de « Signaler » ; ligne « Fourni par » seulement pour le
-  partenaire concerné ; « Donner mon avis » désactivé si le jeu n'a jamais été lancé ;
-  avis sous pseudonyme ; pas de « Voir tout » sur la galerie ni sur les jeux similaires.
-- Textes traduits en français, noms de jeux et de partenaires fictifs, visuels en SVG
-  aux formats de Figma.
+- Accueil : ordre du backlog (jeu à la une, récemment joués, Recommandé pour vous, mes favoris,
+  nouveautés, rangées par genre avec « Voir tout ») ; une seule carte « à la une » au style des
+  cartes « Discover » ; « Recommandé pour vous » = sélection du pays au MVP.
+- Tuile : icône, nom et note moyenne. Titre de la mini app : « Play ».
+- Fiche jeu : favori, langues, nombre de joueurs, mode solo ou multijoueur, nombre d'avis,
+  classements, « Signaler » ; ligne « Fourni par » seulement pour le partenaire concerné ;
+  « Donner mon avis » désactivé si le jeu n'a jamais été lancé ; pas de « Voir tout » sur la
+  galerie ni sur les jeux similaires. Badges (V2) : seulement sur l'écran pv3.
 - Écrans sans Figma : réutiliser les composants Figma, sans en inventer.
 
 

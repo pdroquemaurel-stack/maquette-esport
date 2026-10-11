@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<!-- Écran p09 — Page de Max it dans le store du téléphone (p09-store.html?store=android ou ?store=ios).
+     Ouvert par un lien partagé reçu par une personne qui n'a pas Max it (menu de démo).
+     Pas d'écran Figma : page du store simulée, sans logo réel, aux couleurs de Max it (tokens de base).
+     US : S07-07 — le lien mène à Google Play (Android) ou à l'App Store (iPhone) ; après l'installation
+     et la première connexion, l'ami arrive sur l'accueil de Max it : le lien vers la fiche n'est pas conservé. -->
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Store</title>
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-zone="play">
+<div class="cadre">
+  <div class="telephone store" id="telephone">
+    <div class="barre-etat" data-heure="9:31"></div>
+    <header class="entete-store">
+      <a href="#" data-action="retour" data-repli="00a" data-t-aria="commun.retour" id="retour"></a>
+      <span id="nom-store"></span>
+    </header>
+    <main class="contenu" id="page"></main>
+  </div>
+</div>
+
+<script src="js/data-play.js"></script>
+<script src="js/textes-play.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/play.js"></script>
+<script src="js/demo.js"></script>
+<script>
+  const ios = Nav.param("store") === "ios";
+  let etape = "installer";   // installer → installation → ouvrir
+
+  function rendre() {
+    const t = Play.t;
+    document.getElementById("telephone").classList.toggle("store-ios", ios);
+    document.getElementById("nom-store").textContent = t(ios ? "store.ios" : "store.android");
+    document.getElementById("retour").innerHTML = Play.icone("retour", "f-text");
+    document.title = t(ios ? "store.ios" : "store.android");
+
+    const action = etape === "ouvrir"
+      // Après l'installation : ouverture de Max it, première connexion, accueil de Max it (S07-07)
+      ? '<a class="bouton-store" href="00a-maxit-accueil.html" id="ouvrir">' + t("store.ouvrir") + "</a>"
+      : '<button class="bouton-store" id="installer"' + (etape === "installation" ? " disabled" : "") + ">" +
+        t(etape === "installation" ? "store.installation" : "store.installer") + "</button>" +
+        (etape === "installation" ? '<div class="store-progression"><i></i></div>' : "");
+
+    document.getElementById("page").innerHTML =
+      '<div class="store-app"><span class="icone-app" aria-hidden="true">M</span>' +
+      "<div><h1>Max it</h1><p>" + t("store.editeur") + "</p></div></div>" +
+      '<div class="store-infos"><span><b>' + t("store.note") + "</b></span><span><b>" + t("store.telechargements") + "</b></span><span><b>" + t("store.age") + "</b></span></div>" +
+      '<div class="store-action">' + action + "</div>" +
+      '<div class="store-captures" aria-hidden="true"><span></span><span></span><span></span></div>' +
+      '<p class="store-description">' + t("store.description") + "</p>" +
+      '<p class="aide-store">' + t("store.aide") + "</p>";
+
+    const installer = document.getElementById("installer");
+    if (installer && etape === "installer") installer.addEventListener("click", () => {
+      etape = "installation";
+      rendre();
+      setTimeout(() => { etape = "ouvrir"; rendre(); }, 1700);
+    });
+  }
+  Play.monter(rendre);
+</script>
+</body>
+</html>

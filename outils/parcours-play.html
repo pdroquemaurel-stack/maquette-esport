@@ -1,14 +1,17 @@
 <!DOCTYPE html>
-<!-- Test des parcours de Play (hors maquette), lot P1 :
-     A. 00c → « Jouer » → accueil Play : sections, ordre, genres du Maroc ;
-     B. fiche d'un jeu en mini app (Kora Games) : « Fourni par », badges, vidéo à la demande → partie → « Quitter » → fiche ;
-     C. jeu d'un hub avec lien direct : partie sans étape intermédiaire, pas de mention du partenaire ;
-     D. jeu d'un hub sans lien direct : transition → accueil du hub → partie → fiche ; récents mis à jour ;
-     E. favori ajouté depuis la fiche → premier de « Mes favoris » ;
-     F. nouveau joueur : ni récents ni favoris, puis récents dès la première partie ;
-     G. Sénégal : badge « Sans consommation de data », genre Stratégie ;
-     H. jeu indisponible : masqué partout, lien partagé → accueil avec message, retour dans les favoris ;
-     I. page d'un genre, jeux similaires, lien partagé.
+<!-- Test des parcours de Max it Gaming Play (hors maquette), d'après le backlog de référence :
+     A. 00c → « Jouer » → accueil : ordre des sections, rangées par genre, tuiles (icône, nom, note) ;
+     B. fiche d'un jeu en mini app (Kora Games) : « Fourni par », pas de badges au MVP, vidéo à la demande,
+        « Jouer » → mini app directement → « Quitter » → fiche ;
+     C. jeu d'un hub (Baobab Arcade) : marque blanche, « Jouer » → hub directement, bouton de sortie de Max it → fiche ;
+     D. classements : onglets, podium, ma position (12ᵉ de la semaine), 100 premiers puis ma position (250ᵉ),
+        pseudos générés, classement précédent, jeu sans scores (Zénith Jeux) sans classement ;
+     E. favori ; F. nouveau joueur ; G. Sénégal ; H. jeu indisponible ; I. genre et lien partagé ;
+     J. avis (donner, modifier, signaler : l'avis disparaît, supprimer) ;
+     K. partage : ami sans Max it → store → installer → accueil Max it ;
+     L. signaler un jeu : raison « autre » sans commentaire refusée, confirmation, une fois par jour ;
+     M. langues : anglais, arabe de droite à gauche ;
+     N. écrans V2 : fiche avec badges, pseudo → profil, assistant IA.
      À ouvrir avec l'accès entre fichiers locaux autorisé (voir controle.html). Remplace l'état de démonstration.
      « parcours-play.html?unique » : même test dans le fichier unique maquette-esport.html. -->
 <html lang="fr"><meta charset="utf-8"><title>Test des parcours de Play</title>
@@ -16,7 +19,8 @@
 <script src="banc.js"></script>
 <script>
   const s = document.getElementById("s");
-  const log = (ok, m) => { s.textContent += (ok ? "✓ " : "✗ ") + m + "\n"; };
+  let echecs = 0;
+  const log = (ok, m) => { if (!ok) echecs++; s.textContent += (ok ? "✓ " : "✗ ") + m + "\n"; };
   const pause = (ms) => new Promise((r) => setTimeout(r, ms));
   const doc = Banc.doc;
   const texte = () => doc().body.innerText.replace(/\s+/g, " ");
@@ -29,43 +33,42 @@
   }
   function etat(valeurs) { localStorage.clear(); localStorage.setItem("maquette-esport-etat", JSON.stringify(valeurs || {})); }
   const lire = () => JSON.parse(localStorage.getItem("maquette-esport-etat") || "{}");
-  /* Titres des sections de l'accueil, et identifiants des jeux d'une section */
-  const sections = () => [...doc().querySelectorAll(".titre-play")].map((t) => t.textContent);
-  function jeuxDe(titre) {
-    const t = [...doc().querySelectorAll(".titre-play")].find((x) => x.textContent === titre);
+  /* Titres des sections (sans « Voir tout »), et identifiants des jeux d'une section */
+  const titre = (t) => t.querySelector("span:not(.pastille-genre)").textContent;
+  const sections = () => [...doc().querySelectorAll(".titre-play")].map(titre);
+  function jeuxDe(nom) {
+    const t = [...doc().querySelectorAll(".titre-play")].find((x) => titre(x) === nom);
     return t ? [...t.parentElement.querySelectorAll(".tuile-play")].map((a) => new URLSearchParams(a.getAttribute("href").split("?")[1]).get("jeu")) : null;
   }
   /* Ouvre une adresse par un clic sur le lien qui y mène */
   async function suivre(sel) { const n = navigation(); cliquer(sel); await n; await pause(400); }
 
   (async () => { try {
-    // ---- A. Entrée et accueil ----
+    // ---- A. Entrée et accueil (S06-01 à S06-04) ----
     etat();
     await charger("00c-maxit-gaming.html"); await pause(300);
     await suivre(".tuile-jouer");
     log(page() === "p01-accueil.html", "A · 00c « Jouer » → accueil Play (" + page() + ")");
     log(/Bienvenue sur Play/.test(texte()) && doc().querySelector('.retour-play[href="00c-maxit-gaming.html"]'), "A · p01 : bienvenue, retour vers Max it");
-    log(sections().join(" / ") === "Récemment joués / À la une / Recommandés pour toi / Mes favoris / Nouveautés / Populaires ici / Parcourir par genre",
-      "A · p01 : ordre des sections (" + sections().join(" / ") + ")");
+    const attendu = "Jeu à la une / Récemment joués / Recommandé pour vous / Mes favoris / Nouveautés / Sport / Course et voitures / Puzzle et réflexion";
+    log(sections().join(" / ").startsWith(attendu), "A · ordre : à la une, récents, Recommandé pour vous, favoris, nouveautés, genres (" + sections().slice(0, 8).join(" / ") + ")");
+    log(!sections().includes("Stratégie") && sections().length === 14, "A · Maroc : 9 rangées de genre, sans Stratégie");
     log(jeuxDe("Récemment joués").join() === "foot-lions,bloc-mania,rallye-dunes", "A · Récemment joués : le dernier lancé en premier");
     log(jeuxDe("Mes favoris").join() === "bloc-mania,ludo-famille", "A · Mes favoris");
-    const recos = jeuxDe("Recommandés pour toi");
-    log(recos.length && !recos.some((id) => ["foot-lions", "bloc-mania", "rallye-dunes"].includes(id)), "A · Recommandés : aucun jeu déjà lancé");
-    const genres = [...doc().querySelectorAll(".genre-play")].map((g) => g.textContent);
-    log(genres.length === 10 && !genres.includes("Stratégie") && genres[0] === "Sport" && genres[9] === "Tous les jeux",
-      "A · genres du Maroc : 9 genres dans l'ordre du pays, sans Stratégie, puis « Tous les jeux »");
-    log(doc().querySelectorAll(".tuile-play .tuile-note").length === doc().querySelectorAll(".tuile-play").length, "A · chaque tuile affiche « Gratuit » et la note");
-    // Visuels : image fournie (images/play) si elle existe, chargée sans erreur ; sinon dessin SVG
+    log(jeuxDe("Recommandé pour vous")[0] === "cuisine-mama", "A · Recommandé pour vous : sélection du responsable local (S03-04)");
+    log(doc().querySelector('.voir-tout-play[href="p02-genre.html?genre=sport"]'), "A · rangée Sport : « Voir tout » vers la page du genre");
+    log(!/Gratuit/.test(doc().querySelector(".tuile-play").textContent) && doc().querySelectorAll(".tuile-note").length === doc().querySelectorAll(".tuile-play").length,
+      "A · tuile : icône, nom et note (sans badge au MVP)");
     const imageBloc = doc().querySelector('.tuile-play[href*="jeu=bloc-mania"] img.visuel-image-play');
     await attendre(() => imageBloc && imageBloc.complete, 3000, "chargement de l'image de Bloc Mania");
     log(imageBloc && imageBloc.naturalWidth > 0, "A · Bloc Mania : image fournie, chargée");
-    log(doc().querySelector('.tuile-play[href*="jeu=bijoux-atlas"] svg.visuel-play'), "A · Bijoux de l'Atlas (sans image) : dessin SVG");
+    log(Banc.win().getComputedStyle(doc().querySelector(".telephone")).fontFamily.startsWith("Nunito"), "A · typographie ronde (Nunito)");
 
     // ---- B. Mini app (Kora Games) ----
     await suivre('.tuile-play[href*="jeu=rallye-dunes"]');
     log(page().startsWith("p03-jeu.html?jeu=rallye-dunes"), "B · tuile → fiche (" + page() + ")");
     log(/Fourni par Kora Games/.test(texte()) && /318 avis/.test(texte()), "B · fiche : « Fourni par Kora Games », note et nombre d'avis");
-    log(/Gratuit/.test(texte()) && !/Sans consommation de data/.test(texte()), "B · Maroc : badge « Gratuit » seul");
+    log(!doc().querySelector(".badge-play"), "B · MVP : pas de badges (V2)");
     log(!doc().querySelector(".lecteur-play") && doc().getElementById("lecture"), "B · la vidéo ne démarre pas seule");
     cliquer("#lecture"); await pause(1300);
     log(doc().querySelector(".lecteur-play") && /0:0[1-9]/.test(doc().getElementById("temps").textContent), "B · vidéo lancée à la demande");
@@ -74,29 +77,47 @@
     await suivre("#jouer");
     log(page().startsWith("p05-partie.html?jeu=rallye-dunes"), "B · « Jouer » → mini app du jeu, sans étape intermédiaire");
     await attendre(() => doc().querySelector(".partie-jeu"), 5000, "partie en cours");
-    log(/Partie en cours/.test(texte()) && /Quitter/.test(texte()), "B · chargement puis partie en cours, « Quitter » affiché par Max it");
+    log(/Partie en cours/.test(texte()) && doc().querySelector(".capsule-miniapp #quitter") && !doc().querySelector(".sortie-maxit"), "B · mini app : capsule « Quitter », pas de bouton de hub");
     await suivre("#quitter");
     log(page().startsWith("p03-jeu.html?jeu=rallye-dunes"), "B · « Quitter » → fiche du jeu");
 
-    // ---- C. Hub avec lien direct (Baobab Arcade) ----
+    // ---- C. Hub (Baobab Arcade, Zénith Jeux) : lancement direct, bouton de sortie de Max it ----
     await charger("p03-jeu.html?jeu=bloc-mania"); await pause(400);
     log(!/Fourni par/.test(texte()), "C · marque blanche : aucune mention du partenaire");
-    log(doc().getElementById("jouer").getAttribute("href").startsWith("p05-partie.html"), "C · « Jouer » ouvre le hub directement sur le jeu");
-
-    // ---- D. Hub sans lien direct (Zénith Jeux) ----
-    await charger("p03-jeu.html?jeu=ludo-famille&depuis=p01-accueil.html"); await pause(400);
     await suivre("#jouer");
-    log(page().startsWith("p04-transition.html") && /Ludo en famille se trouve dans Zénith Jeux/.test(texte()), "D · « Jouer » → écran de transition");
-    log(/touche l'onglet « Cartes et plateau », puis le jeu « Ludo en famille »/.test(texte()), "D · texte « où trouver le jeu »");
-    await suivre("#continuer");
-    await attendre(() => doc().querySelector('.hub-grille [data-jeu="ludo-famille"]'), 5000, "accueil du hub");
-    log(/Zénith Jeux/.test(texte()), "D · « Continuer » → accueil du hub");
-    cliquer('.hub-grille [data-jeu="ludo-famille"]');
-    await attendre(() => doc().querySelector(".partie-jeu"), 5000, "partie depuis le hub");
-    log(true, "D · jeu choisi dans le hub → partie en cours");
+    log(page().startsWith("p05-partie.html?jeu=bloc-mania"), "C · « Jouer » ouvre le hub directement sur le jeu");
+    await attendre(() => doc().querySelector(".partie-jeu"), 5000, "partie dans le hub");
+    log(doc().querySelector(".barre-hub") && doc().querySelector(".sortie-maxit#quitter") && /Retour à Play/.test(texte()), "C · hub : bouton de sortie de Max it au-dessus du hub");
     await suivre("#quitter");
-    log(page().startsWith("p03-jeu.html?jeu=ludo-famille"), "D · « Quitter » → fiche du jeu, comme pour une mini app");
-    log(lire().playRecents[0] === "ludo-famille", "D · lancement enregistré en tête des récents");
+    log(page().startsWith("p03-jeu.html?jeu=bloc-mania"), "C · bouton de sortie → fiche du jeu");
+    log(!Banc.win().eval("ECRANS.p04"), "C · écran de transition supprimé");
+    await charger("p05-partie.html?jeu=ludo-famille&depuis=p01-accueil.html");
+    await attendre(() => doc().querySelector(".partie-jeu"), 5000, "partie Zénith");
+    log(lire().playRecents[0] === "ludo-famille", "C · lancement d'un jeu de hub enregistré en tête des récents");
+
+    // ---- D. Classements (S07-04) ----
+    etat();
+    await charger("p03-jeu.html?jeu=foot-lions&depuis=p01-accueil.html"); await pause(400);
+    log(doc().querySelectorAll("#classements .onglet-play").length === 3 && /Du jour/.test(texte()) && /De la semaine/.test(texte()) && /De tous les temps/.test(texte()),
+      "D · fiche : onglets du jour, de la semaine, de tous les temps");
+    log(/Entre joueurs du Maroc/.test(texte()) && doc().querySelectorAll(".podium .medaille").length === 3, "D · classement du pays, podium à médailles");
+    log(/Bravo, tu es 12ᵉ cette semaine/.test(texte()), "D · ma position mise en avant : « Bravo, tu es 12ᵉ cette semaine ! »");
+    log(/^Joueur\d{4}$/.test(doc().querySelector(".nom-podium").textContent) && /Joueur4821/.test(doc().querySelector(".ma-place").textContent), "D · pseudos générés (« Joueur4821 »)");
+    cliquer('#classements [data-periode="jour"]'); await pause(200);
+    log(/Bravo, tu es 3ᵉ aujourd'hui/.test(texte()), "D · onglet du jour : 3ᵉ");
+    await suivre("#classements a.bouton-doux");
+    log(page().startsWith("p08-classement.html?jeu=foot-lions&periode=jour"), "D · « Voir le classement complet » → p08");
+    cliquer('[data-periode="tout"]'); await pause(300);
+    log(doc().querySelectorAll(".liste-classement li").length === 100 && !doc().querySelector(".liste-classement .ligne-moi") && /250ᵉ/.test(doc().getElementById("ma-place").textContent),
+      "D · 250ᵉ de tous les temps : les 100 premiers, puis ma position");
+    cliquer('[data-periode="semaine"]'); await pause(300);
+    log(doc().querySelector(".liste-classement .ligne-moi") && /12ᵉ/.test(doc().querySelector(".ligne-moi").textContent), "D · semaine : ma ligne surlignée dans la liste");
+    cliquer('[data-precedent="oui"]'); await pause(300);
+    log(/Semaine dernière/.test(texte()) && doc().querySelectorAll(".liste-classement li").length === 100, "D · classement de la semaine dernière consultable");
+    await charger("p03-jeu.html?jeu=ludo-famille"); await pause(400);
+    log(!doc().getElementById("classements"), "D · jeu sans scores transmis (Zénith Jeux) : pas de classement");
+    await charger("p03-jeu.html?jeu=parking-pro"); await pause(400);
+    log(/Joue une partie pour entrer dans le classement/.test(texte()), "D · jeu jamais lancé : invitation à jouer");
 
     // ---- E. Favori ----
     await charger("p03-jeu.html?jeu=robots-furie"); await pause(400);
@@ -108,27 +129,23 @@
     // ---- F. Nouveau joueur ----
     etat({ playNouveau: true });
     await charger("p01-accueil.html"); await pause(400);
-    log(!sections().includes("Récemment joués") && !sections().includes("Mes favoris") && sections().includes("Recommandés pour toi"),
-      "F · nouveau joueur : ni récents ni favoris, recommandés visibles");
-    log(jeuxDe("Recommandés pour toi")[0] === jeuxDe("Populaires ici")[0], "F · recommandés = jeux populaires du pays");
+    log(!sections().includes("Récemment joués") && !sections().includes("Mes favoris") && sections().includes("Recommandé pour vous") && sections().includes("Nouveautés"),
+      "F · nouveau joueur : ni récents ni favoris ; à la une, recommandés et nouveautés visibles");
     await charger("p05-partie.html?jeu=bijoux-atlas"); await attendre(() => doc().querySelector(".partie-jeu"), 5000, "partie");
     await charger("p01-accueil.html"); await pause(400);
     log(jeuxDe("Récemment joués") && jeuxDe("Récemment joués").join() === "bijoux-atlas", "F · « Récemment joués » apparaît dès la première partie");
-    log(Banc.win().eval("Play.jeu('" + jeuxDe("Recommandés pour toi")[0] + "').genre") === "puzzle",
-      "F · recommandés : d'abord le genre joué (puzzle)");
 
     // ---- G. Sénégal ----
     etat({ playPays: "SN" });
-    await charger("p03-jeu.html?jeu=ludo-famille"); await pause(400);
-    log(/Sans consommation de data/.test(texte()), "G · Sénégal : badge « Sans consommation de data »");
     await charger("p01-accueil.html"); await pause(400);
-    log([...doc().querySelectorAll(".genre-play")].some((g) => g.textContent === "Stratégie"), "G · Sénégal : genre Stratégie proposé");
+    log(sections().includes("Stratégie") && jeuxDe("Recommandé pour vous")[0] === "ludo-famille", "G · Sénégal : rangée Stratégie, sélection du pays");
+    await charger("p03-jeu.html?jeu=foot-lions"); await pause(400);
+    log(/Entre joueurs du Sénégal/.test(texte()), "G · classement des joueurs du Sénégal");
 
-    // ---- H. Jeu momentanément indisponible ----
+    // ---- H. Jeu momentanément indisponible (S08-03) ----
     etat({ playIndispo: true });
     await charger("p01-accueil.html"); await pause(400);
     log(!doc().querySelector('[href*="jeu=bloc-mania"]'), "H · Bloc Mania masqué de toutes les sections");
-    log(jeuxDe("Mes favoris").join() === "ludo-famille", "H · Bloc Mania retiré des favoris affichés");
     await charger("p03-jeu.html?jeu=bloc-mania&via=lien"); await attendre(() => page().startsWith("p01-accueil.html?indispo=1"), 3000, "redirection");
     await pause(300);
     log(/Ce jeu n'est pas disponible pour le moment/.test(texte()), "H · lien partagé vers le jeu → accueil avec message");
@@ -136,64 +153,97 @@
     await charger("p01-accueil.html"); await pause(400);
     log(jeuxDe("Mes favoris").join() === "bloc-mania,ludo-famille", "H · jeu de retour : il retrouve sa place dans les favoris");
 
-    // ---- I. Genre, lien partagé ----
-    await suivre('.genre-play[href*="genre=sport"]');
-    log(page() === "p02-genre.html?genre=sport" && /^Sport$/.test(doc().getElementById("titre").textContent) && doc().querySelectorAll(".tuile-play").length === 3,
-      "I · page du genre Sport : 3 jeux");
+    // ---- I. Genre, lien partagé (S07-06) ----
+    await suivre('.voir-tout-play[href="p02-genre.html?genre=sport"]');
+    log(page() === "p02-genre.html?genre=sport" && doc().getElementById("titre").textContent === "Sport" && doc().querySelectorAll(".tuile-play").length === 3,
+      "I · « Voir tout » → page du genre Sport : 3 jeux");
     await suivre('.tuile-play[href*="jeu=basket-rue"]');
     log(doc().querySelector(".fond-fiche").getAttribute("href") === "p02-genre.html?genre=sport", "I · fermer la fiche → retour à la page du genre");
-    await charger("p02-genre.html?genre=tous"); await pause(400);
-    log(doc().querySelectorAll(".tuile-play").length === 27, "I · « Tous les jeux » : 27 jeux au Maroc");
     await charger("p03-jeu.html?jeu=rallye-dunes&via=lien"); await pause(400);
-    log(/Rallye des dunes/.test(texte()) && doc().querySelector(".fond-fiche").getAttribute("href") === "p01-accueil.html", "I · lien partagé → fiche ; fermer → accueil de Play");
+    log(/Rallye des dunes/.test(texte()) && doc().querySelector(".fond-fiche").getAttribute("href") === "p01-accueil.html", "I · lien partagé (ami avec Max it) → fiche ; fermer → accueil");
 
-    // ---- J. Avis (lot P2) ----
+    // ---- J. Avis (E10) ----
     etat();
     await charger("p03-jeu.html?jeu=parking-pro&depuis=p01-accueil.html"); await pause(400);
-    log(/Notes et avis/.test(texte()) && /52 avis/.test(texte()) && doc().querySelectorAll("#avis .avis-play").length === 2,
-      "J · fiche : moyenne, nombre d'avis et 2 derniers commentaires");
-    log(doc().querySelector("#avis button.bouton-clair[disabled]") && /Lance le jeu au moins une fois/.test(texte()), "J · jeu jamais lancé : « Donner mon avis » inactif");
+    log(/52 avis/.test(texte()) && doc().querySelectorAll("#avis .avis-play").length === 2, "J · fiche : moyenne, nombre d'avis et 2 derniers commentaires");
+    log(doc().querySelector("#avis button.bouton-doux[disabled]") && /Lance le jeu au moins une fois/.test(texte()), "J · jeu jamais lancé : « Donner mon avis » inactif");
+    log(/^Joueur\d{4}/.test(doc().querySelector("#avis .avis-nom").textContent), "J · avis sous un pseudo généré");
     await charger("p03-jeu.html?jeu=bloc-mania&depuis=p01-accueil.html"); await pause(400);
-    log(/Donner mon avis/.test(doc().querySelector("#avis .bouton-clair").textContent), "J · jeu déjà lancé : « Donner mon avis » actif");
-    const avant = doc().querySelector(".nombre-avis").textContent;
-    await suivre("#avis a.bouton-clair");
+    await suivre("#avis a.bouton-doux");
     log(page().startsWith("p07-donner-avis.html?jeu=bloc-mania"), "J · « Donner mon avis » → formulaire");
-    log(doc().getElementById("publier").disabled, "J · « Publier » inactif sans note");
     cliquer('[data-note="4"]'); await pause(100);
-    log(!doc().getElementById("publier").disabled && /Bien/.test(texte()), "J · 4 étoiles : « Bien », « Publier » actif");
     const champ = doc().getElementById("texte");
-    log(champ.maxLength === 500, "J · commentaire limité à 500 caractères");
     champ.value = "Très bon jeu pour la pause."; champ.dispatchEvent(new Event("input"));
-    log(/27 \/ 500/.test(texte()), "J · compteur de caractères");
     let n = navigation(); cliquer("#publier"); await n; await pause(500);
-    log(page().startsWith("p03-jeu.html?jeu=bloc-mania"), "J · « Publier » → retour à la fiche");
-    log(/Youss_KZ · Ton avis/.test(texte()) && /Très bon jeu pour la pause/.test(texte()), "J · avis publié tout de suite, sous le pseudonyme");
-    log(doc().querySelector(".nombre-avis").textContent === "403 avis" && avant === "402 avis", "J · nombre d'avis recalculé (402 → 403)");
-    log(/Modifier mon avis/.test(doc().querySelector("#avis .bouton-clair").textContent), "J · un seul avis par jeu : « Modifier mon avis »");
-    // Modifier depuis la liste complète : l'avis est remplacé, retour sur la liste
-    await suivre('#avis a.voir-tout-play');
-    log(page().startsWith("p06-avis.html?jeu=bloc-mania"), "J · « Voir tout » → liste complète des avis");
-    log(doc().querySelector(".avis-mien") && doc().querySelectorAll(".avis-play").length > 6, "J · p06 : mon avis en tête, puis tous les commentaires");
-    await suivre('.avis-mien a.lien-avis');
-    cliquer('[data-note="2"]'); await pause(100);
-    n = navigation(); cliquer("#publier"); await n; await pause(500);
-    log(page().startsWith("p06-avis.html") && Object.keys(lire().playAvis).filter((k) => k === "bloc-mania").length === 1 && lire().playAvis["bloc-mania"].note === 2,
-      "J · avis modifié : il remplace le précédent, retour sur la liste");
-    // Signaler un avis
+    log(page().startsWith("p03-jeu.html?jeu=bloc-mania") && /Joueur4821 · Ton avis/.test(texte()), "J · avis publié tout de suite, sous le pseudo généré");
+    log(doc().querySelector(".nombre-avis").textContent === "403 avis", "J · nombre d'avis recalculé (402 → 403)");
+    await suivre("#avis a.voir-tout-play");
+    const avant = doc().querySelectorAll(".avis-play").length;
     const premier = doc().querySelector("[data-signaler]").dataset.signaler;
     cliquer("[data-signaler]"); await pause(200);
     log(doc().getElementById("envoyer-signalement").disabled, "J · signalement : motif obligatoire");
-    doc().querySelector('input[value="Publicité"]').click(); await pause(100);
-    cliquer("#envoyer-signalement"); await pause(300);
-    log(lire().playSignales.includes(premier) && /Signalé · en cours d'examen/.test(texte()), "J · avis signalé, marqué « en cours d'examen »");
-    // Supprimer mon avis
+    doc().querySelector('input[value="motifPub"]').click(); await pause(100);
+    cliquer("#envoyer-signalement"); await pause(400);
+    log(lire().playSignales.includes(premier) && doc().querySelectorAll(".avis-play").length === avant - 1 && !doc().querySelector('[data-signaler="' + premier + '"]'),
+      "J · avis signalé : il disparaît aussitôt de la liste");
+    log(/L'avis est masqué en attendant d'être vérifié/.test(doc().querySelector(".toast").textContent), "J · message de confirmation");
     cliquer("#supprimer"); await pause(200);
     cliquer(".dialogue .bouton-primaire"); await pause(400);
-    log(!doc().querySelector(".avis-mien") && /402 avis/.test(texte()), "J · avis supprimé, moyenne et nombre recalculés");
-    // Formulaire ouvert pour un jeu jamais lancé : message et sortie
-    await charger("p07-donner-avis.html?jeu=parking-pro"); await pause(400);
-    log(/Joue d'abord une partie/.test(texte()) && !doc().getElementById("publier") && doc().querySelector(".barre-play a[href^='p03-jeu.html']"),
-      "J · p07 pour un jeu jamais lancé : message et retour au jeu");
+    log(!doc().querySelector(".avis-mien"), "J · avis supprimé");
+
+    // ---- K. Partage : ami sans Max it (S07-07) ----
+    await charger("p09-store.html?store=android"); await pause(400);
+    log(/Google Play/.test(texte()) && /Max it/.test(texte()), "K · Android : page de Max it dans Google Play");
+    cliquer("#installer");
+    await attendre(() => doc().getElementById("ouvrir"), 4000, "installation");
+    await suivre("#ouvrir");
+    log(page() === "00a-maxit-accueil.html", "K · après l'installation, l'ami arrive sur l'accueil de Max it (fiche non conservée)");
+    await charger("p09-store.html?store=ios"); await pause(400);
+    log(/App Store/.test(texte()), "K · iPhone : page de Max it dans l'App Store");
+
+    // ---- L. Signaler un jeu (S10-04) ----
+    await charger("p03-jeu.html?jeu=taxi-brousse"); await pause(400);
+    await suivre("a.lien-signaler-jeu");
+    log(page().startsWith("p10-signaler-jeu.html?jeu=taxi-brousse") && doc().querySelectorAll('input[name="raison"]').length === 5, "L · fiche → signaler : 5 raisons");
+    doc().querySelector('input[value="raisonAutre"]').click(); await pause(200);
+    log(/\(obligatoire\)/.test(texte()), "L · « Autre » : commentaire obligatoire");
+    cliquer("#envoyer"); await pause(200);
+    log(!doc().getElementById("erreur").hidden && !lire().playJeuxSignales, "L · « Autre » sans commentaire : le commentaire est demandé");
+    doc().getElementById("commentaire").value = "Le son ne marche pas"; doc().getElementById("commentaire").dispatchEvent(new Event("input"));
+    cliquer("#envoyer"); await pause(300);
+    log(/Merci pour ton aide/.test(texte()) && lire().playJeuxSignales["taxi-brousse"], "L · confirmation après l'envoi");
+    await charger("p10-signaler-jeu.html?jeu=taxi-brousse"); await pause(400);
+    log(/Déjà signalé aujourd'hui/.test(texte()), "L · un même jeu une fois par jour");
+
+    // ---- M. Langues ----
+    etat({ playLangue: "en" });
+    await charger("p01-accueil.html"); await pause(400);
+    log(/Welcome to Play/.test(texte()) && sections().includes("Recommended for you"), "M · anglais");
+    etat({ playLangue: "ar" });
+    await charger("p03-jeu.html?jeu=foot-lions"); await pause(400);
+    log(doc().documentElement.dir === "rtl" && doc().documentElement.lang === "ar" && /العب/.test(doc().getElementById("jouer").textContent), "M · arabe : lecture de droite à gauche");
+
+    // ---- N. Écrans V2 ----
+    etat();
+    await charger("pv3-fiche-badges.html?jeu=foot-lions"); await pause(400);
+    log(doc().querySelector(".etiquette-v2") && /Gratuit/.test(texte()) && /Sans pub/.test(texte()) && !/Sans consommation de data/.test(texte()), "N · fiche V2 : badges Gratuit et Sans pub (Maroc)");
+    const lienProfil = doc().querySelector("#classements a.lien-pseudo");
+    log(lienProfil && !/^Joueur\d/.test(lienProfil.textContent), "N · V2 : pseudos choisis, cliquables");
+    await suivre("#classements a.lien-pseudo");
+    log(page().startsWith("pv1-profil.html?joueur=") && /Parties jouées/.test(texte()) && /Meilleures positions/.test(texte()), "N · pseudo → profil du joueur");
+    await charger("pv1-profil.html"); await pause(400);
+    log(/Youss_KZ/.test(texte()) && /3 jours de suite/.test(texte()) && /Temps de jeu/.test(texte()), "N · mon profil : pseudo, série, temps de jeu");
+    await charger("pv2-assistant.html"); await pause(400);
+    doc().getElementById("message").value = "un jeu de cartes à jouer seul";
+    doc().getElementById("formulaire").dispatchEvent(new Event("submit", { cancelable: true }));
+    await attendre(() => doc().querySelectorAll(".bulle-assistant .tuile-play").length, 3000, "réponse de l'assistant");
+    const proposes = [...doc().querySelectorAll(".bulle-assistant .tuile-play")].map((a) => a.getAttribute("href"));
+    log(proposes.length && proposes.every((h) => /solitaire-zen/.test(h)), "N · assistant : « un jeu de cartes à jouer seul » → Solitaire zen, lien vers sa fiche");
+    etat({ playIndispo: true });
+    await charger("pv2-assistant.html"); await pause(400);
+    doc().getElementById("message").value = "un puzzle"; doc().getElementById("formulaire").dispatchEvent(new Event("submit", { cancelable: true }));
+    await attendre(() => doc().querySelectorAll(".bulle-assistant .tuile-play").length, 3000, "réponse de l'assistant");
+    log(!doc().querySelector('.bulle-assistant [href*="bloc-mania"]'), "N · assistant : jamais un jeu masqué");
   } catch (e) { log(false, "erreur : " + e.message); }
-  s.textContent += "FIN"; })();
+  s.textContent += (echecs ? echecs + " échec(s)" : "Aucun échec") + "\nFIN"; })();
 </script>

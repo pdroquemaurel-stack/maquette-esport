@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<!-- Écran p10 — Signaler un problème avec un jeu (p10-signaler-jeu.html?jeu=bloc-mania&depuis=…),
+     ouvert depuis le lien en bas de la fiche.
+     Pas d'écran Figma : composants de Play (cartes à cocher, champ de commentaire, bouton orange).
+     US : S10-04 — cinq raisons (le jeu ne se lance pas, plante ou bloque, contenu inapproprié,
+     trop de publicité, autre) ; commentaire facultatif, obligatoire pour « autre » ; signalement envoyé
+     au responsable local du pays ; un même jeu au plus une fois par jour ; confirmation après l'envoi. -->
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Signaler un problème</title>
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-zone="play">
+<div class="cadre">
+  <div class="telephone play">
+    <div class="barre-etat" data-heure="9:30"></div>
+    <header class="entete-simple-play">
+      <a class="retour-play" id="retour" data-t-aria="commun.retour"></a>
+      <h1 data-t="signalerJeu.titre">Signaler un problème</h1>
+    </header>
+    <main class="contenu" id="page"></main>
+    <div class="barre-action barre-play" id="barre"></div>
+  </div>
+</div>
+
+<script src="js/data-play.js"></script>
+<script src="js/textes-play.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/play.js"></script>
+<script src="js/demo.js"></script>
+<script>
+  const jeu = Play.jeuDeLaPage();
+  const RAISONS = ["raisonLance", "raisonPlante", "raisonInapproprie", "raisonPub", "raisonAutre"];
+  let raison = null;
+  let envoye = false;
+
+  function fiche() {
+    return Play.v2() ? "pv3-fiche-badges.html?jeu=" + jeu.id : Play.url("p03-jeu.html", { jeu: jeu.id, depuis: Play.depuis() });
+  }
+
+  function rendre() {
+    if (!jeu) return;
+    if (!Play.disponible(jeu)) return ouvrirPage("p01-accueil.html?indispo=1");
+    Play.appliquerLangue();
+    const t = Play.t;
+    const retour = document.getElementById("retour");
+    retour.innerHTML = Play.icone("retour");
+    retour.href = fiche();
+    const barre = document.getElementById("barre");
+
+    // Après l'envoi, ou si le jeu a déjà été signalé aujourd'hui : confirmation et retour au jeu
+    if (envoye || Play.dejaSignaleAujourdhui(jeu.id)) {
+      document.getElementById("page").innerHTML = '<div class="confirmation-play" role="status">' +
+        '<div class="rond-ok">' + Play.icone(envoye ? "coche" : "drapeau", "f-play-free") + "</div>" +
+        "<h2>" + t(envoye ? "signalerJeu.merciTitre" : "signalerJeu.dejaTitre") + "</h2>" +
+        "<p>" + (envoye ? t("signalerJeu.merciTexte") : t("signalerJeu.dejaTexte", { nom: jeu.nom })) + "</p></div>";
+      barre.innerHTML = '<a class="bouton-jouer" href="' + fiche() + '">' + t("signalerJeu.retourJeu") + "</a>";
+      return;
+    }
+
+    const autre = raison === "raisonAutre";
+    document.getElementById("page").innerHTML = '<div class="page-signaler">' +
+      '<div class="jeu-avis" style="padding: 0"><span class="vignette-cible">' + Play.visuel(jeu, 60, 60, "tuile") + "</span>" +
+      "<div><strong>" + jeu.nom + "</strong><small>" + Play.nomGenre(jeu.genre) + "</small></div></div>" +
+      "<h2>" + t("signalerJeu.question") + "</h2>" +
+      '<fieldset class="raisons-play"><legend class="sr-only" hidden>' + t("signalerJeu.question") + "</legend>" +
+      RAISONS.map((r) => '<label class="raison-play"><input type="radio" name="raison" value="' + r + '"' + (r === raison ? " checked" : "") + ">" +
+        "<span>" + t("signalerJeu." + r) + "</span></label>").join("") + "</fieldset>" +
+      '<h2><label for="commentaire">' + t("signalerJeu.commentaire") + " <small>" + t(autre ? "signalerJeu.obligatoire" : "signalerJeu.facultatif") + "</small></label></h2>" +
+      '<textarea class="champ-avis" id="commentaire" rows="4" maxlength="500" placeholder="' + t("signalerJeu.placeholder") + '"></textarea>' +
+      '<p class="erreur-play" id="erreur" role="alert" hidden>' + t("signalerJeu.erreur") + "</p>" +
+      '<div class="fin-contenu"></div></div>';
+    barre.innerHTML = '<button class="bouton-jouer" id="envoyer"' + (raison ? "" : " disabled") + ">" + t("signalerJeu.envoyer") + "</button>";
+
+    const commentaire = document.getElementById("commentaire");
+    commentaire.value = brouillon;
+    commentaire.addEventListener("input", () => {
+      brouillon = commentaire.value;
+      document.getElementById("erreur").hidden = true;
+      commentaire.classList.remove("en-erreur");
+    });
+    document.querySelectorAll('input[name="raison"]').forEach((r) => r.addEventListener("change", () => { raison = r.value; rendre(); }));
+    document.getElementById("envoyer").addEventListener("click", envoyer);
+  }
+  let brouillon = "";
+
+  /* « Autre » sans commentaire : le commentaire est demandé (S10-04) */
+  function envoyer() {
+    if (!raison) return;
+    const commentaire = document.getElementById("commentaire");
+    if (raison === "raisonAutre" && !commentaire.value.trim()) {
+      document.getElementById("erreur").hidden = false;
+      commentaire.classList.add("en-erreur");
+      commentaire.focus();
+      return;
+    }
+    Play.signalerJeu(jeu.id);
+    envoye = true;
+    rendre();
+  }
+
+  Play.monter(rendre);
+</script>
+</body>
+</html>

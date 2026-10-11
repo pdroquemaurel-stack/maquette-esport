@@ -1,9 +1,38 @@
-/* Fonctions communes aux écrans de Play (p01 à p05) : catalogue visible dans le pays,
-   historique du joueur (récents, favoris, lancements), recommandations, visuels SVG des jeux,
-   tuiles, rangées et feuilles du bas. Les données viennent de js/data-play.js ;
+/* Fonctions communes aux écrans de Max it Gaming Play (p01 à p10, pv1 à pv3) : langue et sens de lecture,
+   catalogue visible dans le pays, historique du joueur (récents, favoris, lancements), pseudos,
+   classements, avis, visuels SVG des jeux et des genres, tuiles, rangées et feuilles du bas.
+   Les données viennent de js/data-play.js, les textes de js/textes-play.js ;
    l'état de la démo est mémorisé par js/nav.js (Etat). */
 
 const Play = (function () {
+
+  /* =====================================================================
+     Langue : français, anglais ou arabe (menu de démo) ; l'arabe se lit de droite à gauche
+     ===================================================================== */
+
+  function langue() { return TEXTES_PLAY[Etat.get("playLangue")] ? Etat.get("playLangue") : "fr"; }
+  function rtl() { return langue() === "ar"; }
+
+  /* Texte traduit : t("accueil.titre"), t("commun.avis", { n: 12 }) ; repli sur le français */
+  function t(cle, variables) {
+    const valeur = cle in TEXTES_PLAY[langue()] ? TEXTES_PLAY[langue()][cle] : TEXTES_PLAY.fr[cle];
+    if (valeur === undefined) return cle;
+    return typeof valeur === "function" ? valeur(variables || {}) : valeur;
+  }
+
+  /* Langue et sens de la page, et textes fixes du HTML :
+     data-t="cle" (contenu), data-t-aria="cle" (étiquette pour les lecteurs d'écran) */
+  function appliquerLangue() {
+    document.documentElement.lang = langue();
+    document.documentElement.dir = rtl() ? "rtl" : "ltr";
+    document.querySelectorAll("[data-t]").forEach((e) => { e.textContent = t(e.dataset.t); });
+    document.querySelectorAll("[data-t-aria]").forEach((e) => { e.setAttribute("aria-label", t(e.dataset.tAria)); });
+  }
+
+  /* Nombre avec la virgule en français (« 4,5 ») */
+  function decimal(n) { return langue() === "fr" ? n.toFixed(1).replace(".", ",") : n.toFixed(1); }
+  /* Nombre avec séparateur de milliers (« 12 400 ») */
+  function entier(n) { return langue() === "fr" ? String(n).replace(/\B(?=(\d{3})+(?!\d))/g, " ") : String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
 
   /* =====================================================================
      Catalogue visible par le joueur
@@ -11,14 +40,16 @@ const Play = (function () {
 
   function pays() { return Etat.get("playPays") || PLAY.paysParDefaut; }
   function infosPays() { return PLAY.pays[pays()]; }
+  function nomPays() { return t("pays." + pays()); }
   function jeu(id) { return PLAY.jeux.find((j) => j.id === id) || null; }
   function partenaire(j) { return PLAY.partenaires[j.partenaire]; }
   function genre(id) { return PLAY.genres.find((g) => g.id === id) || null; }
+  function nomGenre(id) { return t("genre." + id); }
 
-  /* Jeux momentanément indisponibles (S08-04) : forcé par le menu de démo */
+  /* Jeux momentanément indisponibles (S08-03) : forcé par le menu de démo */
   function indisponibles() { return Etat.get("playIndispo") ? [PLAY.demo.jeuIndisponible] : []; }
 
-  /* Un jeu est visible s'il est proposé dans le pays (S02-04) et disponible (S08-04) */
+  /* Un jeu est visible s'il est proposé dans le pays (S02-04) et disponible (S08-03) */
   function disponible(j) {
     return !!j && !(j.absentDe || []).includes(pays()) && !indisponibles().includes(j.id);
   }
@@ -46,7 +77,7 @@ const Play = (function () {
   function recents() { return idsRecents().map(jeu).filter(disponible).slice(0, 10); }
 
   /* Mes favoris : le dernier ajouté en premier (S09-01).
-     Un favori indisponible est seulement masqué : il retrouve sa place quand il revient (S08-04). */
+     Un favori indisponible est seulement masqué : il retrouve sa place quand il revient (S08-03). */
   function favoris() { return idsFavoris().map(jeu).filter(disponible); }
   function estFavori(id) { return idsFavoris().includes(id); }
   function basculerFavori(id) {
@@ -57,22 +88,67 @@ const Play = (function () {
     return ajoute;
   }
 
-  /* Chaque lancement alimente les récents et les recommandations (S08-01) */
+  /* Chaque lancement alimente les récents, les statistiques et les classements (S08-01) */
   function enregistrerLancement(id) {
     Etat.set("playRecents", [id].concat(idsRecents().filter((x) => x !== id)).slice(0, 10));
     const lances = idsLances();
     if (!lances.includes(id)) Etat.set("playLances", lances.concat(id));
   }
 
+  /* Le joueur ne peut noter qu'un jeu qu'il a lancé au moins une fois (S10-01) */
+  function aLance(id) { return idsLances().includes(id); }
+
+  /* =====================================================================
+     Pseudos (S11-01) : au MVP, pas de profil joueur ; un pseudo généré automatiquement
+     (« Joueur4821 ») s'affiche dans les classements et sous les avis.
+     Sur les écrans V2 (pv…, ou « v2=1 »), le pseudo choisi s'affiche et ouvre le profil.
+     ===================================================================== */
+
+  function v2() { return /^pv/.test(pageCourante()) || Nav.param("v2") === "1"; }
+
+  /* Pseudo choisi du joueur (commun avec la plateforme de tournois) */
+  function pseudo() { return Etat.get("pseudo") || PLAY.joueur.pseudo; }
+
+  /* Nombre tiré d'un texte : valeurs fictives stables d'une page à l'autre */
+  function graine(texte) { return String(texte).split("").reduce((n, c) => (n * 31 + c.charCodeAt(0)) % 99991, 7); }
+
+  /* Pseudo généré d'un autre joueur : « Joueur » + 4 chiffres tirés de son pseudo */
+  function pseudoGenere(nom) {
+    let numero = 1000 + (graine(nom) * 7919) % 9000;
+    if (numero === 4821) numero = 4822;
+    return "Joueur" + numero;
+  }
+  /* Nom affiché d'un joueur, et le mien */
+  function nomAffiche(nom) { return v2() ? nom : pseudoGenere(nom); }
+  function monNom() { return v2() ? pseudo() : PLAY.joueur.pseudoGenere; }
+
+  /* Lien vers le profil d'un joueur (V2, S11-02) ; null hors V2 */
+  function lienProfil(nom) {
+    if (!v2()) return null;
+    return nom === pseudo() ? "pv1-profil.html" : "pv1-profil.html?" + new URLSearchParams({ joueur: nom }).toString();
+  }
+  /* Pseudo affiché, cliquable en V2 */
+  function pseudoHtml(nom, classe) {
+    const lien = lienProfil(nom);
+    const texte = nom === pseudo() ? monNom() : nomAffiche(nom);
+    return lien ? '<a class="' + (classe || "") + ' lien-pseudo" href="' + lien + '">' + texte + "</a>"
+      : '<span class="' + (classe || "") + '">' + texte + "</span>";
+  }
+
+  /* Générateur pseudo-aléatoire à graine (mulberry32) : classements et profils fictifs */
+  function hasard(graineDepart) {
+    let a = graineDepart >>> 0;
+    return function () {
+      a = (a + 0x6d2b79f5) >>> 0;
+      let x = Math.imul(a ^ (a >>> 15), 1 | a);
+      x = (x + Math.imul(x ^ (x >>> 7), 61 | x)) ^ x;
+      return ((x ^ (x >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
   /* =====================================================================
      Avis des joueurs (E10)
      ===================================================================== */
-
-  /* Pseudonyme du joueur (compte Max it), sous lequel ses avis sont publiés */
-  function pseudo() { return Etat.get("pseudo") || PLAY.joueur.pseudo; }
-
-  /* Le joueur ne peut noter qu'un jeu qu'il a lancé au moins une fois (S10-01) */
-  function aLance(id) { return idsLances().includes(id); }
 
   /* Avis du joueur, par jeu : mémorisés, sinon ceux du début de la démo */
   function tousMesAvis() {
@@ -100,36 +176,42 @@ const Play = (function () {
   /* « 2026-10-02 » → « 02/10/2026 » */
   function dateCourte(iso) { return iso.split("-").reverse().join("/"); }
 
-  /* Nombre tiré du nom du jeu : sélection d'avis stable d'une page à l'autre */
-  function graine(texte) { return texte.split("").reduce((n, c) => (n * 31 + c.charCodeAt(0)) % 9973, 7); }
-
-  /* Commentaires des autres joueurs, du plus récent au plus ancien */
+  /* Commentaires des autres joueurs du pays, du plus récent au plus ancien (S10-02) */
   function avisDesJoueurs(j) {
     const pool = PLAY.avisJoueurs;
+    const auteurs = PLAY.joueurs[pays()];
     const g = graine(j.id);
     const nombre = 6 + (g % 5);
-    const liste = [];
+    const resultat = [];
     for (let i = 0; i < nombre; i++) {
       const modele = pool[(g + i * 5) % pool.length];
       const date = new Date(2026, 9, 8 - i * 4 - (g % 3));
-      liste.push({
+      resultat.push({
         id: j.id + "-" + i,
-        pseudo: modele.pseudo,
+        pseudo: auteurs[(g + i * 3) % auteurs.length],
         note: modele.note,
         texte: modele.texte,
         date: date.getFullYear() + "-" + String(date.getMonth() + 1).padStart(2, "0") + "-" + String(date.getDate()).padStart(2, "0")
       });
     }
-    return liste;
+    return resultat;
   }
 
-  /* Note moyenne et nombre d'avis, avis du joueur compris (S10-02) */
+  /* Avis signalés par le joueur (S10-03) : masqués tout de suite de la liste */
+  function idsSignales() { return (Etat.get("playSignales") || []).slice(); }
+  function estSignale(idAvis) { return idsSignales().includes(idAvis); }
+  function signaler(idAvis) { Etat.set("playSignales", idsSignales().concat(idAvis)); }
+  function avisVisibles(j) { return avisDesJoueurs(j).filter((a) => !estSignale(a.id)); }
+
+  /* Note moyenne et nombre d'avis, avis du joueur compris, avis masqués exclus (S10-02, S04-01) */
   function moyenne(j) {
+    const masques = avisDesJoueurs(j).filter((a) => estSignale(a.id)).length;
     const mien = monAvis(j.id);
-    if (!mien) return { note: j.note, nombre: j.avis };
-    return { note: (j.note * j.avis + mien.note) / (j.avis + 1), nombre: j.avis + 1 };
+    const nombre = j.avis - masques;
+    if (!mien) return { note: j.note, nombre: nombre };
+    return { note: (j.note * nombre + mien.note) / (nombre + 1), nombre: nombre + 1 };
   }
-  function note(j) { return moyenne(j).note.toFixed(1).replace(".", ","); }
+  function note(j) { return decimal(moyenne(j).note); }
 
   /* Répartition des notes de 5 à 1 étoiles, en pourcentage, autour de la moyenne */
   function repartition(j) {
@@ -139,13 +221,79 @@ const Play = (function () {
     return poids.map((p) => Math.round(p / total * 100));
   }
 
-  /* Signalements envoyés par le joueur (S10-03) */
-  function idsSignales() { return (Etat.get("playSignales") || []).slice(); }
-  function estSignale(idAvis) { return idsSignales().includes(idAvis); }
-  function signaler(idAvis) { Etat.set("playSignales", idsSignales().concat(idAvis)); }
+  /* Jeux signalés par le joueur (S10-04) : un même jeu au plus une fois par jour */
+  function dejaSignaleAujourdhui(id) { return (Etat.get("playJeuxSignales") || {})[id] === aujourdhui(); }
+  function signalerJeu(id) {
+    const signales = Object.assign({}, Etat.get("playJeuxSignales") || {});
+    signales[id] = aujourdhui();
+    Etat.set("playJeuxSignales", signales);
+  }
 
   /* =====================================================================
-     Sections de l'accueil
+     Classements du jeu : jour, semaine, tout temps, propres au pays (S07-04)
+     ===================================================================== */
+
+  const PERIODES = ["jour", "semaine", "tout"];
+  /* Le partenaire transmet-il les scores ? Sinon, pas de classement */
+  function aUnClassement(j) { return partenaire(j).scores; }
+
+  /* Ma position sur une période (null : pas classé) ; precedent : jour ou semaine précédents */
+  function maPosition(j, periode, precedent) {
+    if (!aLance(j.id)) return null;
+    const fixees = !Etat.get("playNouveau") && PLAY.mesPositions[j.id];
+    if (fixees && !precedent && fixees[periode] !== undefined) return fixees[periode];
+    const r = hasard(graine(j.id + periode + pays() + (precedent ? "-p" : "")))();
+    if (precedent && r < 0.3) return null;
+    return { jour: 4 + Math.floor(r * 90), semaine: 15 + Math.floor(r * 180), tout: 120 + Math.floor(r * 600) }[periode];
+  }
+
+  /* Classement complet : les 100 premiers, puis ma position.
+     Renvoie { liste: [{ rang, pseudo, score, moi }], moi: { rang, score } | null } */
+  function classement(j, periode, precedent) {
+    const alea = hasard(graine(j.id + "|" + periode + "|" + pays() + (precedent ? "|p" : "")));
+    const pool = PLAY.joueurs[pays()];
+    // Score du premier selon la période, puis des écarts décroissants
+    let score = Math.round({ jour: 2400, semaine: 9800, tout: 48000 }[periode] * (0.8 + alea() * 0.4));
+    const pas = { jour: 22, semaine: 80, tout: 380 }[periode];
+    const ordre = pool.map((p, i) => i).sort(() => alea() - 0.5);
+    const position = maPosition(j, periode, precedent);
+    const resultat = [];
+    for (let rang = 1; rang <= 100; rang++) {
+      const i = ordre[(rang - 1) % pool.length];
+      const nom = rang <= pool.length ? pool[i] : pool[i] + (rang + 10);
+      resultat.push({ rang: rang, pseudo: nom, score: score, moi: rang === position });
+      score -= Math.max(1, Math.round(pas * (0.4 + alea())));
+    }
+    let moi = null;
+    if (position) {
+      const monScore = position <= 100 ? resultat[position - 1].score : Math.max(10, score - (position - 100) * Math.round(pas / 3));
+      if (position <= 100) resultat[position - 1].pseudo = pseudo();
+      moi = { rang: position, score: monScore };
+    }
+    return { liste: resultat, moi: moi };
+  }
+
+  /* Phrase d'encouragement selon ma position */
+  function encouragement(rang, periode) {
+    if (!rang) return t("classement.pasClasse");
+    if (rang <= 20) return t({ jour: "classement.bravoJour", semaine: "classement.bravoSemaine", tout: "classement.bravoTout" }[periode], { rang: rang });
+    return t("classement.continue", { rang: rang });
+  }
+
+  /* Meilleures positions du joueur, tous jeux confondus (profil V2, S11-02) */
+  function meilleuresPositions() {
+    const positions = [];
+    idsLances().map(jeu).filter((j) => disponible(j) && aUnClassement(j)).forEach((j) => {
+      PERIODES.forEach((p) => {
+        const rang = maPosition(j, p);
+        if (rang) positions.push({ jeu: j, periode: p, rang: rang });
+      });
+    });
+    return positions.sort((a, b) => a.rang - b.rang).slice(0, 3);
+  }
+
+  /* =====================================================================
+     Sections de l'accueil (S06-02)
      ===================================================================== */
 
   /* Jeu à la une du pays, sinon celui du responsable MEA (S03-01) */
@@ -154,35 +302,78 @@ const Play = (function () {
     return candidats.find(disponible) || null;
   }
 
-  /* Recommandés : jeux des genres les plus joués, pas encore lancés ;
-     pour un joueur sans historique, les jeux populaires du pays (S09-03) */
-  function recommandes() {
-    const lances = idsLances();
-    const nonLances = parPopularite(catalogue().filter((j) => !lances.includes(j.id)));
-    if (!lances.length) return nonLances.slice(0, 8);
-    const poids = {};
-    lances.map(jeu).filter(Boolean).forEach((j) => { poids[j.genre] = (poids[j.genre] || 0) + 1; });
-    const duGout = nonLances.filter((j) => poids[j.genre]).sort((a, b) => poids[b.genre] - poids[a.genre]);
-    const autres = nonLances.filter((j) => !poids[j.genre]);
-    return duGout.concat(autres).slice(0, 8);
-  }
+  /* « Recommandé pour vous » : sélection du responsable local, la même pour tous au MVP ;
+     un jeu masqué en est retiré automatiquement (S03-04). Personnalisation : V2 (S09-03). */
+  function recommandes() { return infosPays().recommandes.map(jeu).filter(disponible); }
 
-  /* Nouveautés : publiés depuis moins de 30 jours, du plus récent au plus ancien (S03-02) */
+  /* Nouveautés : publiés depuis moins de 30 jours, du plus récent au plus ancien (S03-03) */
   function nouveautes() { return catalogue().filter((j) => j.publie < 30).sort((a, b) => a.publie - b.publie); }
 
-  /* Populaires ici : parties lancées dans le pays sur 7 jours (S03-03) */
-  function populaires() { return parPopularite(catalogue()).slice(0, 10); }
-
-  /* Genres de la grille, dans l'ordre du pays, s'ils ont au moins un jeu (S06-02, S03-04) */
+  /* Rangées par genre, dans l'ordre du pays, si le genre a au moins un jeu (S06-02, S03-05) */
   function genresVisibles() {
     return infosPays().ordreGenres.map(genre).filter((g) => catalogue().some((j) => j.genre === g.id));
   }
+  /* Jeux d'un genre, par popularité dans le pays (S03-05) */
   function jeuxDuGenre(idGenre) {
     return parPopularite(catalogue().filter((j) => idGenre === "tous" || j.genre === idGenre));
   }
 
-  /* Jeux similaires : même genre, sans le jeu de la fiche, par popularité (S07-04) */
+  /* Jeux similaires : même genre, sans le jeu de la fiche, par popularité (S07-05) */
   function similaires(j) { return jeuxDuGenre(j.genre).filter((x) => x.id !== j.id).slice(0, 8); }
+
+  /* =====================================================================
+     Profil joueur (V2, S11-02)
+     ===================================================================== */
+
+  /* Statistiques d'un joueur : les miennes (nom absent ou mon pseudo), sinon fictives et stables */
+  function statistiques(nom) {
+    if (!nom || nom === pseudo()) {
+      const lances = idsLances().map(jeu).filter(Boolean);
+      const nouveau = Etat.get("playNouveau");
+      const s = PLAY.joueur.stats;
+      const temps = lances.map((j) => ({ jeu: j, minutes: nouveau ? 6 : (s.temps[j.id] || 12) }))
+        .sort((a, b) => b.minutes - a.minutes);
+      return {
+        pseudo: pseudo(), moi: true,
+        parties: nouveau ? lances.length : s.parties,
+        partiesSemaine: nouveau ? lances.length : s.partiesSemaine,
+        jeux: lances.length,
+        genre: genrePrefere(lances),
+        serie: nouveau ? Math.min(1, lances.length) : s.serie,
+        positions: meilleuresPositions(),
+        favoris: idsFavoris().length,
+        avis: Object.keys(tousMesAvis()).length,
+        temps: temps
+      };
+    }
+    // Autre joueur : valeurs tirées de son pseudo
+    const alea = hasard(graine(nom + pays()));
+    const jeux = parPopularite(catalogue()).filter(() => alea() < 0.35).slice(0, 5);
+    if (!jeux.length) jeux.push(parPopularite(catalogue())[0]);
+    const positions = jeux.filter(aUnClassement).slice(0, 3).map((j, i) => ({
+      jeu: j, periode: PERIODES[i % 3], rang: 1 + Math.floor(alea() * (i === 0 ? 5 : 60))
+    })).sort((a, b) => a.rang - b.rang);
+    return {
+      pseudo: nom, moi: false,
+      parties: 40 + Math.floor(alea() * 400),
+      partiesSemaine: 3 + Math.floor(alea() * 40),
+      jeux: jeux.length + Math.floor(alea() * 6),
+      genre: genrePrefere(jeux),
+      serie: 1 + Math.floor(alea() * 12),
+      positions: positions,
+      favoris: Math.floor(alea() * 9),
+      avis: Math.floor(alea() * 7),
+      temps: jeux.map((j) => ({ jeu: j, minutes: 10 + Math.floor(alea() * 400) })).sort((a, b) => b.minutes - a.minutes)
+    };
+  }
+  function genrePrefere(jeux) {
+    const compte = {};
+    jeux.forEach((j) => { compte[j.genre] = (compte[j.genre] || 0) + 1; });
+    const meilleur = Object.keys(compte).sort((a, b) => compte[b] - compte[a])[0];
+    return meilleur || null;
+  }
+  /* « 6 h 52 min » */
+  function duree(minutes) { return t("profil.heures", { h: Math.floor(minutes / 60), m: minutes % 60 }); }
 
   /* =====================================================================
      Navigation
@@ -199,13 +390,19 @@ const Play = (function () {
   /* Page d'où l'on vient (paramètre « depuis »), limitée aux écrans de Play */
   function depuis() {
     const valeur = Nav.param("depuis");
-    return valeur && /^p0\d-[\w-]+\.html(\?[\w=&%.-]*)?$/.test(valeur) ? valeur : "p01-accueil.html";
+    return valeur && /^pv?\d+-[\w-]+\.html(\?[\w=&%.-]*)?$/.test(valeur) ? valeur : "p01-accueil.html";
   }
 
-  function url(page, params) { return page + "?" + new URLSearchParams(params).toString(); }
+  /* Adresse d'un écran ; sur un écran V2, les écrans de Play ouverts restent en V2 */
+  function url(page, params) {
+    const p = Object.assign({}, params);
+    if (v2() && /^p\d/.test(page)) p.v2 = "1";
+    const texte = new URLSearchParams(p).toString();
+    return page + (texte ? "?" + texte : "");
+  }
   function lienFiche(id, origine) { return url("p03-jeu.html", { jeu: id, depuis: origine || ici() }); }
 
-  /* Un jeu indisponible ou inconnu n'a pas de fiche : retour à l'accueil avec un message (S08-04) */
+  /* Un jeu indisponible ou inconnu n'a pas de fiche : retour à l'accueil avec un message (S08-03) */
   function jeuDeLaPage() {
     const j = jeu(Nav.param("jeu"));
     if (!disponible(j)) {
@@ -215,10 +412,11 @@ const Play = (function () {
     return j;
   }
 
-  /* Rendu au chargement et à chaque changement d'état (menu de démo) */
+  /* Rendu au chargement et à chaque changement d'état (menu de démo), dans la langue choisie */
   function monter(fn) {
-    document.addEventListener("DOMContentLoaded", fn);
-    document.addEventListener("etat-change", fn);
+    const rendre = () => { appliquerLangue(); fn(); };
+    document.addEventListener("DOMContentLoaded", rendre);
+    document.addEventListener("etat-change", rendre);
   }
 
   /* =====================================================================
@@ -238,72 +436,93 @@ const Play = (function () {
     info: '<path d="M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20zm0 2a8 8 0 1 0 0 16 8 8 0 0 0 0-16zm-1 7h2v6h-2zm0-4h2v2h-2z"/>',
     gratuit: '<path d="M3 3h8.6l9.7 9.7-8.6 8.6L3 11.6zm4.5 2.5a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/>',
     data: '<path d="M12 4c3.6 0 6.9 1.4 9.4 3.7l-1.4 1.5A11.6 11.6 0 0 0 12 6C9 6 6.2 7.2 4 9.2L2.6 7.7A13.6 13.6 0 0 1 12 4zm0 4.5c2.4 0 4.6.9 6.3 2.4l-1.4 1.5A7.3 7.3 0 0 0 12 10.5c-1.9 0-3.6.7-4.9 1.9l-1.4-1.5A9.3 9.3 0 0 1 12 8.5zm0 4.5c1.2 0 2.3.4 3.2 1.2L12 17.6l-3.2-3.4c.9-.8 2-1.2 3.2-1.2zM3.3 2 22 20.7 20.7 22 2 3.3z"/>',
+    sansPub: '<path d="M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20zm6.3 5.1L7.1 18.3A8 8 0 0 0 18.3 7.1zM12 4a8 8 0 0 0-6.3 12.9L16.9 5.7A8 8 0 0 0 12 4z"/>',
     copier: '<path d="M8 3h11a2 2 0 0 1 2 2v11h-2V5H8zM5 7h10a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2zm0 2v11h10V9z"/>',
     message: '<path d="M4 4h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H8l-4 4V6a2 2 0 0 1 2-2zm0 2v11.2L7.2 16H20V6z"/>',
     discussion: '<path d="M12 3c5 0 9 3.6 9 8s-4 8-9 8c-1.1 0-2.2-.2-3.2-.5L4 20l1.3-3.9A7.6 7.6 0 0 1 3 11c0-4.4 4-8 9-8zm-4 7a1.3 1.3 0 1 0 0 2.6A1.3 1.3 0 0 0 8 10zm4 0a1.3 1.3 0 1 0 0 2.6 1.3 1.3 0 0 0 0-2.6zm4 0a1.3 1.3 0 1 0 0 2.6 1.3 1.3 0 0 0 0-2.6z"/>',
     reseau: '<path d="M7 9a3 3 0 1 1 0 6 3 3 0 0 1 0-6zm10-6a3 3 0 1 1 0 6 3 3 0 0 1 0-6zm0 12a3 3 0 1 1 0 6 3 3 0 0 1 0-6zM9.6 10.6l4.8-2.8 1 1.7-4.8 2.8zm0 2.8 1-1.7 4.8 2.8-1 1.7z"/>',
-    mail: '<path d="M3 5h18a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1zm1 2.4V17h16V7.4l-8 5.3zM5.6 7l6.4 4.3L18.4 7z"/>',
-    hub: '<path d="M4 4h7v7H4zm9 0h7v7h-7zM4 13h7v7H4zm9 0h7v7h-7z"/>'
+    hub: '<path d="M4 4h7v7H4zm9 0h7v7h-7zM4 13h7v7H4zm9 0h7v7h-7z"/>',
+    drapeau: '<path d="M5 3h2v1h11l-2.5 4.5L18 13H7v8H5zm2 3v5h7.6L13 8.5 14.6 6z"/>',
+    trophee: '<path d="M7 3h10v2h3v3a4 4 0 0 1-4 4h-.3A5 5 0 0 1 13 14.9V18h3v3H8v-3h3v-3.1A5 5 0 0 1 8.3 12H8a4 4 0 0 1-4-4V5h3zm0 4H6v1a2 2 0 0 0 1 1.7zm10 0v2.7A2 2 0 0 0 18 8V7z"/>',
+    flamme: '<path d="M12 2c1 4 6 6 6 12a6 6 0 0 1-12 0c0-3 1.5-5 3-6 0 2 1 3 2 3-1-3 0-6 1-9z"/>',
+    manette: '<path d="M7 7h10a5 5 0 0 1 5 5l.4 4.3c.3 2.6-2.8 4-4.6 2.2L15.5 16h-7l-2.3 2.5C4.4 20.3 1.3 18.9 1.6 16.3L2 12a5 5 0 0 1 5-5zm0 3v1.5H5.5v2H7V15h2v-1.5h1.5v-2H9V10zm9.5.5a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 0 0 0-2.4zm-2 2.5a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 0 0 0-2.4z"/>',
+    horloge: '<path d="M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20zm0 2a8 8 0 1 0 0 16 8 8 0 0 0 0-16zm1 3v5.4l3.6 2.1-1 1.7L11 13.6V7z"/>',
+    envoyer: '<path d="M3 20.5 21 12 3 3.5 3 10l12 2-12 2z"/>',
+    etincelles: '<path d="M10 3l1.6 4.4L16 9l-4.4 1.6L10 15l-1.6-4.4L4 9l4.4-1.6zm8 9 .9 2.1L21 15l-2.1.9L18 18l-.9-2.1L15 15l2.1-.9z"/>',
+    coche: '<path d="M9.5 16.2 5.3 12l-1.4 1.4 5.6 5.6 11-11-1.4-1.4z"/>'
   };
+  /* Icônes qui montrent une direction : retournées en arabe (lecture de droite à gauche) */
+  const DIRECTIONNELLES = ["retour", "chevron", "envoyer"];
 
   function icone(nom, classe) {
-    return '<svg viewBox="0 0 24 24" aria-hidden="true" class="' + (classe || "f-play-text") + '">' + ICONES[nom] + "</svg>";
+    const miroir = DIRECTIONNELLES.includes(nom) ? " miroir" : "";
+    return '<svg viewBox="0 0 24 24" aria-hidden="true" class="' + (classe || "f-play-text") + miroir + '">' + ICONES[nom] + "</svg>";
   }
 
   /* Note en étoiles (pleines jusqu'à la note arrondie) */
-  function etoiles(note, taille) {
+  function etoiles(valeur, taille) {
     let html = '<span class="etoiles" aria-hidden="true">';
     for (let i = 1; i <= 5; i++) {
       html += '<svg viewBox="0 0 24 24" style="width:' + taille + "px;height:" + taille + 'px" class="' +
-        (i <= Math.round(note) ? "f-play-star" : "f-play-chip") + '">' + ICONES.etoile + "</svg>";
+        (i <= Math.round(valeur) ? "f-play-star" : "f-play-chip") + '">' + ICONES.etoile + "</svg>";
     }
     return html + "</span>";
   }
 
+  /* Étiquette « V2 » des écrans et blocs hors MVP */
+  function etiquetteV2() { return '<span class="etiquette-v2" title="' + t("commun.v2Aide") + '">' + t("commun.v2") + "</span>"; }
+
   /* =====================================================================
-     Pictogrammes des genres (grille de l'accueil, style de la maquette Figma :
-     orange et blanc sur case gris chaud)
+     Pictogrammes des genres : dessins blancs sur pastille de la couleur du genre,
+     détails dans la couleur du genre (g2) ; sans personnage ni marque.
      ===================================================================== */
 
   const PICTOS_GENRES = {
-    action: '<path class="g2" d="M7 5h4l15 15-4 4L7 9z"/><path class="g1" d="M41 5h-4L22 20l4 4L41 9z"/>' +
-      '<path class="g2" d="M12 27l9 9-3 3-2-2-5 5-3-3 5-5-2-2z"/><path class="g1" d="M36 27l-9 9 3 3 2-2 5 5 3-3-5-5 2-2z"/>',
-    arcade: '<rect class="g2" x="7" y="30" width="34" height="12" rx="4"/><rect class="g2" x="22" y="15" width="4" height="16"/>' +
-      '<circle class="g1" cx="24" cy="12" r="7"/><circle class="g1" cx="34" cy="36" r="2.5"/>',
-    course: '<path class="g1" d="M12 8h12v14H12z"/><path class="gs2" d="M12 43V6M12 8h24l-5 7 5 7H12" fill="none" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>',
-    puzzle: '<path class="gs2" d="M9 14h9a4 4 0 1 1 8 0h9v9a4 4 0 1 1 0 8v9h-9a4 4 0 1 0-8 0H9v-9a4 4 0 1 0 0-8z" fill="none" stroke-width="3.5" stroke-linejoin="round"/>',
-    casual: '<path class="g1" d="M24 7c5 5 6 13 0 22-6-9-5-17 0-22z"/><path class="g1" d="M5 17c8 0 14 5 16 13-8 1-15-4-16-13z"/>' +
-      '<path class="g1" d="M43 17c-8 0-14 5-16 13 8 1 15-4 16-13z"/><path class="g1" d="M9 33h30c-3 5-8 7-15 7s-12-2-15-7z"/>',
-    sport: '<circle class="gs2" cx="24" cy="24" r="17" fill="none" stroke-width="3.5"/><path class="g2" d="M24 16l7.5 5.5-3 8.5h-9l-3-8.5z"/>' +
-      '<path class="gs2" d="M24 16V8M31.5 21.5l7.5-2.5M28.5 30l4.5 6.5M19.5 30L15 36.5M16.5 21.5 9 19" fill="none" stroke-width="3"/>',
-    cartes: '<rect class="g2" x="7" y="8" width="21" height="31" rx="3"/><rect class="g1" x="20" y="9" width="21" height="31" rx="3" transform="rotate(10 30 25)"/>',
-    quiz: '<path class="g2" d="M7 7h34v25H22l-8 8v-8H7z"/><path class="g1" d="M19.5 15.5a4.5 4.5 0 1 1 6.6 4c-1.1.7-2.1 1.4-2.1 2.6v.9h-3.5v-1.4c0-2.2 1.6-3.3 2.8-4a1.2 1.2 0 1 0-1.8-1.3z"/>' +
-      '<circle class="g1" cx="22.3" cy="27" r="2"/>',
-    aventure: '<circle class="gs2" cx="24" cy="24" r="17" fill="none" stroke-width="3.5"/><path class="g1" d="M31 13l-4.5 13.5L17 35l4.5-13.5z"/><circle class="g2" cx="24" cy="24" r="2.2"/>',
-    strategie: '<path class="gs2" d="M14 7h4v4h4V7h4v4h4V7h4v9l-4 4v12h4v9H14v-9h4V20l-4-4z" fill="none" stroke-width="3" stroke-linejoin="round"/>' +
-      '<rect class="g1" x="21" y="24" width="6" height="8" rx="3"/>',
-    tous: '<circle class="g1" cx="10" cy="24" r="5"/><circle class="g2" cx="24" cy="24" r="5"/><circle class="g3" cx="38" cy="24" r="5"/>'
+    action: '<path class="g1" d="M27 4 10 27h11l-3 17 19-25H26z"/>',
+    arcade: '<rect class="g1" x="8" y="30" width="32" height="12" rx="6"/><rect class="g1" x="22" y="15" width="4" height="16" rx="2"/>' +
+      '<circle class="g1" cx="24" cy="12" r="7"/><circle class="g2" cx="33" cy="36" r="2.6"/>',
+    course: '<path class="g1" d="M7 31l3-9c1.2-3.4 3.4-5 7-5h14c3.6 0 5.8 1.6 7 5l3 9v6H7z"/><path class="g2" d="M15.5 20.5h17l2 7h-21z"/>' +
+      '<circle class="g1" cx="15" cy="37" r="5.5"/><circle class="g2" cx="15" cy="37" r="2.2"/><circle class="g1" cx="33" cy="37" r="5.5"/><circle class="g2" cx="33" cy="37" r="2.2"/>',
+    puzzle: '<rect class="g1" x="9" y="15" width="25" height="25" rx="5"/><circle class="g1" cx="21.5" cy="13" r="5.5"/><circle class="g1" cx="36" cy="27.5" r="5.5"/>' +
+      '<circle class="g2" cx="21.5" cy="27.5" r="3"/>',
+    casual: '<ellipse class="g1" cx="24" cy="19" rx="12.5" ry="14"/><path class="g1" d="M21 32h6l-3 4.5z"/>' +
+      '<path class="gs1" d="M24 36c-3 3 3 5 0 8" fill="none" stroke-width="2.4" stroke-linecap="round"/><ellipse class="g2" cx="19.5" cy="14" rx="2.6" ry="4.2" opacity=".5"/>',
+    sport: '<circle class="g1" cx="24" cy="24" r="17"/><path class="g2" d="M24 16.5l7.2 5.2-2.8 8.5h-8.8l-2.8-8.5z"/>' +
+      '<circle class="g2" cx="24" cy="8.5" r="2.6"/><circle class="g2" cx="39" cy="20" r="2.6"/><circle class="g2" cx="9" cy="20" r="2.6"/>' +
+      '<circle class="g2" cx="33" cy="37.5" r="2.6"/><circle class="g2" cx="15" cy="37.5" r="2.6"/>',
+    cartes: '<rect class="g1" x="7" y="10" width="20" height="28" rx="4" transform="rotate(-12 17 24)" opacity=".75"/>' +
+      '<g transform="rotate(8 30 24)"><rect class="g1" x="20" y="9" width="20" height="29" rx="4"/>' +
+      '<path class="g2" d="M30 21.5c-1.6-2.6-5.6-1.4-5 1.6.4 1.8 2.6 3.6 5 5.6 2.4-2 4.6-3.8 5-5.6.6-3-3.4-4.2-5-1.6z"/></g>',
+    quiz: '<path class="g1" d="M9 8h30a5 5 0 0 1 5 5v15a5 5 0 0 1-5 5H23l-9 8v-8H9a5 5 0 0 1-5-5V13a5 5 0 0 1 5-5z"/>' +
+      '<path class="gs2" d="M19.5 16.5a4.5 4.5 0 1 1 6 4.2c-1.1.5-1.5 1.2-1.5 2.3v.8" fill="none" stroke-width="3" stroke-linecap="round"/><circle class="g2" cx="24" cy="28" r="2"/>',
+    aventure: '<circle class="g1" cx="24" cy="24" r="17"/><path class="g2" d="M31.5 14.5 27 27l-10.5 6.5L21 21z"/><circle class="g1" cx="24" cy="24" r="2.4"/>',
+    strategie: '<path class="g1" d="M9 42V19h6v5h4v-5h4v5h2v-5h4v5h4v-5h6v23z"/><path class="g2" d="M20 42v-8a4 4 0 0 1 8 0v8z"/>' +
+      '<path class="g1" d="M23 6h2v8h-2z"/><path class="g1" d="M25 6h8l-2 3 2 3h-8z"/>',
+    tous: '<circle class="g1" cx="12" cy="24" r="5"/><circle class="g1" cx="24" cy="24" r="5"/><circle class="g1" cx="36" cy="24" r="5"/>'
   };
 
-  function pictoGenre(id) {
-    return '<svg viewBox="0 0 48 48" aria-hidden="true" class="picto-genre">' + PICTOS_GENRES[id] + "</svg>";
+  /* Pastille d'un genre : pictogramme blanc sur la couleur du genre */
+  function pastilleGenre(id, classe) {
+    const couleur = id === "tous" ? "var(--color-primary)" : "var(--play-g-" + id + ")";
+    return '<span class="pastille-genre ' + (classe || "") + '" style="--gc: ' + couleur + '" aria-hidden="true">' +
+      '<svg viewBox="0 0 48 48" class="picto-genre">' + PICTOS_GENRES[id] + "</svg></span>";
   }
 
   /* =====================================================================
-     Visuels des jeux : dégradé de la palette, formes anguleuses et pictogramme.
-     p1 : blanc ; p2 : couleur sombre de la palette ; p3 : couleur claire.
+     Visuels des jeux sans image : dégradé de deux couleurs vives, bulles douces et pictogramme.
+     p1 : blanc ; p2 : couleur foncée de la palette ; p3 : couleur claire.
      ===================================================================== */
 
-  /* Palettes : deux couleurs de tokens.css (sombre, claire) */
+  /* Palettes : deux couleurs de genre de tokens.css (foncée, claire) */
   const PALETTES = {
-    flamme: ["--color-gaming-flame-dark", "--color-primary"],
-    nuit: ["--color-game-blue-bg", "--color-game-blue"],
-    foret: ["--color-game-green-bg", "--color-game-green"],
-    violet: ["--illu-purple-dark", "--color-game-purple"],
-    neon: ["--illu-purple-deep", "--illu-neon-pink"],
-    or: ["--illu-black", "--illu-gold"],
-    terre: ["--illu-hair", "--illu-terracotta"],
-    sable: ["--illu-terracotta", "--illu-sand"]
+    flamme: ["--play-g-action", "--play-g-sport"],
+    nuit: ["--play-g-quiz", "--play-g-course"],
+    foret: ["--play-g-puzzle", "--play-g-strategie"],
+    violet: ["--play-g-arcade", "--play-g-casual"],
+    neon: ["--play-g-casual", "--play-g-arcade"],
+    or: ["--play-g-aventure", "--play-g-sport"],
+    terre: ["--play-g-aventure", "--play-g-action"],
+    sable: ["--play-g-cartes", "--play-g-sport"]
   };
 
   /* Pictogrammes des jeux (48 × 48) */
@@ -370,11 +589,11 @@ const Play = (function () {
 
   let compteurVisuels = 0;
 
-  /* Pictogramme du jeu, centré en (cx, cy), de taille t, sur un disque sombre */
+  /* Pictogramme du jeu, centré en (cx, cy), de taille t, sur un disque clair */
   function picto(j, cx, cy, t) {
     const k = t / 48;
     return '<g transform="translate(' + (cx - t / 2) + " " + (cy - t / 2) + ") scale(" + k + ')">' +
-      '<circle class="p2" cx="24" cy="24" r="27" opacity=".45"/>' + PICTOS[j.picto] + "</g>";
+      '<circle class="p1" cx="24" cy="24" r="27" opacity=".22"/>' + PICTOS[j.picto] + "</g>";
   }
 
   /* Visuel d'un jeu, en SVG, de proportions l × h.
@@ -392,16 +611,17 @@ const Play = (function () {
     const petit = Math.min(l, h);
     let scene = "";
 
-    // Formes anguleuses en écho à l'univers Gaming, et halo
-    scene += '<path class="p2" opacity=".35" d="M' + l * 0.58 + " 0H" + l + "V" + h + "H" + l * 0.82 + 'z"/>';
-    scene += '<circle class="p1" opacity=".1" cx="' + l * 0.8 + '" cy="' + h * 0.22 + '" r="' + petit * 0.22 + '"/>';
+    // Bulles douces en fond (sans déborder à droite du visuel)
+    scene += '<circle class="p1" opacity=".16" cx="' + l * 0.82 + '" cy="' + h * 0.18 + '" r="' + Math.min(l * 0.16, petit * 0.28) + '"/>';
+    scene += '<circle class="p1" opacity=".12" cx="' + l * 0.1 + '" cy="' + h * 0.9 + '" r="' + petit * 0.34 + '"/>';
+    scene += '<circle class="p1" opacity=".2" cx="' + l * 0.2 + '" cy="' + h * 0.2 + '" r="' + petit * 0.06 + '"/>';
 
     if (variante === "carte") {
       scene += picto(j, l * 0.5, h * 0.36, petit * 0.42);
     } else if (variante === "capture-1") {
-      // Écran de jeu : barre de score et pictogramme
-      scene += '<rect class="p2" opacity=".6" x="' + l * 0.06 + '" y="' + h * 0.05 + '" width="' + l * 0.88 + '" height="' + h * 0.07 + '" rx="' + h * 0.035 + '"/>';
-      scene += '<rect class="p3" x="' + l * 0.09 + '" y="' + h * 0.072 + '" width="' + l * 0.4 + '" height="' + h * 0.026 + '" rx="' + h * 0.013 + '"/>';
+      // Écran de jeu : barre de score arrondie et pictogramme
+      scene += '<rect class="p1" opacity=".35" x="' + l * 0.06 + '" y="' + h * 0.05 + '" width="' + l * 0.88 + '" height="' + h * 0.07 + '" rx="' + h * 0.035 + '"/>';
+      scene += '<rect class="p1" x="' + l * 0.09 + '" y="' + h * 0.072 + '" width="' + l * 0.4 + '" height="' + h * 0.026 + '" rx="' + h * 0.013 + '"/>';
       scene += picto(j, l * 0.5, h * 0.55, petit * 0.62);
     } else if (variante === "capture-2") {
       // Grille de niveaux
@@ -411,15 +631,15 @@ const Play = (function () {
         }
       }
     } else if (variante === "capture-3") {
-      // Horizon et soleil
+      // Collines et soleil
       scene += '<circle class="p3" cx="' + l * 0.5 + '" cy="' + h * 0.42 + '" r="' + petit * 0.26 + '"/>';
-      scene += '<path class="p2" d="M0 ' + h * 0.62 + "Q" + l * 0.3 + " " + h * 0.52 + " " + l * 0.55 + " " + h * 0.62 + "T" + l + " " + h * 0.6 + "V" + h + "H0z\"/>";
+      scene += '<path class="p1" opacity=".35" d="M0 ' + h * 0.62 + "Q" + l * 0.3 + " " + h * 0.52 + " " + l * 0.55 + " " + h * 0.62 + "T" + l + " " + h * 0.6 + "V" + h + "H0z\"/>";
       scene += picto(j, l * 0.5, h * 0.8, petit * 0.3);
     } else if (variante === "partie") {
-      // Décor de partie : sol, obstacles et pictogramme du joueur
-      scene += '<rect class="p2" y="' + h * 0.78 + '" width="' + l + '" height="' + h * 0.22 + '"/>';
+      // Décor de partie : sol arrondi, plateformes et pictogramme du joueur
+      scene += '<rect class="p1" opacity=".3" y="' + h * 0.78 + '" width="' + l + '" height="' + h * 0.22 + '" rx="' + h * 0.04 + '"/>';
       [0.15, 0.42, 0.7].forEach((x, i) => {
-        scene += '<rect class="p1" opacity=".25" x="' + l * x + '" y="' + h * (0.58 - i * 0.08) + '" width="' + l * 0.16 + '" height="' + h * 0.04 + '" rx="' + h * 0.02 + '"/>';
+        scene += '<rect class="p1" opacity=".4" x="' + l * x + '" y="' + h * (0.58 - i * 0.08) + '" width="' + l * 0.16 + '" height="' + h * 0.04 + '" rx="' + h * 0.02 + '"/>';
       });
       scene += picto(j, l * 0.5, h * 0.62, petit * 0.4);
     } else {
@@ -438,30 +658,35 @@ const Play = (function () {
      Composants
      ===================================================================== */
 
-  /* Tuile d'un jeu : visuel, nom, « Gratuit » et note ; mène toujours à la fiche (S06-04).
-     Identique quel que soit le partenaire et le modèle d'intégration. */
-  function tuile(j, origine) {
-    return '<a href="' + lienFiche(j.id, origine) + '" class="tuile-play">' +
-      '<span class="visuel-tuile">' + visuel(j, 160, 150, "tuile") + "</span>" +
+  /* Tuile d'un jeu : icône, nom et note moyenne ; mène toujours à la fiche (S06-04).
+     Identique quel que soit le partenaire et le modèle d'intégration.
+     lien : adresse de la fiche, si ce n'est pas p03 (écrans V2) ; suite : HTML ajouté sous la note. */
+  function tuile(j, origine, lien, suite) {
+    return '<a href="' + (lien || lienFiche(j.id, origine)) + '" class="tuile-play">' +
+      '<span class="visuel-tuile">' + visuel(j, 156, 146, "tuile") + "</span>" +
       '<span class="tuile-nom">' + j.nom + "</span>" +
-      '<span class="tuile-meta">Gratuit<span class="tuile-note">' + icone("etoile", "f-play-star") + note(j) + "</span></span>" +
-      "</a>";
+      '<span class="tuile-note" aria-label="' + t("commun.note", { note: note(j) }) + '">' + icone("etoile", "f-play-star") + note(j) + "</span>" +
+      (suite || "") + "</a>";
   }
 
-  /* Rangée horizontale de tuiles, avec son titre (masquée si vide) */
-  function rangee(titre, jeux, origine) {
+  /* Rangée horizontale de tuiles, avec son titre (masquée si vide).
+     options : { genre : pastille du genre devant le titre ; voirTout : lien « Voir tout » } */
+  function rangee(titre, jeux, origine, options) {
     if (!jeux.length) return "";
-    return '<section><h2 class="titre-play">' + titre + "</h2>" +
+    const o = options || {};
+    return '<section class="section-play"><h2 class="titre-play">' +
+      (o.genre ? pastilleGenre(o.genre, "pastille-titre") : "") + "<span>" + titre + "</span>" +
+      (o.voirTout ? '<a href="' + o.voirTout + '" class="voir-tout-play">' + t("commun.voirTout") + icone("chevron", "f-primary") + "</a>" : "") +
+      "</h2>" +
       '<div class="carrousel rangee-play">' + jeux.map((j) => tuile(j, origine)).join("") + "</div></section>";
   }
 
-  /* Feuille du bas. contenu : HTML ; classe : « feuille-sombre » pour une feuille de Play
-     (la feuille de partage, elle, est celle du téléphone). Renvoie le voile pour la fermer. */
-  function feuille(contenu, etiquette, classe) {
+  /* Feuille du bas de Play (fond blanc, coins arrondis). Renvoie le voile pour la fermer. */
+  function feuille(contenu, etiquette) {
     const telephone = document.querySelector(".telephone");
     const voile = document.createElement("div");
     voile.className = "voile ouvert";
-    voile.innerHTML = '<div class="feuille ' + (classe || "") + '" role="dialog" aria-modal="true" aria-label="' + etiquette + '">' +
+    voile.innerHTML = '<div class="feuille feuille-play" role="dialog" aria-modal="true" aria-label="' + etiquette + '">' +
       '<div class="poignee"></div>' + contenu + "</div>";
     voile.addEventListener("click", (evenement) => {
       if (evenement.target === voile || evenement.target.closest("[data-fermer]")) voile.remove();
@@ -470,71 +695,104 @@ const Play = (function () {
     return voile;
   }
 
+  /* ---------- Classement : ligne d'un joueur, avec médaille pour le podium ---------- */
+
+  function medaille(rang) {
+    return '<span class="medaille medaille-' + rang + '" role="img" aria-label="' + t("classement.medaille", { n: rang }) + '">' +
+      '<svg viewBox="0 0 32 32" aria-hidden="true"><path class="ruban" d="M9 2h6l3 9h-6zM23 2h-6l-3 9h6z"/>' +
+      '<circle class="disque" cx="16" cy="20" r="10"/></svg><b>' + rang + "</b></span>";
+  }
+
+  function ligneClassement(entree, periode) {
+    const moi = entree.moi;
+    return '<li class="ligne-classement' + (moi ? " ligne-moi" : "") + '">' +
+      (entree.rang <= 3 ? medaille(entree.rang) : '<span class="rang-play">' + t("classement.rang", { rang: entree.rang }) + "</span>") +
+      '<span class="nom-classement">' + pseudoHtml(entree.pseudo) + (moi ? ' <small class="pastille-toi">' + t("classement.toi") + "</small>" : "") + "</span>" +
+      '<span class="score-classement">' + t("classement.points", { n: entier(entree.score) }) + "</span></li>";
+  }
+
+  /* Carte « ma place » : mon rang et un encouragement, ou une invitation à jouer (S07-04) */
+  function maPlace(moi, periode, precedent) {
+    if (!moi) {
+      return '<div class="ma-place"><span class="rang-moi">' + icone("manette", "f-play-on-accent") + "</span>" +
+        "<p>" + t(precedent ? "classement.pasClasseAvant" : "classement.pasClasse") + "</p></div>";
+    }
+    return '<div class="ma-place"><span class="rang-moi">' + t("classement.rang", { rang: moi.rang }) + "</span>" +
+      "<p>" + (precedent ? t("classement.taPlace") : encouragement(moi.rang, periode)) +
+      "<small>" + monNom() + " · " + t("classement.points", { n: entier(moi.score) }) + "</small></p></div>";
+  }
+
   /* ---------- Avis (style de reference/figma-play/06-avis.png) ---------- */
 
-  /* Initiales du pseudonyme pour l'avatar : « Salma_ElA » → « SE » */
+  /* Initiales du pseudo pour l'avatar : « Joueur4821 » → « J4 », « Salma_ElA » → « SE » */
   function initiales(nom) {
-    const morceaux = nom.split(/[_.\s]+/).filter(Boolean);
+    const morceaux = nom.replace(/(\D)(\d)/, "$1 $2").split(/[_.\s]+/).filter(Boolean);
     return (morceaux.length > 1 ? morceaux[0][0] + morceaux[1][0] : morceaux[0].slice(0, 2)).toUpperCase();
   }
+  /* Couleur de l'avatar, tirée du pseudo parmi les couleurs des genres */
+  function couleurAvatar(nom) { return "var(--play-g-" + PLAY.genres[graine(nom) % PLAY.genres.length].id + ")"; }
 
   /* Carte d'un avis. mien : avis du joueur (pas de signalement) ; actions : HTML ajouté en bas */
   function carteAvis(avis, mien, actions) {
     const long = avis.texte.length > 110;
-    let pied = "";
-    if (mien) pied = actions || "";
-    else if (estSignale(avis.id)) pied = '<span class="avis-signale">Signalé · en cours d\'examen</span>';
-    else pied = '<button class="lien-avis lien-signaler" data-signaler="' + avis.id + '">Signaler</button>';
+    const nom = mien ? pseudo() : avis.pseudo;
+    const affiche = mien ? monNom() : nomAffiche(avis.pseudo);
+    const pied = mien ? actions || "" : '<button class="lien-avis lien-signaler" data-signaler="' + avis.id + '">' + t("avis.signaler") + "</button>";
     return '<article class="avis-play' + (mien ? " avis-mien" : "") + '">' +
-      '<div class="avis-tete"><span class="avatar-play" aria-hidden="true">' + initiales(avis.pseudo) + "</span>" +
-      '<div class="avis-auteur"><span class="avis-nom">' + avis.pseudo + (mien ? " <small>· Ton avis</small>" : "") + "</span>" +
+      '<div class="avis-tete"><span class="avatar-play" style="--av: ' + couleurAvatar(affiche) + '" aria-hidden="true">' + initiales(affiche) + "</span>" +
+      '<div class="avis-auteur"><span class="avis-nom">' + pseudoHtml(nom) + (mien ? " <small>· " + t("avis.tonAvis") + "</small>" : "") + "</span>" +
       '<span class="avis-note">' + etoiles(avis.note, 18) + '<span class="avis-date">' + dateCourte(avis.date) + "</span></span></div></div>" +
-      (avis.texte ? '<p class="avis-texte' + (long ? " replie" : "") + '">' + avis.texte + "</p>" +
-        (long ? '<button class="lien-avis" data-lire-suite>Lire la suite</button>' : "") : "") +
+      (avis.texte ? '<p class="avis-texte' + (long ? " replie" : "") + '" dir="ltr" lang="fr">' + avis.texte + "</p>" +
+        (long ? '<button class="lien-avis" data-lire-suite>' + t("avis.lireSuite") + "</button>" : "") : "") +
       '<div class="avis-pied">' + pied + "</div>" +
       "</article>";
   }
 
-  /* Gestes communs aux listes d'avis : « Lire la suite » et « Signaler » (S10-03) */
-  function brancherAvis(conteneur, j) {
+  /* Gestes communs aux listes d'avis : « Lire la suite » et « Signaler » (S10-03).
+     Un avis signalé disparaît aussitôt : apres() redessine la liste. */
+  function brancherAvis(conteneur, j, apres) {
     conteneur.querySelectorAll("[data-lire-suite]").forEach((bouton) => bouton.addEventListener("click", () => {
       bouton.previousElementSibling.classList.remove("replie");
       bouton.remove();
     }));
     conteneur.querySelectorAll("[data-signaler]").forEach((bouton) => bouton.addEventListener("click", () => {
-      ouvrirSignalement(avisDesJoueurs(j).find((a) => a.id === bouton.dataset.signaler));
+      ouvrirSignalement(avisDesJoueurs(j).find((a) => a.id === bouton.dataset.signaler), apres);
     }));
   }
 
-  /* Feuille de signalement : motif obligatoire, puis envoi en modération */
-  function ouvrirSignalement(avis) {
-    const motifs = ["Insultant", "Hors sujet", "Publicité", "Autre"];
+  /* Feuille de signalement d'un avis : motif obligatoire, puis l'avis est masqué (S10-03) */
+  function ouvrirSignalement(avis, apres) {
+    const motifs = ["motifInsultant", "motifHorsSujet", "motifPub", "motifAutre"];
     const voile = feuille(
-      '<p class="demo-titre">Signaler cet avis</p>' +
-      '<p class="demo-aide">L\'avis de ' + avis.pseudo + " sera examiné par l'équipe Max it de ton pays.</p>" +
-      '<div class="motifs-play" role="radiogroup" aria-label="Motif">' + motifs.map((m) =>
-        '<label class="motif-play"><input type="radio" name="motif" value="' + m + '"><span>' + m + "</span></label>").join("") + "</div>" +
-      '<button class="bouton bouton-primaire bouton-pleine-largeur" id="envoyer-signalement" disabled>Envoyer le signalement</button>' +
-      '<button class="bouton bouton-secondaire bouton-pleine-largeur bouton-annuler" data-fermer>Annuler</button>',
-      "Signaler un avis",
-      "feuille-sombre"
+      '<p class="feuille-titre">' + t("avis.signalerTitre") + "</p>" +
+      '<p class="feuille-aide">' + t("avis.signalerAide") + "</p>" +
+      '<div class="motifs-play" role="radiogroup" aria-label="' + t("avis.motif") + '">' + motifs.map((m) =>
+        '<label class="motif-play"><input type="radio" name="motif" value="' + m + '"><span>' + t("avis." + m) + "</span></label>").join("") + "</div>" +
+      '<button class="bouton-jouer" id="envoyer-signalement" disabled>' + t("avis.envoyer") + "</button>" +
+      '<button class="bouton-doux" data-fermer>' + t("commun.annuler") + "</button>",
+      t("avis.signalerTitre")
     );
     const envoyer = voile.querySelector("#envoyer-signalement");
     voile.querySelectorAll('input[name="motif"]').forEach((r) => r.addEventListener("change", () => { envoyer.disabled = false; }));
     envoyer.addEventListener("click", () => {
       voile.remove();
       signaler(avis.id);
-      Nav.toast("Avis signalé : il sera examiné");
+      if (apres) apres();
+      Nav.toast(t("avis.signale"));
     });
   }
 
   return {
-    pays, infosPays, jeu, partenaire, genre, disponible, catalogue,
-    recents, favoris, estFavori, basculerFavori, enregistrerLancement,
-    pseudo, aLance, monAvis, enregistrerAvis, supprimerAvis, dateCourte, avisDesJoueurs, moyenne, repartition,
-    estSignale, carteAvis, brancherAvis,
-    aLaUne, recommandes, nouveautes, populaires, genresVisibles, jeuxDuGenre, similaires,
+    langue, rtl, t, appliquerLangue, decimal, entier,
+    pays, infosPays, nomPays, jeu, partenaire, genre, nomGenre, disponible, catalogue, parPopularite,
+    recents, favoris, estFavori, basculerFavori, enregistrerLancement, aLance,
+    v2, pseudo, monNom, nomAffiche, pseudoHtml, lienProfil,
+    monAvis, enregistrerAvis, supprimerAvis, dateCourte, avisDesJoueurs, avisVisibles, moyenne, repartition,
+    carteAvis, brancherAvis, dejaSignaleAujourdhui, signalerJeu,
+    PERIODES, aUnClassement, maPosition, classement, encouragement, ligneClassement, medaille, maPlace,
+    aLaUne, recommandes, nouveautes, genresVisibles, jeuxDuGenre, similaires,
+    statistiques, duree,
     ici, depuis, url, lienFiche, jeuDeLaPage, monter,
-    icone, etoiles, note, pictoGenre, visuel, tuile, rangee, feuille
+    icone, etoiles, etiquetteV2, note, pastilleGenre, visuel, tuile, rangee, feuille
   };
 })();

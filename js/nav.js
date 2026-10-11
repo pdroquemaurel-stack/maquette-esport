@@ -35,14 +35,19 @@ const ECRANS = {
   "27": { fichier: "27-preferences-notif.html", titre: "Préférences", pret: true },
   "28": { fichier: "28-mes-donnees.html", titre: "Mes données", pret: true },
   "29": { fichier: "29-classement-mensuel.html", titre: "Classement MaxPoints", pret: true },
-  // Play, la mini app des mini-jeux (2e chantier)
+  // Max it Gaming Play, la mini app des mini-jeux (2e chantier) ; pv… : écrans V2, hors parcours MVP
   "p01": { fichier: "p01-accueil.html", titre: "Accueil Play", pret: true },
   "p02": { fichier: "p02-genre.html", titre: "Genre", pret: true },
   "p03": { fichier: "p03-jeu.html", titre: "Fiche jeu", pret: true },
-  "p04": { fichier: "p04-transition.html", titre: "Transition vers le hub", pret: true },
   "p05": { fichier: "p05-partie.html", titre: "Partie", pret: true },
   "p06": { fichier: "p06-avis.html", titre: "Tous les avis", pret: true },
   "p07": { fichier: "p07-donner-avis.html", titre: "Donner mon avis", pret: true },
+  "p08": { fichier: "p08-classement.html", titre: "Classement d'un jeu", pret: true },
+  "p09": { fichier: "p09-store.html", titre: "Max it dans le store", pret: true },
+  "p10": { fichier: "p10-signaler-jeu.html", titre: "Signaler un jeu", pret: true },
+  "pv1": { fichier: "pv1-profil.html", titre: "Profil joueur (V2)", pret: true },
+  "pv2": { fichier: "pv2-assistant.html", titre: "Assistant IA (V2)", pret: true },
+  "pv3": { fichier: "pv3-fiche-badges.html", titre: "Fiche avec badges (V2)", pret: true },
   // Shop, la boutique de jeux (3e chantier, voir ecrans-shop.md)
   "s01": { fichier: "s01-accueil.html", titre: "Accueil du Shop", pret: true },
   "s02": { fichier: "s02-recherche.html", titre: "Recherche", pret: true },
@@ -139,12 +144,14 @@ const Etat = (function () {
     // Play (mini-jeux) : null = valeurs de départ de js/data-play.js
     playPays: null,         // pays du joueur dans Play (menu de démo : Maroc ou Sénégal)
     playNouveau: false,     // nouveau joueur : ni récents ni favoris (S06-02)
-    playIndispo: false,     // un jeu momentanément indisponible (S08-04)
+    playIndispo: false,     // un jeu momentanément indisponible (S08-03)
+    playLangue: null,       // langue de Play : fr (par défaut), en ou ar (lecture de droite à gauche)
     playRecents: null,      // jeux récemment joués, du plus récent au plus ancien (S09-02)
     playLances: null,       // jeux déjà lancés au moins une fois (recommandations, avis)
     playFavoris: null,      // jeux favoris, le dernier ajouté en premier (S09-01)
     playAvis: null,         // avis du joueur, par jeu : { note, texte, date } (S10-01)
-    playSignales: null,     // avis signalés par le joueur (S10-03)
+    playSignales: null,     // avis signalés par le joueur, masqués aussitôt (S10-03)
+    playJeuxSignales: null, // jeux signalés par le joueur : { jeu: date }, une fois par jour (S10-04)
     // Shop (boutique de jeux)
     shopPremierAchat: false, // premier achat : aucun achat passé, conditions de vente à accepter (S06-08)
     shopCgvModifiees: false, // nouvelle version des conditions de vente publiée (S06-08)
