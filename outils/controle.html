@@ -78,9 +78,9 @@
     "pv2-assistant.html", ["pv2-assistant.html", { playLangue: "en" }],
     "pv3-fiche-badges.html?jeu=foot-lions", ["pv3-fiche-badges.html?jeu=foot-lions", { playPays: "SN" }], "pv3-fiche-badges.html?jeu=ludo-famille",
     "p08-classement.html?jeu=foot-lions&v2=1", "p06-avis.html?jeu=foot-lions&v2=1",
-    // Fonctions V2 affichées (interrupteur) : accueil, fiche, classement ; profil façon Game Hub ; modifier son profil
-    ["p01-accueil.html", { playV2: true }], ["p01-accueil.html", { playV2: true, playNouveau: true }], ["p01-accueil.html", { playV2: true, playLangue: "ar" }],
-    ["p03-jeu.html?jeu=foot-lions", { playV2: true }], ["p08-classement.html?jeu=foot-lions", { playV2: true }], ["p06-avis.html?jeu=foot-lions", { playV2: true }],
+    // Fonctions V2 coupées (parcours MVP seul ; l'interrupteur est activé par défaut) ; profil façon Game Hub ; modifier son profil
+    ["p01-accueil.html", { playV2: false }], ["p01-accueil.html", { playV2: false, playNouveau: true }], ["p01-accueil.html", { playV2: false, playLangue: "ar" }],
+    ["p03-jeu.html?jeu=foot-lions", { playV2: false }], ["p08-classement.html?jeu=foot-lions", { playV2: false }], ["p06-avis.html?jeu=foot-lions", { playV2: false }],
     ["pv1-profil.html", { pseudoOffensant: "Youss_KZ", pseudo: "Joueur_48213" }], ["pv1-profil.html?joueur=Mamadou221", { playPays: "SN" }],
     ["pv1-profil.html", { playLangue: "en", playAvatar: "🐼" }],
     "pv4-modifier-profil.html", ["pv4-modifier-profil.html", () => ({ pseudoModifieLe: new Date().toISOString().slice(0, 10) })],

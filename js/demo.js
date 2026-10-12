@@ -56,7 +56,7 @@ const Demo = (function () {
   ];
   /* Fonctions V2 de Play : interrupteur (hors parcours MVP par défaut) et écrans à part */
   const BASCULES_V2_PLAY = [
-    { cle: "playV2", libelle: "Afficher les fonctions V2", aide: "Profil, assistant IA, recommandations personnalisées, badges, avatars et pseudos" }
+    { cle: "playV2", libelle: "Afficher les fonctions V2", aide: "Activé par défaut. Coupé : parcours MVP seul" }
   ];
   const ECRANS_V2_PLAY = [
     { libelle: "Mon profil joueur", ecran: "pv1" },
@@ -150,7 +150,7 @@ const Demo = (function () {
       "<span>" + r.libelle + "<small>Écran " + r.ecran + " · " + ECRANS[r.ecran].titre + "</small></span>" + ICONE_FLECHE + "</button>";
     RACCOURCIS_PLAY.forEach((r, i) => { html += lignePlay(r, "data-raccourci-play", i); });
     html += '<p class="demo-groupe">Max it Gaming Play : écrans V2</p>' +
-      '<p class="demo-aide">Hors parcours MVP : profil joueur, assistant IA, recommandations personnalisées, badges.</p>';
+      '<p class="demo-aide">Profil joueur, assistant IA, recommandations personnalisées, badges, avatars et pseudos.</p>';
     BASCULES_V2_PLAY.forEach(bascule);
     ECRANS_V2_PLAY.forEach((r, i) => { html += lignePlay(r, "data-v2-play", i); });
 

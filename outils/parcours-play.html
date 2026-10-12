@@ -31,7 +31,8 @@
     while (Date.now() < fin) { try { if (cond()) return true; } catch (e) {} await pause(200); }
     log(false, "délai dépassé : " + quoi); return false;
   }
-  function etat(valeurs) { localStorage.clear(); localStorage.setItem("maquette-esport-etat", JSON.stringify(valeurs || {})); }
+  /* État de démo ; les fonctions V2 (activées par défaut) sont coupées sauf demande, pour vérifier le parcours MVP */
+  function etat(valeurs) { localStorage.clear(); localStorage.setItem("maquette-esport-etat", JSON.stringify(Object.assign({ playV2: false }, valeurs || {}))); }
   const lire = () => JSON.parse(localStorage.getItem("maquette-esport-etat") || "{}");
   /* Titres des sections (sans « Voir tout »), et identifiants des jeux d'une section */
   const titre = (t) => t.querySelector("span:not(.pastille-genre)").textContent;

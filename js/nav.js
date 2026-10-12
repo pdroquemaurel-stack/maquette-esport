@@ -147,7 +147,7 @@ const Etat = (function () {
     playNouveau: false,     // nouveau joueur : ni récents ni favoris (S06-02)
     playIndispo: false,     // un jeu momentanément indisponible (S08-03)
     playLangue: null,       // langue de Play : fr (par défaut), en ou ar (lecture de droite à gauche)
-    playV2: false,          // fonctions V2 affichées dans le parcours de Play (profil, assistant, badges…)
+    playV2: true,           // fonctions V2 affichées dans le parcours de Play (profil, assistant, badges…) ; activé par défaut
     playAvatar: null,       // avatar emoji choisi dans Play (V2, S11-01) ; sinon celui de js/data-play.js
     playRecents: null,      // jeux récemment joués, du plus récent au plus ancien (S09-02)
     playLances: null,       // jeux déjà lancés au moins une fois (recommandations, avis)

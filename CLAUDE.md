@@ -75,10 +75,10 @@ continue de mener à la plateforme e-sport, qui ne doit pas être modifiée.
   « Fourni par » active pour un partenaire et absente pour les autres.
 - Pseudo : au MVP, pas de profil ; un pseudo généré (« Joueur4821 ») s'affiche dans les
   classements et sous les avis.
-- Fonctions V2 (toutes les US V2 du front) : étiquette « V2 » ; hors du parcours MVP par défaut ;
-  l'interrupteur « Afficher les fonctions V2 » du menu de démo les montre dans le parcours (profil
+- Fonctions V2 (toutes les US V2 du front) : étiquette « V2 » ; l'interrupteur « Afficher les
+  fonctions V2 » du menu de démo, activé par défaut (2026-10-12), les montre dans le parcours (profil
   depuis l'accueil, assistant, recommandations personnalisées, badges, avatars et pseudos) ; écrans
-  pv1 à pv4 aussi ouverts depuis le menu de démo.
+  pv1 à pv4 aussi ouverts depuis le menu de démo. Interrupteur coupé : parcours MVP seul.
 - Profil joueur (V2) : indicateurs repris du profil joueur du Game Hub de Samsung (validé le
   2026-10-12), pas sa charte graphique ; avatar emoji au choix ; pseudo commun avec les tournois
   (clés d'état « pseudo », « pseudoModifieLe », « pseudoOffensant » partagées).
