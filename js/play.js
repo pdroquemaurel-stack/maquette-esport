@@ -660,10 +660,13 @@ const Play = (function () {
 
   /* Tuile d'un jeu : icône, nom et note moyenne ; mène toujours à la fiche (S06-04).
      Identique quel que soit le partenaire et le modèle d'intégration.
+     Encadré « Sans pub » sur le visuel des jeux sans publicité (badge du backlog en V2, S02-05 ;
+     affiché sur les tuiles dès le MVP à la demande du 2026-10-12).
      lien : adresse de la fiche, si ce n'est pas p03 (écrans V2) ; suite : HTML ajouté sous la note. */
   function tuile(j, origine, lien, suite) {
     return '<a href="' + (lien || lienFiche(j.id, origine)) + '" class="tuile-play">' +
-      '<span class="visuel-tuile">' + visuel(j, 156, 146, "tuile") + "</span>" +
+      '<span class="visuel-tuile">' + visuel(j, 156, 146, "tuile") +
+      (j.sansPub ? '<span class="badge-tuile">' + icone("sansPub", "f-play-free") + t("fiche.badgeSansPub") + "</span>" : "") + "</span>" +
       '<span class="tuile-nom">' + j.nom + "</span>" +
       '<span class="tuile-note" aria-label="' + t("commun.note", { note: note(j) }) + '">' + icone("etoile", "f-play-star") + note(j) + "</span>" +
       (suite || "") + "</a>";

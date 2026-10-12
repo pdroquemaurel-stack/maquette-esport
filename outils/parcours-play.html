@@ -58,7 +58,9 @@
     log(jeuxDe("Recommandé pour vous")[0] === "cuisine-mama", "A · Recommandé pour vous : sélection du responsable local (S03-04)");
     log(doc().querySelector('.voir-tout-play[href="p02-genre.html?genre=sport"]'), "A · rangée Sport : « Voir tout » vers la page du genre");
     log(!/Gratuit/.test(doc().querySelector(".tuile-play").textContent) && doc().querySelectorAll(".tuile-note").length === doc().querySelectorAll(".tuile-play").length,
-      "A · tuile : icône, nom et note (sans badge au MVP)");
+      "A · tuile : icône, nom et note");
+    log(doc().querySelector('.tuile-play[href*="jeu=foot-lions"] .badge-tuile') && /Sans pub/.test(doc().querySelector('.tuile-play[href*="jeu=foot-lions"]').textContent)
+      && !doc().querySelector('.tuile-play[href*="jeu=bloc-mania"] .badge-tuile'), "A · encadré « Sans pub » sur les tuiles des jeux sans publicité seulement");
     const imageBloc = doc().querySelector('.tuile-play[href*="jeu=bloc-mania"] img.visuel-image-play');
     await attendre(() => imageBloc && imageBloc.complete, 3000, "chargement de l'image de Bloc Mania");
     log(imageBloc && imageBloc.naturalWidth > 0, "A · Bloc Mania : image fournie, chargée");

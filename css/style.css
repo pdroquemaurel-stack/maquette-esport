@@ -1105,6 +1105,7 @@ svg { display: block; flex-shrink: 0; }
   box-shadow: var(--play-shadow);
 }
 .visuel-tuile {
+  position: relative;
   display: block;
   width: 100%;
   aspect-ratio: 156 / 146;
@@ -1112,6 +1113,25 @@ svg { display: block; flex-shrink: 0; }
   overflow: hidden;
   margin-bottom: var(--space-2);
 }
+/* Encadré « Sans pub » posé sur le visuel de la tuile, en haut au début de la ligne */
+.badge-tuile {
+  position: absolute;
+  top: var(--space-2);
+  inset-inline-start: var(--space-2);
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  min-height: 26px;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--play-sheet);
+  color: var(--play-free);
+  box-shadow: var(--play-shadow);
+  font-size: var(--play-font-small);
+  font-weight: 800;
+  white-space: nowrap;
+}
+.badge-tuile svg { width: 14px; height: 14px; }
 .tuile-nom {
   padding: 0 var(--space-1);
   font-size: var(--play-font-tile);

@@ -461,7 +461,7 @@ V2 (menu de démo) : pv3 ─ pseudo ─► pv1 ; pv2 ─ tuile ─► pv3
 | S06-01 | En partie | 00c, p01, p03 | Pays et langue simulés par le menu de démo. |
 | S06-02 | Couverte | p01 | Ordre du backlog. |
 | S06-03 | Couverte | p01, p02 | Rangées par genre et « Voir tout ». |
-| S06-04 | Couverte | p01, p02, p03 | Icône, nom, note. |
+| S06-04 | Couverte | p01, p02, p03 | Icône, nom, note ; en plus, encadré « Sans pub » (badge V2 avancé au MVP, validé le 2026-10-12). |
 | S07-01, S07-02, S07-05 | Couvertes | p03 | Vidéo simulée (30 s), sans fichier. |
 | S07-03 (V2) | Couverte à part | pv3 | Badges hors parcours MVP. |
 | S07-04 | Couverte | p03, p08 | Scores fictifs ; remise à zéro décrite, pas simulée dans le temps. |

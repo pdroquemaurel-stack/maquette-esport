@@ -107,7 +107,8 @@ jeu momentanément indisponible ; lien partagé reçu par un ami qui a Max it, o
 - Accueil : ordre du backlog (jeu à la une, récemment joués, Recommandé pour vous, mes favoris,
   nouveautés, rangées par genre avec « Voir tout ») ; une seule carte « à la une » au style des
   cartes « Discover » ; « Recommandé pour vous » = sélection du pays au MVP.
-- Tuile : icône, nom et note moyenne. Titre de la mini app : « Play ».
+- Tuile : icône, nom, note moyenne et encadré « Sans pub » pour les jeux sans publicité
+  (écart au backlog, où ce badge est en V2 : validé le 2026-10-12). Titre de la mini app : « Play ».
 - Fiche jeu : favori, langues, nombre de joueurs, mode solo ou multijoueur, nombre d'avis,
   classements, « Signaler » ; ligne « Fourni par » seulement pour le partenaire concerné ;
   « Donner mon avis » désactivé si le jeu n'a jamais été lancé ; pas de « Voir tout » sur la
