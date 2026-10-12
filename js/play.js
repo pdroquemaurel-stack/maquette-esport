@@ -101,13 +101,57 @@ const Play = (function () {
   /* =====================================================================
      Pseudos (S11-01) : au MVP, pas de profil joueur ; un pseudo généré automatiquement
      (« Joueur4821 ») s'affiche dans les classements et sous les avis.
-     Sur les écrans V2 (pv…, ou « v2=1 »), le pseudo choisi s'affiche et ouvre le profil.
+     En V2 (interrupteur « Afficher les fonctions V2 » du menu de démo, écrans pv…, ou « v2=1 »),
+     le pseudo choisi et l'avatar s'affichent, et un appui sur un pseudo ouvre le profil.
      ===================================================================== */
 
-  function v2() { return /^pv/.test(pageCourante()) || Nav.param("v2") === "1"; }
+  function v2() { return !!Etat.get("playV2") || /^pv/.test(pageCourante()) || Nav.param("v2") === "1"; }
 
-  /* Pseudo choisi du joueur (commun avec la plateforme de tournois) */
-  function pseudo() { return Etat.get("pseudo") || PLAY.joueur.pseudo; }
+  /* Pseudo du joueur, commun avec la plateforme de tournois (clé « pseudo » partagée, S11-01) :
+     celui des tournois s'il existe ; pour un nouveau joueur, le pseudo proposé automatiquement */
+  function pseudo() {
+    return Etat.get("pseudo") || (Etat.get("playNouveau") ? PLAY.joueur.pseudoGenere : PLAY.joueur.pseudo);
+  }
+  /* Origine du pseudo affichée sur le profil : proposé, repris des tournois, ou remplacé */
+  function originePseudo() {
+    if (Etat.get("pseudoOffensant")) return "remplace";
+    if (pseudo() === PLAY.joueur.pseudoGenere) return "propose";
+    return "commun";
+  }
+
+  /* ---- Règles du pseudo (S11-01) ---- */
+  /* 3 à 16 caractères : lettres, chiffres, « _ » et « . » */
+  function pseudoValide(nom) { return /^[A-Za-z0-9_.]{3,16}$/.test(nom); }
+  /* Unique sur les 17 pays : pseudos pris et joueurs fictifs, sans tenir compte des majuscules */
+  function pseudoPris(nom) {
+    const pris = PLAY.pseudosPris.concat(PLAY.joueurs.MA, PLAY.joueurs.SN).map((x) => x.toLowerCase());
+    return nom.toLowerCase() !== pseudo().toLowerCase() && pris.includes(nom.toLowerCase());
+  }
+  /* Proposition de rechange : le pseudo suivi de chiffres, libre */
+  function pseudoRechange(nom) {
+    const base = nom.slice(0, 13);
+    for (let i = 7; i < 100; i += 7) { if (!pseudoPris(base + i)) return base + i; }
+    return base + "_" + new Date().getDate();
+  }
+  /* Modifiable une fois tous les 30 jours ; sans limite après un pseudo jugé offensant */
+  function dernierChangementPseudo() { return Etat.get("pseudoModifieLe") || PLAY.joueur.pseudoModifieLe; }
+  function prochainChangementPseudo() {
+    return new Date(new Date(dernierChangementPseudo() + "T12:00").getTime() + 30 * 86400000);
+  }
+  function pseudoModifiable() { return !!Etat.get("pseudoOffensant") || new Date() >= prochainChangementPseudo(); }
+  /* Nouveau pseudo : aussi pour la plateforme de tournois */
+  function changerPseudo(nom) {
+    Etat.set("pseudo", nom);
+    Etat.set("pseudoModifieLe", aujourdhui());
+    Etat.set("pseudoOffensant", null);
+  }
+
+  /* ---- Avatar emoji (V2, S11-01) : le mien, ou celui d'un autre joueur tiré de son pseudo ---- */
+  function monAvatar() { return Etat.get("playAvatar") || PLAY.joueur.avatar; }
+  function avatarDe(nom) { return nom === pseudo() ? monAvatar() : PLAY.avatars[graine(nom) % PLAY.avatars.length]; }
+  function avatarHtml(nom, classe) {
+    return '<span class="avatar-emoji ' + (classe || "") + '" aria-hidden="true">' + avatarDe(nom) + "</span>";
+  }
 
   /* Nombre tiré d'un texte : valeurs fictives stables d'une page à l'autre */
   function graine(texte) { return String(texte).split("").reduce((n, c) => (n * 31 + c.charCodeAt(0)) % 99991, 7); }
@@ -303,8 +347,29 @@ const Play = (function () {
   }
 
   /* « Recommandé pour vous » : sélection du responsable local, la même pour tous au MVP ;
-     un jeu masqué en est retiré automatiquement (S03-04). Personnalisation : V2 (S09-03). */
-  function recommandes() { return infosPays().recommandes.map(jeu).filter(disponible); }
+     un jeu masqué en est retiré automatiquement (S03-04). */
+  function selectionPays() { return infosPays().recommandes.map(jeu).filter(disponible); }
+  /* En V2, personnalisé (S09-03) : jeux pas encore lancés des genres les plus joués, mêlés à la
+     sélection du responsable local ; un joueur qui n'a encore rien joué voit la sélection. */
+  function recommandes() {
+    const selection = selectionPays();
+    if (!v2() || !idsLances().length) return selection;
+    const lances = idsLances();
+    const poids = {};
+    lances.map(jeu).filter(Boolean).forEach((j) => { poids[j.genre] = (poids[j.genre] || 0) + 1; });
+    const perso = parPopularite(catalogue().filter((j) => poids[j.genre] && !lances.includes(j.id)))
+      .sort((a, b) => poids[b.genre] - poids[a.genre]);
+    const choix = [];
+    // Deux recommandations personnelles, puis un jeu de la sélection, et ainsi de suite
+    for (let i = 0; choix.length < 8 && (perso.length || selection.length) && i < 40; i++) {
+      const source = i % 3 === 2 ? selection : perso.length ? perso : selection;
+      const suivant = source.shift();
+      if (suivant && !lances.includes(suivant.id) && !choix.includes(suivant)) choix.push(suivant);
+    }
+    return choix;
+  }
+  /* La section est-elle personnalisée ? (étiquette V2 sur l'accueil) */
+  function recommandesPerso() { return v2() && idsLances().length > 0; }
 
   /* Nouveautés : publiés depuis moins de 30 jours, du plus récent au plus ancien (S03-03) */
   function nouveautes() { return catalogue().filter((j) => j.publie < 30).sort((a, b) => a.publie - b.publie); }
@@ -325,52 +390,97 @@ const Play = (function () {
      Profil joueur (V2, S11-02)
      ===================================================================== */
 
-  /* Statistiques d'un joueur : les miennes (nom absent ou mon pseudo), sinon fictives et stables */
-  function statistiques(nom) {
-    if (!nom || nom === pseudo()) {
-      const lances = idsLances().map(jeu).filter(Boolean);
-      const nouveau = Etat.get("playNouveau");
+  /* Périodes de l'historique de jeu (données jusqu'à hier) et leur part des 6 mois.
+     autresJeux et autresSession : moyennes des autres joueurs du pays sur la période. */
+  const PERIODES_HISTORIQUE = {
+    semaine: { part: 0.055, autresJeux: 2, autresSession: 74 },
+    mois: { part: 0.2, autresJeux: 4, autresSession: 186 },
+    sixMois: { part: 1, autresJeux: 5, autresSession: 351 }
+  };
+  const MOMENTS = ["matin", "apresMidi", "soir", "nuit"];
+
+  /* Statistiques d'un joueur sur une période (semaine, mois, sixMois) :
+     les miennes (nom absent ou mon pseudo), sinon fictives et stables, tirées du pseudo.
+     KPI d'après le profil joueur du Game Hub de Samsung, et ceux du backlog (S11-02). */
+  function statistiques(nom, periode) {
+    const p = PERIODES_HISTORIQUE[periode] || PERIODES_HISTORIQUE.sixMois;
+    const moi = !nom || nom === pseudo();
+    const nouveauJoueur = Etat.get("playNouveau");
+    let base;   // { parJeu: { id: { minutes, lancements, session } }, moment, dernier, aujourdhui, ... }
+
+    if (moi) {
       const s = PLAY.joueur.stats;
-      const temps = lances.map((j) => ({ jeu: j, minutes: nouveau ? 6 : (s.temps[j.id] || 12) }))
-        .sort((a, b) => b.minutes - a.minutes);
-      return {
-        pseudo: pseudo(), moi: true,
-        parties: nouveau ? lances.length : s.parties,
-        partiesSemaine: nouveau ? lances.length : s.partiesSemaine,
-        jeux: lances.length,
-        genre: genrePrefere(lances),
-        serie: nouveau ? Math.min(1, lances.length) : s.serie,
+      const parJeu = {};
+      // Historique de départ (sauf nouveau joueur), puis jeux lancés pendant la démo
+      if (!nouveauJoueur) Object.keys(s.sixMois.parJeu).forEach((id) => { parJeu[id] = s.sixMois.parJeu[id]; });
+      idsLances().forEach((id) => { if (!parJeu[id]) parJeu[id] = { minutes: 6, lancements: 1, session: 6 }; });
+      const recent = recents()[0];
+      base = {
+        parJeu: parJeu,
+        moment: nouveauJoueur ? "apresMidi" : s.sixMois.moment,
+        dernier: recent ? { jeu: recent, ilYa: nouveauJoueur ? 2 : s.dernier.ilYa } : null,
+        aujourdhui: nouveauJoueur ? { jeux: idsLances().length, minutes: 6 * idsLances().length } : s.aujourdhui,
+        parties: nouveauJoueur ? idsLances().length : s.parties,
+        partiesSemaine: nouveauJoueur ? idsLances().length : s.partiesSemaine,
+        serie: nouveauJoueur ? Math.min(1, idsLances().length) : s.serie,
         positions: meilleuresPositions(),
         favoris: idsFavoris().length,
-        avis: Object.keys(tousMesAvis()).length,
-        temps: temps
+        avis: Object.keys(tousMesAvis()).length
+      };
+    } else {
+      const alea = hasard(graine(nom + pays()));
+      const parJeu = {};
+      parPopularite(catalogue()).filter(() => alea() < 0.3).slice(0, 6).forEach((j) => {
+        parJeu[j.id] = { minutes: 60 + Math.floor(alea() * 2400), lancements: 8 + Math.floor(alea() * 500), session: 8 + Math.floor(alea() * 110) };
+      });
+      if (!Object.keys(parJeu).length) parJeu[parPopularite(catalogue())[0].id] = { minutes: 240, lancements: 30, session: 25 };
+      const ids = Object.keys(parJeu);
+      base = {
+        parJeu: parJeu,
+        moment: MOMENTS[Math.floor(alea() * MOMENTS.length)],
+        dernier: { jeu: jeu(ids[0]), ilYa: 5 + Math.floor(alea() * 300) },
+        aujourdhui: { jeux: Math.floor(alea() * 3), minutes: Math.floor(alea() * 90) },
+        parties: 40 + Math.floor(alea() * 400),
+        partiesSemaine: 3 + Math.floor(alea() * 40),
+        serie: 1 + Math.floor(alea() * 12),
+        positions: ids.map(jeu).filter((j) => j && aUnClassement(j)).slice(0, 3).map((j, i) => ({
+          jeu: j, periode: PERIODES[i % 3], rang: 1 + Math.floor(alea() * (i === 0 ? 5 : 60))
+        })).sort((a, b) => a.rang - b.rang),
+        favoris: Math.floor(alea() * 9),
+        avis: Math.floor(alea() * 7)
       };
     }
-    // Autre joueur : valeurs tirées de son pseudo
-    const alea = hasard(graine(nom + pays()));
-    const jeux = parPopularite(catalogue()).filter(() => alea() < 0.35).slice(0, 5);
-    if (!jeux.length) jeux.push(parPopularite(catalogue())[0]);
-    const positions = jeux.filter(aUnClassement).slice(0, 3).map((j, i) => ({
-      jeu: j, periode: PERIODES[i % 3], rang: 1 + Math.floor(alea() * (i === 0 ? 5 : 60))
-    })).sort((a, b) => a.rang - b.rang);
-    return {
-      pseudo: nom, moi: false,
-      parties: 40 + Math.floor(alea() * 400),
-      partiesSemaine: 3 + Math.floor(alea() * 40),
-      jeux: jeux.length + Math.floor(alea() * 6),
-      genre: genrePrefere(jeux),
-      serie: 1 + Math.floor(alea() * 12),
-      positions: positions,
-      favoris: Math.floor(alea() * 9),
-      avis: Math.floor(alea() * 7),
-      temps: jeux.map((j) => ({ jeu: j, minutes: 10 + Math.floor(alea() * 400) })).sort((a, b) => b.minutes - a.minutes)
-    };
-  }
-  function genrePrefere(jeux) {
-    const compte = {};
-    jeux.forEach((j) => { compte[j.genre] = (compte[j.genre] || 0) + 1; });
-    const meilleur = Object.keys(compte).sort((a, b) => compte[b] - compte[a])[0];
-    return meilleur || null;
+
+    // Part de la période : jeux lancés au moins une fois sur la période, sessions un peu plus courtes
+    const jeux = Object.keys(base.parJeu).map((id) => ({ jeu: jeu(id), v: base.parJeu[id] }))
+      .filter((x) => x.jeu && disponible(x.jeu))
+      .map((x) => ({
+        jeu: x.jeu,
+        minutes: Math.max(1, Math.round(x.v.minutes * p.part)),
+        lancements: Math.round(x.v.lancements * p.part),
+        session: Math.max(1, Math.round(x.v.session * (p.part === 1 ? 1 : p.part > 0.1 ? 0.9 : 0.7)))
+      }))
+      .filter((x) => x.lancements > 0 || p.part === 1);
+    const minutes = jeux.reduce((somme, x) => somme + x.minutes, 0);
+    const parGenre = {};
+    jeux.forEach((x) => { parGenre[x.jeu.genre] = (parGenre[x.jeu.genre] || 0) + x.minutes; });
+    const autres = PLAY.joueur.stats.autres;
+
+    return Object.assign(base, {
+      pseudo: moi ? pseudo() : nom, moi: moi,
+      avatar: moi ? monAvatar() : avatarDe(nom),
+      minutes: minutes,
+      jeux: jeux.length,
+      session: jeux.reduce((max, x) => Math.max(max, x.session), 0),
+      genre: Object.keys(parGenre).sort((a, b) => parGenre[b] - parGenre[a])[0] || null,
+      autresMinutes: Math.round(autres.minutes * p.part),
+      autresJeux: p.autresJeux,
+      autresSession: p.autresSession,
+      // Les trois premiers jeux selon le temps de jeu, le nombre d'ouvertures et la plus longue session
+      topTemps: jeux.slice().sort((a, b) => b.minutes - a.minutes).slice(0, 3),
+      topLancements: jeux.slice().sort((a, b) => b.lancements - a.lancements).slice(0, 3),
+      topSession: jeux.slice().sort((a, b) => b.session - a.session).slice(0, 3)
+    });
   }
   /* « 6 h 52 min » */
   function duree(minutes) { return t("profil.heures", { h: Math.floor(minutes / 60), m: minutes % 60 }); }
@@ -710,6 +820,7 @@ const Play = (function () {
     const moi = entree.moi;
     return '<li class="ligne-classement' + (moi ? " ligne-moi" : "") + '">' +
       (entree.rang <= 3 ? medaille(entree.rang) : '<span class="rang-play">' + t("classement.rang", { rang: entree.rang }) + "</span>") +
+      (v2() ? avatarHtml(entree.pseudo, "avatar-ligne") : "") +
       '<span class="nom-classement">' + pseudoHtml(entree.pseudo) + (moi ? ' <small class="pastille-toi">' + t("classement.toi") + "</small>" : "") + "</span>" +
       '<span class="score-classement">' + t("classement.points", { n: entier(entree.score) }) + "</span></li>";
   }
@@ -742,7 +853,8 @@ const Play = (function () {
     const affiche = mien ? monNom() : nomAffiche(avis.pseudo);
     const pied = mien ? actions || "" : '<button class="lien-avis lien-signaler" data-signaler="' + avis.id + '">' + t("avis.signaler") + "</button>";
     return '<article class="avis-play' + (mien ? " avis-mien" : "") + '">' +
-      '<div class="avis-tete"><span class="avatar-play" style="--av: ' + couleurAvatar(affiche) + '" aria-hidden="true">' + initiales(affiche) + "</span>" +
+      '<div class="avis-tete">' + (v2() ? avatarHtml(nom, "avatar-avis")
+        : '<span class="avatar-play" style="--av: ' + couleurAvatar(affiche) + '" aria-hidden="true">' + initiales(affiche) + "</span>") +
       '<div class="avis-auteur"><span class="avis-nom">' + pseudoHtml(nom) + (mien ? " <small>· " + t("avis.tonAvis") + "</small>" : "") + "</span>" +
       '<span class="avis-note">' + etoiles(avis.note, 18) + '<span class="avis-date">' + dateCourte(avis.date) + "</span></span></div></div>" +
       (avis.texte ? '<p class="avis-texte' + (long ? " replie" : "") + '" dir="ltr" lang="fr">' + avis.texte + "</p>" +
@@ -789,12 +901,14 @@ const Play = (function () {
     langue, rtl, t, appliquerLangue, decimal, entier,
     pays, infosPays, nomPays, jeu, partenaire, genre, nomGenre, disponible, catalogue, parPopularite,
     recents, favoris, estFavori, basculerFavori, enregistrerLancement, aLance,
-    v2, pseudo, monNom, nomAffiche, pseudoHtml, lienProfil,
+    v2, pseudo, monNom, nomAffiche, pseudoHtml, lienProfil, originePseudo,
+    pseudoValide, pseudoPris, pseudoRechange, pseudoModifiable, prochainChangementPseudo, changerPseudo,
+    monAvatar, avatarDe, avatarHtml,
     monAvis, enregistrerAvis, supprimerAvis, dateCourte, avisDesJoueurs, avisVisibles, moyenne, repartition,
     carteAvis, brancherAvis, dejaSignaleAujourdhui, signalerJeu,
     PERIODES, aUnClassement, maPosition, classement, encouragement, ligneClassement, medaille, maPlace,
-    aLaUne, recommandes, nouveautes, genresVisibles, jeuxDuGenre, similaires,
-    statistiques, duree,
+    aLaUne, recommandes, recommandesPerso, nouveautes, genresVisibles, jeuxDuGenre, similaires,
+    statistiques, duree, MOMENTS,
     ici, depuis, url, lienFiche, jeuDeLaPage, monter,
     icone, etoiles, etiquetteV2, note, pastilleGenre, visuel, tuile, rangee, feuille
   };

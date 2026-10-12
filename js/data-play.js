@@ -60,13 +60,40 @@ const PLAY = {
     favoris: ["bloc-mania", "ludo-famille"],                 // le dernier ajouté en premier
     // Avis déjà laissés (S10-01) : un seul par jeu, modifiable ou supprimable
     avis: { "foot-lions": { note: 5, texte: "Le meilleur jeu de foot de Play. Les matchs à deux sur le même téléphone sont géniaux.", date: "2026-10-02" } },
-    // Profil (V2, S11-02) : statistiques mesurées par Max it
+    // Pseudo et avatar (V2, S11-01) : dernier changement de pseudo (même date que js/data.js, pseudo commun
+    // avec la plateforme de tournois) ; avatar emoji choisi dans PLAY.avatars
+    pseudoModifieLe: "2026-08-20",
+    avatar: "🦊",
+    // Profil (V2, S11-02) : statistiques mesurées par Max it, d'après les indicateurs du profil joueur
+    // du Game Hub de Samsung (KPI repris, pas la charte graphique)
     stats: {
       parties: 148, partiesSemaine: 23, serie: 3,
-      // Temps de jeu par jeu, en minutes (de l'appui sur « Jouer » à la fermeture de la mini app)
-      temps: { "foot-lions": 412, "bloc-mania": 265, "rallye-dunes": 131, "ludo-famille": 96, "cuisine-mama": 54 }
+      dernier: { ilYa: 41 },                       // dernier jeu (premier des récents), lancé il y a 41 min
+      aujourdhui: { jeux: 2, minutes: 62 },        // jeux joués et durée de jeu aujourd'hui
+      // Historique sur 6 mois (données jusqu'à hier) ; les périodes de 30 et 7 jours en sont une part (voir js/play.js).
+      // minutes : temps de jeu ; lancements : nombre d'ouvertures ; session : plus longue session unique, en minutes
+      sixMois: {
+        moment: "soir", genre: "sport",
+        parJeu: {
+          "foot-lions": { minutes: 2540, lancements: 412, session: 74 },
+          "bloc-mania": { minutes: 1630, lancements: 286, session: 52 },
+          "rallye-dunes": { minutes: 905, lancements: 133, session: 93 },
+          "ludo-famille": { minutes: 610, lancements: 64, session: 68 },
+          "cuisine-mama": { minutes: 344, lancements: 41, session: 31 },
+          "quiz-afrique": { minutes: 210, lancements: 37, session: 22 },
+          "mot-juste": { minutes: 96, lancements: 48, session: 9 }
+        }
+      },
+      // Moyennes des autres joueurs du pays, sur 6 mois
+      autres: { minutes: 5256, jeux: 5, session: 351 }
     }
   },
+
+  /* ---- Avatars emoji proposés au joueur (V2, S11-01) : sans personnage ni marque ---- */
+  avatars: ["🦊", "🐼", "🐯", "🦁", "🐸", "🐵", "🐧", "🦄", "🐢", "🐙", "🦋", "🐝", "🍉", "🍓", "⚽", "🎲"],
+
+  /* ---- Pseudos déjà pris dans les 17 pays (S11-01 : pseudo unique), en plus des joueurs ci-dessous ---- */
+  pseudosPris: ["Lion_Dakar", "Rachid_GOAT", "Taha_Sniper", "Champion", "SuperJoueur", "Max_it", "Kofi.Gh", "Ines_Tunis"],
 
   /* ---- Positions du joueur dans les classements (S07-04) ----
      Par jeu, pour le jour, la semaine et tous les temps (null : pas encore classé sur la période).

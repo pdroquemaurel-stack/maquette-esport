@@ -246,6 +246,53 @@
     doc().getElementById("message").value = "un puzzle"; doc().getElementById("formulaire").dispatchEvent(new Event("submit", { cancelable: true }));
     await attendre(() => doc().querySelectorAll(".bulle-assistant .tuile-play").length, 3000, "réponse de l'assistant");
     log(!doc().querySelector('.bulle-assistant [href*="bloc-mania"]'), "N · assistant : jamais un jeu masqué");
+
+    // ---- O. Interrupteur V2 : accueil, recommandations personnalisées, avatars (S09-03, S11-02) ----
+    etat({ playV2: true });
+    await charger("p01-accueil.html"); await pause(400);
+    log(doc().querySelector('.bouton-profil[href="pv1-profil.html"]') && doc().querySelector('.carte-assistant[href="pv2-assistant.html"]'), "O · V2 : bouton du profil et assistant sur l'accueil");
+    const recoV2 = jeuxDe(sections().find((s) => s.startsWith("Recommandé pour vous")));
+    log(/Choisis d'après les jeux auxquels tu joues/.test(texte()) && ["sport", "puzzle", "course"].includes(Banc.win().eval("Play.jeu('" + recoV2[0] + "').genre"))
+      && !recoV2.some((id) => ["foot-lions", "bloc-mania", "rallye-dunes"].includes(id)), "O · S09-03 : recommandés des genres joués, jamais lancés");
+    etat({ playV2: true, playNouveau: true });
+    await charger("p01-accueil.html"); await pause(400);
+    log(jeuxDe("Recommandé pour vous")[0] === "cuisine-mama", "O · S09-03 : nouveau joueur → sélection du pays");
+    etat({ playV2: true });
+    await charger("p03-jeu.html?jeu=foot-lions"); await pause(400);
+    log(doc().querySelector(".badge-play") && doc().querySelector(".podium .avatar-emoji") && doc().querySelector("#classements a.lien-pseudo"), "O · fiche en V2 : badges, avatars et pseudos cliquables");
+
+    // ---- P. Profil façon Game Hub (S11-02) ----
+    await charger("pv1-profil.html"); await pause(400);
+    log(/Joué récemment/.test(texte()) && /il y a 41 min/.test(texte()) && /Jeux joués aujourd'hui/.test(texte()), "P · joué récemment et aujourd'hui");
+    log(doc().querySelectorAll(".comparaison").length === 3 && /Les autres/.test(texte()) && /Moment préféré/.test(texte()) && /Le soir/.test(texte()), "P · comparaison aux autres, moment préféré");
+    log(/Le plus de temps de jeu/.test(texte()) && /Les plus lancés/.test(texte()) && /Plus longue session par jeu/.test(texte()) && /412 fois/.test(texte()), "P · top 3 par temps, lancements, session");
+    const sixMois = doc().querySelector(".carte-comparee .grand").textContent;
+    cliquer('[data-periode="semaine"]'); await pause(300);
+    log(doc().querySelector(".carte-comparee .grand").textContent !== sixMois && /7 derniers jours/.test(texte()), "P · historique sur 7 jours");
+
+    // ---- Q. Modifier son profil (S11-01) ----
+    await suivre("a.bouton-modifier");
+    log(page().startsWith("pv4-modifier-profil.html") && doc().querySelectorAll(".choix-avatar").length === 16, "Q · Modifier → avatar emoji (16 choix) et pseudo");
+    cliquer('[data-avatar="🐼"]');
+    const champP = doc().getElementById("pseudo");
+    champP.value = "Salma_ElA"; champP.dispatchEvent(new Event("input"));
+    cliquer("#enregistrer"); await pause(200);
+    log(/déjà pris/.test(texte()) && doc().getElementById("prendre"), "Q · pseudo déjà pris : refusé, avec une proposition");
+    champP.value = "Lion du desert"; champP.dispatchEvent(new Event("input"));
+    cliquer("#enregistrer"); await pause(200);
+    log(/ne respecte pas les règles/.test(texte()), "Q · pseudo invalide refusé");
+    champP.value = "Super_Youss"; champP.dispatchEvent(new Event("input"));
+    let nav = navigation(); cliquer("#enregistrer"); await nav; await pause(400);
+    log(page().startsWith("pv1-profil.html") && /Super_Youss/.test(texte()) && doc().querySelector(".avatar-profil").textContent === "🐼"
+      && lire().pseudo === "Super_Youss", "Q · avatar et pseudo enregistrés, pseudo commun avec les tournois");
+    await charger("pv4-modifier-profil.html"); await pause(400);
+    log(doc().getElementById("pseudo").disabled && /Tu pourras le modifier à nouveau le/.test(texte()), "Q · pseudo modifiable une fois tous les 30 jours");
+    etat({ playV2: true, pseudoOffensant: "Youss_KZ", pseudo: "Joueur_48213", pseudoModifieLe: new Date().toISOString().slice(0, 10) });
+    await charger("pv4-modifier-profil.html"); await pause(400);
+    log(!doc().getElementById("pseudo").disabled && /Pseudo remplacé/.test(texte()), "Q · pseudo offensant remplacé : nouveau choix sans limite de 30 jours");
+    etat({ playV2: true, playNouveau: true });
+    await charger("pv1-profil.html"); await pause(400);
+    log(/Joueur4821/.test(texte()) && /Pseudo proposé automatiquement/.test(texte()), "Q · nouveau joueur : pseudo proposé automatiquement");
   } catch (e) { log(false, "erreur : " + e.message); }
   s.textContent += (echecs ? echecs + " échec(s)" : "Aucun échec") + "\nFIN"; })();
 </script>

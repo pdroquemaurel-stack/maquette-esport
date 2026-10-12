@@ -6,7 +6,9 @@
      S03-04 (« Recommandé pour vous », sélection du pays), S03-03 (nouveautés), S03-05 (ordre des genres),
      S09-01 (mes favoris), S09-02 (récemment joués),
      S08-03 (jeux indisponibles masqués ; « ?indispo=1 » : arrivée par le lien d'un jeu indisponible).
-     Ordre : jeu à la une, récemment joués, Recommandé pour vous, mes favoris, nouveautés, rangées par genre. -->
+     Ordre : jeu à la une, récemment joués, Recommandé pour vous, mes favoris, nouveautés, rangées par genre.
+     Fonctions V2 (interrupteur du menu de démo) : bouton du profil joueur (S11-02 : le profil s'ouvre depuis
+     l'accueil), accès à l'assistant IA (S09-04), « Recommandé pour vous » personnalisé (S09-03). -->
 <html lang="fr">
 <head>
   <meta charset="utf-8">
@@ -62,8 +64,12 @@
     let html = "";
 
     // En-tête : retour vers Max it (univers gaming), illustration, bienvenue (S06-01)
-    html += '<header class="entete-play">' +
+    html += '<header class="entete-play"><div class="entete-haut">' +
       '<a href="00c-maxit-gaming.html" class="retour-play" aria-label="' + t("commun.retourMaxit") + '">' + Play.icone("retour") + "</a>" +
+      // V2 : mon profil, avec mon avatar (S11-02)
+      (Play.v2() ? '<a href="pv1-profil.html" class="bouton-profil" aria-label="' + t("accueil.monProfil") + '">' +
+        '<span class="avatar-emoji" aria-hidden="true">' + Play.monAvatar() + "</span>" + Play.etiquetteV2() + "</a>" : "") +
+      "</div>" +
       ILLUSTRATION +
       "<h1>" + t("accueil.titre") + "</h1>" +
       "<p>" + t("accueil.sousTitre") + "</p>" +
@@ -85,10 +91,19 @@
         '<span class="pilule-une">' + t("accueil.decouvrir") + "</span></span></a></section>";
     }
 
+    // V2 : l'assistant IA de Max it recommande des jeux dans une conversation (S09-04)
+    if (Play.v2()) {
+      html += '<a href="pv2-assistant.html" class="carte-assistant section-play">' +
+        '<span class="pastille-genre" style="--gc: var(--play-v2)">' + Play.icone("etincelles", "f-play-white") + "</span>" +
+        "<div><strong>" + t("accueil.assistantTitre") + " " + Play.etiquetteV2() + "</strong><p>" + t("accueil.assistantTexte") + "</p></div>" +
+        Play.icone("chevron", "f-play-text") + "</a>";
+    }
+
     // 2. Récemment joués : dès la première partie (S09-02)
     html += Play.rangee(t("accueil.recents"), Play.recents(), ici);
-    // 3. Recommandé pour vous : toujours visible, sélection du pays (S03-04)
-    html += Play.rangee(t("accueil.reco"), Play.recommandes(), ici);
+    // 3. Recommandé pour vous : toujours visible, sélection du pays (S03-04) ; personnalisé en V2 (S09-03)
+    html += Play.rangee(t("accueil.reco") + (Play.recommandesPerso() ? " " + Play.etiquetteV2() +
+      '<small class="sous-titre-rangee">' + t("accueil.recoPerso") + "</small>" : ""), Play.recommandes(), ici);
     // 4. Mes favoris : dès le premier favori (S09-01)
     html += Play.rangee(t("accueil.favoris"), Play.favoris(), ici);
     // 5. Nouveautés : toujours visible (S03-03)

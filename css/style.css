@@ -2052,6 +2052,132 @@ svg { display: block; flex-shrink: 0; }
 .saisie-assistant input:focus { outline: 0; border-color: var(--color-primary); }
 .saisie-assistant .bouton-rond-play { width: 52px; height: 52px; background: var(--color-primary); }
 
+/* ============ Fonctions V2 (interrupteur du menu de démo) ============ */
+/* Avatar emoji (S11-01) : sur un disque doux, dans les classements, sous les avis, sur le profil */
+.avatar-emoji {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: var(--radius-round);
+  background: var(--play-surface);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  line-height: 1;
+}
+.avatar-ligne { width: 36px; height: 36px; font-size: 20px; }
+.avatar-podium { width: 40px; height: 40px; font-size: 22px; background: var(--play-sheet); box-shadow: var(--play-shadow); }
+.avatar-profil { width: 96px; height: 96px; font-size: 54px; background: var(--play-sheet); box-shadow: var(--play-shadow); margin: 0 auto var(--space-3); display: flex; }
+.avatar-emoji.pop { animation: play-pop .35s ease-out; }
+
+/* Accueil : bouton du profil à la fin de la ligne du retour, carte de l'assistant */
+.entete-haut { position: relative; z-index: 1; display: flex; align-items: center; justify-content: space-between; }
+.bouton-profil {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: var(--play-touch);
+  padding-inline: 4px var(--space-2);
+  margin-top: var(--space-1);
+  border-radius: var(--radius-pill);
+  background: var(--play-sheet);
+  box-shadow: var(--play-shadow);
+}
+.bouton-profil .avatar-emoji { width: 40px; height: 40px; font-size: 22px; }
+.carte-assistant {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin: var(--space-5) var(--page-gutter) 0;
+  padding: var(--space-4);
+  border-radius: var(--play-radius-card);
+  background: var(--play-v2-soft);
+}
+.carte-assistant div { flex: 1; min-width: 0; }
+.carte-assistant strong { display: block; font-weight: 800; }
+.carte-assistant p { font-size: var(--play-font-small); color: var(--play-text-secondary); }
+.carte-assistant > svg { width: 22px; height: 22px; }
+.sous-titre-rangee { display: block; font-size: var(--play-font-small); font-weight: 600; color: var(--play-text-secondary); }
+
+/* Profil (S11-02) : bouton « Modifier », cartes de statistiques façon Game Hub, charte de Play */
+.carte-profil { position: relative; }
+.bouton-modifier {
+  position: absolute;
+  top: var(--space-3);
+  inset-inline-end: var(--space-3);
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-pill);
+  background: var(--play-sheet);
+  box-shadow: var(--play-shadow);
+  font-size: var(--play-font-small);
+  font-weight: 800;
+}
+.carte-stat {
+  display: block;
+  min-width: 0;
+  padding: var(--space-4);
+  border-radius: var(--play-radius-card);
+  background: var(--play-sheet);
+  box-shadow: var(--play-shadow);
+}
+.carte-stat h3 { font-size: var(--play-font-small); font-weight: 800; color: var(--play-text-secondary); line-height: 1.25; }
+.carte-stat.section-play { margin: var(--space-3) var(--page-gutter) 0; }
+.carte-recent { display: flex; align-items: center; gap: var(--space-3); }
+.carte-recent .vignette-cible { width: 64px; height: 64px; border-radius: 18px; overflow: hidden; flex-shrink: 0; }
+.carte-recent div { flex: 1; min-width: 0; }
+.carte-recent small { display: block; font-size: var(--play-font-small); font-weight: 700; color: var(--play-text-secondary); }
+.carte-recent strong { display: block; font-size: 18px; font-weight: 800; overflow-wrap: anywhere; }
+.il-y-a { font-size: var(--play-font-small); color: var(--play-text-secondary); white-space: nowrap; }
+.il-y-a b, .chiffre-stat b, .grand b, .valeur-top b { color: var(--color-primary-pressed); font-weight: 800; }
+.il-y-a b { font-size: 26px; }
+.grille-stats { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); margin: var(--space-3) var(--page-gutter) 0; }
+.chiffre-stat p { margin-top: var(--space-2); font-size: var(--play-font-small); color: var(--play-text-secondary); text-align: center; }
+.chiffre-stat b { font-size: 36px; }
+.carte-comparee .grand { margin: var(--space-1) 0 var(--space-3); font-size: var(--play-font-small); color: var(--play-text-secondary); }
+.carte-comparee .grand b { font-size: 26px; }
+.comparaison { display: flex; flex-direction: column; gap: var(--space-2); }
+.ligne-comparaison { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 2px var(--space-2); font-size: 13px; font-weight: 700; color: var(--play-text-secondary); }
+.ligne-comparaison b { grid-column: 1 / -1; font-size: var(--play-font-small); color: var(--play-text); }
+.ligne-comparaison.autres b { color: var(--play-v2); }
+.barre-comparaison { height: 10px; border-radius: var(--radius-pill); background: var(--play-chip); overflow: hidden; }
+.barre-comparaison i { display: block; height: 100%; border-radius: var(--radius-pill); }
+.barre-moi { background: var(--color-primary); }
+.barre-autres { background: var(--play-v2); }
+.carte-genre { background: var(--gs); display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-2); }
+.carte-genre strong, .carte-moment strong { font-size: 17px; font-weight: 800; line-height: 1.2; }
+.carte-moment { background: var(--play-g-quiz-soft); display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-2); }
+.icone-moment { font-size: 34px; line-height: 1; }
+.top-profil { list-style: none; margin-top: var(--space-2); }
+.top-profil li + li { border-top: 2px solid var(--play-divider); }
+.top-profil a { display: flex; align-items: center; gap: var(--space-3); min-height: 56px; padding: var(--space-1) 0; }
+.top-profil .vignette-cible { width: 40px; height: 40px; border-radius: 12px; overflow: hidden; flex-shrink: 0; }
+.nom-top { flex: 1; min-width: 0; font-weight: 700; overflow-wrap: anywhere; }
+.valeur-top { font-size: var(--play-font-small); color: var(--play-text-secondary); white-space: nowrap; }
+.valeur-top b { font-size: 20px; }
+.periodes-profil { flex-wrap: wrap; padding: 0 var(--page-gutter); margin-top: 0; }
+.jusqu-hier { padding-top: var(--space-2); padding-bottom: 0; }
+.stats-profil.section-play { margin-top: 0; }
+
+/* Modifier mon profil (S11-01) : grille d'emojis, champ du pseudo */
+.apercu-profil { padding-top: var(--space-2); }
+.grille-avatars { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-2); }
+.choix-avatar {
+  min-height: 64px;
+  border-radius: 18px;
+  background: var(--play-sheet);
+  box-shadow: var(--play-shadow);
+  font-size: 32px;
+  line-height: 1;
+}
+.choix-avatar[aria-checked="true"] { background: var(--play-accent-soft); box-shadow: inset 0 0 0 3px var(--color-primary); }
+.champ-pseudo { min-height: 52px; font-weight: 700; }
+.champ-pseudo:disabled { background: var(--play-chip); color: var(--play-text-secondary); }
+#proposition .bouton-doux { margin-top: var(--space-2); }
+
 /* Animations coupées si le téléphone demande de réduire les mouvements */
 @media (prefers-reduced-motion: reduce) {
   .play *, .play *::before, .play *::after { animation: none !important; transition: none !important; }

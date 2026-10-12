@@ -54,10 +54,15 @@ const Demo = (function () {
     { libelle: "Lien partagé : l'ami n'a pas Max it (iPhone)", ecran: "p09", params: { store: "ios" } },
     { libelle: "Lien vers un jeu indisponible", ecran: "p03", params: { jeu: "bloc-mania", via: "lien" }, etat: { playIndispo: true } }
   ];
-  /* Écrans V2 de Play : à part, hors du parcours MVP */
+  /* Fonctions V2 de Play : interrupteur (hors parcours MVP par défaut) et écrans à part */
+  const BASCULES_V2_PLAY = [
+    { cle: "playV2", libelle: "Afficher les fonctions V2", aide: "Profil, assistant IA, recommandations personnalisées, badges, avatars et pseudos" }
+  ];
   const ECRANS_V2_PLAY = [
     { libelle: "Mon profil joueur", ecran: "pv1" },
     { libelle: "Profil d'un autre joueur", ecran: "pv1", params: { joueur: "Salma_ElA" } },
+    { libelle: "Modifier mon profil (avatar, pseudo)", ecran: "pv4" },
+    { libelle: "Pseudo jugé offensant", ecran: "pv1", offensant: true },
     { libelle: "Assistant IA : recommandations", ecran: "pv2" },
     { libelle: "Fiche avec badges et profils", ecran: "pv3", params: { jeu: "foot-lions" } }
   ];
@@ -145,7 +150,8 @@ const Demo = (function () {
       "<span>" + r.libelle + "<small>Écran " + r.ecran + " · " + ECRANS[r.ecran].titre + "</small></span>" + ICONE_FLECHE + "</button>";
     RACCOURCIS_PLAY.forEach((r, i) => { html += lignePlay(r, "data-raccourci-play", i); });
     html += '<p class="demo-groupe">Max it Gaming Play : écrans V2</p>' +
-      '<p class="demo-aide">Hors parcours MVP : profil joueur, assistant IA, badges.</p>';
+      '<p class="demo-aide">Hors parcours MVP : profil joueur, assistant IA, recommandations personnalisées, badges.</p>';
+    BASCULES_V2_PLAY.forEach(bascule);
     ECRANS_V2_PLAY.forEach((r, i) => { html += lignePlay(r, "data-v2-play", i); });
 
     // Shop (boutique de jeux) : premier achat, liens directs
@@ -232,6 +238,11 @@ const Demo = (function () {
     const ecranV2 = cible.closest("[data-v2-play]");
     if (ecranV2) {
       const r = ECRANS_V2_PLAY[Number(ecranV2.dataset.v2Play)];
+      // Pseudo jugé offensant : remplacé par un pseudo neutre, commun avec les tournois (S11-01)
+      if (r.offensant) {
+        Etat.set("pseudoOffensant", Etat.get("pseudo") || "Youss_KZ");
+        Etat.set("pseudo", "Joueur_48213");
+      }
       fermer();
       return Nav.aller(r.ecran, null, r.params || null);
     }

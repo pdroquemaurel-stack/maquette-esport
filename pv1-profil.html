@@ -1,11 +1,14 @@
 <!DOCTYPE html>
 <!-- Écran pv1 (V2) — Profil joueur (pv1-profil.html : mon profil ; ?joueur=Salma_ElA : profil d'un autre joueur).
-     Écran à part, hors du parcours MVP : ouvert depuis le menu de démo (rubrique « Écrans V2 »),
-     ou par un appui sur un pseudo dans un classement ou sous un avis, sur les écrans V2 (pv3, p06 et p08 en V2).
-     Pas d'écran Figma : composants de Play (cartes colorées, lignes arrondies, médailles).
-     US : S11-01 (pseudo, commun avec la plateforme de tournois), S11-02 (parties jouées au total et cette semaine,
-     jeux différents, genre préféré, série de jours consécutifs, meilleures positions dans les classements,
-     favoris, avis, temps de jeu par jeu et au total ; profil visible par les autres joueurs). -->
+     Ouvert depuis l'accueil quand les fonctions V2 sont affichées (menu de démo), depuis la rubrique
+     « Écrans V2 » du menu de démo, ou par un appui sur un pseudo (classement, avis) en V2.
+     Pas d'écran Figma : indicateurs repris du profil joueur du Game Hub de Samsung (captures fournies
+     le 2026-10-12), avec la charte de Play (fond clair, cartes colorées, coins arrondis).
+     US : S11-01 (pseudo commun avec les tournois, avatar, « Modifier » → pv4 ; pseudo offensant remplacé),
+     S11-02 (profil visible par les autres joueurs ; joué récemment ; aujourd'hui ; historique sur 7 jours,
+     30 jours ou 6 mois : temps de jeu et jeux joués comparés aux autres joueurs du pays, genre préféré,
+     moment préféré, plus longue session, top 3 par temps, par lancements et par session ; série de jours,
+     parties jouées, meilleures positions dans les classements, favoris, avis). -->
 <html lang="fr">
 <head>
   <meta charset="utf-8">
@@ -32,41 +35,105 @@
 <script src="js/play.js"></script>
 <script src="js/demo.js"></script>
 <script>
-  /* Ligne d'une liste : vignette du jeu, texte, valeur ; mène à la fiche V2 du jeu */
-  function ligne(jeu, texte, sousTexte, valeur) {
-    return '<li><a class="ligne-profil" href="pv3-fiche-badges.html?jeu=' + jeu.id + '">' +
-      '<span class="vignette-cible">' + Play.visuel(jeu, 44, 44, "tuile") + "</span>" +
-      "<div><strong>" + texte + "</strong>" + (sousTexte ? "<small>" + sousTexte + "</small>" : "") + "</div>" +
-      (valeur ? '<span class="valeur">' + valeur + "</span>" : "") + "</a></li>";
+  let periode = "sixMois";   // période de l'historique : semaine, mois ou sixMois
+
+  /* Durée en grands chiffres : « 181 h 56 min », les nombres en gras */
+  function grandeDuree(minutes) { return Play.duree(minutes).replace(/(\d+)/g, "<b>$1</b>"); }
+  /* « il y a 41 min » */
+  function ilYa(minutes) { return Play.t("profil.ilYa", { duree: Play.duree(minutes) }); }
+
+  /* Comparaison « Moi » / « Les autres » : deux barres proportionnelles */
+  function comparaison(moi, autres, format) {
+    const t = Play.t;
+    const max = Math.max(moi, autres, 1);
+    return '<div class="comparaison">' +
+      '<div class="ligne-comparaison"><span>' + t("profil.moi") + '</span><span class="barre-comparaison"><i class="barre-moi" style="width:' + Math.max(4, moi / max * 100) + '%"></i></span><b>' + format(moi) + "</b></div>" +
+      '<div class="ligne-comparaison autres"><span>' + t("profil.autres") + '</span><span class="barre-comparaison"><i class="barre-autres" style="width:' + Math.max(4, autres / max * 100) + '%"></i></span><b>' + format(autres) + "</b></div>" +
+      "</div>";
+  }
+
+  /* Liste « top 3 » : vignette du jeu, nom, valeur ; mène à la fiche V2 du jeu */
+  function listeTop(titre, liste, valeur) {
+    if (!liste.length) return "";
+    return '<section class="carte-stat section-play"><h3>' + titre + "</h3><ol class=\"top-profil\">" + liste.map((x) =>
+      '<li><a href="pv3-fiche-badges.html?jeu=' + x.jeu.id + '"><span class="vignette-cible">' + Play.visuel(x.jeu, 40, 40, "tuile") + "</span>" +
+      "<span class=\"nom-top\">" + x.jeu.nom + '</span><span class="valeur-top">' + valeur(x) + "</span></a></li>"
+    ).join("") + "</ol></section>";
   }
 
   function rendre() {
     const t = Play.t;
     const demande = Nav.param("joueur");
-    const s = Play.statistiques(demande);
+    const s = Play.statistiques(demande, periode);
     document.querySelector(".retour-play").innerHTML = Play.icone("retour");
     document.getElementById("titre").innerHTML = t(s.moi ? "profil.monTitre" : "profil.titre") + " " + Play.etiquetteV2();
     document.title = s.pseudo;
-
     const periodes = { jour: "profil.periodeJour", semaine: "profil.periodeSemaine", tout: "profil.periodeTout" };
-    const total = s.temps.reduce((somme, x) => somme + x.minutes, 0);
-    const initiales = s.pseudo.replace(/(\D)(\d)/, "$1 $2").split(/[_.\s]+/).filter(Boolean);
-    const avatar = (initiales.length > 1 ? initiales[0][0] + initiales[1][0] : initiales[0].slice(0, 2)).toUpperCase();
 
-    // Pseudo, série de jours consécutifs
+    // ---- Identité : avatar emoji, pseudo, « Modifier » (S11-01) ----
     let html = '<section class="carte-profil section-play">' +
-      '<span class="avatar-play" style="--av: var(--color-primary)" aria-hidden="true">' + avatar + "</span>" +
+      '<span class="avatar-emoji avatar-profil" aria-hidden="true">' + s.avatar + "</span>" +
       "<h2>" + s.pseudo + "</h2>" +
-      "<p>" + t(s.moi ? "profil.commun" : "profil.titre") + "</p>" +
+      (s.moi ? "<p>" + t(Play.originePseudo() === "propose" ? "profil.originePropose" : "profil.commun") + "</p>" : "") +
       '<span class="serie-profil">' + Play.icone("flamme", "") + t("profil.serie") + " : " + t("profil.serieValeur", { n: s.serie }) + "</span>" +
+      (s.moi ? '<a class="bouton-modifier" href="pv4-modifier-profil.html">' + t("profil.modifier") + "</a>" : "") +
       "</section>";
 
-    // Statistiques en cases colorées
-    html += '<div class="stats-profil section-play" style="margin-top: var(--space-5)">' +
+    // Pseudo jugé offensant : remplacé par un pseudo neutre, le joueur en est informé (S11-01)
+    if (s.moi && Etat.get("pseudoOffensant")) {
+      html += '<div class="message-play" role="status">' + Play.icone("info", "f-primary") +
+        "<div><strong>" + t("profil.remplaceTitre") + "</strong><p>" + t("profil.remplaceTexte", { ancien: Etat.get("pseudoOffensant"), nouveau: s.pseudo }) + "</p></div></div>";
+    }
+
+    // ---- Joué récemment, et aujourd'hui ----
+    if (s.dernier) {
+      html += '<a class="carte-stat carte-recent section-play" href="pv3-fiche-badges.html?jeu=' + s.dernier.jeu.id + '">' +
+        '<span class="vignette-cible">' + Play.visuel(s.dernier.jeu, 64, 64, "tuile") + "</span>" +
+        "<div><small>" + t("profil.recemment") + "</small><strong>" + s.dernier.jeu.nom + "</strong></div>" +
+        '<span class="il-y-a">' + ilYa(s.dernier.ilYa).replace(/(\d+)/g, "<b>$1</b>") + "</span></a>";
+    }
+    html += '<div class="grille-stats section-play">' +
+      '<div class="carte-stat chiffre-stat"><h3>' + t("profil.jeuxAujourdhui") + "</h3><p><b>" + s.aujourdhui.jeux + "</b></p></div>" +
+      '<div class="carte-stat chiffre-stat"><h3>' + t("profil.dureeAujourdhui") + "</h3><p>" + grandeDuree(s.aujourdhui.minutes) + "</p></div>" +
+      "</div>";
+
+    // ---- Historique de jeu, sur la période choisie ----
+    html += '<h2 class="titre-play"><span>' + t("profil.historique") + "</span></h2>" +
+      '<div class="periodes-play periodes-profil" role="radiogroup" aria-label="' + t("profil.historique") + '">' +
+      ["semaine", "mois", "sixMois"].map((p) => '<button class="periode-play" role="radio" data-periode="' + p + '" aria-pressed="' + (p === periode) + '" aria-checked="' + (p === periode) + '">' +
+        t("profil.periode." + p) + "</button>").join("") + "</div>" +
+      '<p class="sous-titre-play jusqu-hier">' + t("profil.jusquHier") + " · " + t("profil.autresAide", { pays: Play.nomPays() }) + "</p>";
+
+    if (!s.jeux) {
+      html += '<p class="sous-titre-play">' + t("profil.aucunJeu") + "</p>";
+    } else {
+      // Temps de jeu et jeux joués, comparés aux autres joueurs du pays
+      html += '<div class="grille-stats section-play">' +
+        '<div class="carte-stat carte-comparee"><h3>' + t("profil.temps") + "</h3><p class=\"grand\">" + grandeDuree(s.minutes) + "</p>" +
+        comparaison(s.minutes, s.autresMinutes, Play.duree) + "</div>" +
+        '<div class="carte-stat carte-comparee"><h3>' + t("profil.jeuxJoues") + "</h3><p class=\"grand\"><b>" + s.jeux + "</b></p>" +
+        comparaison(s.jeux, s.autresJeux, String) + "</div></div>";
+      // Genre et moment préférés
+      html += '<div class="grille-stats section-play">' +
+        '<div class="carte-stat carte-genre" style="--gs: var(--play-g-' + s.genre + '-soft)"><h3>' + t("profil.genre") + "</h3>" +
+        Play.pastilleGenre(s.genre) + "<strong>" + Play.nomGenre(s.genre) + "</strong></div>" +
+        '<div class="carte-stat carte-moment"><h3>' + t("profil.moment") + "</h3>" +
+        '<span class="icone-moment" aria-hidden="true">' + { matin: "🌅", apresMidi: "☀️", soir: "🌇", nuit: "🌙" }[s.moment] + "</span>" +
+        "<strong>" + t("moment." + s.moment) + "</strong></div></div>";
+      // Plus longue session
+      html += '<div class="carte-stat carte-comparee section-play"><h3>' + t("profil.session") + "</h3><p class=\"grand\">" + grandeDuree(s.session) + "</p>" +
+        comparaison(s.session, s.autresSession, Play.duree) + "</div>";
+      // Top 3
+      html += listeTop(t("profil.topTemps"), s.topTemps, (x) => grandeDuree(x.minutes));
+      html += listeTop(t("profil.topLancements"), s.topLancements, (x) => t("profil.fois", { n: Play.entier(x.lancements) }).replace(/^([\d\s,]+)/, "<b>$1</b>"));
+      html += listeTop(t("profil.topSession"), s.topSession, (x) => grandeDuree(x.session));
+    }
+
+    // ---- Et aussi : indicateurs du backlog (S11-02) ----
+    html += '<h2 class="titre-play"><span>' + t("profil.etAussi") + "</span></h2>" +
+      '<div class="stats-profil section-play">' +
       '<div class="stat-profil"><b>' + Play.entier(s.parties) + "</b><span>" + t("profil.parties") + "</span><small>" + t("profil.semaine", { n: s.partiesSemaine }) + "</small></div>" +
-      '<div class="stat-profil"><b>' + s.jeux + "</b><span>" + t("profil.jeux") + "</span></div>" +
-      '<div class="stat-profil"><b>' + (s.genre ? Play.nomGenre(s.genre) : "—") + "</b><span>" + t("profil.genre") + "</span></div>" +
-      '<div class="stat-profil"><b>' + Play.duree(total) + "</b><span>" + t("profil.temps") + "</span><small>" + t("profil.tempsTotal") + "</small></div>" +
+      '<div class="stat-profil"><b>' + s.serie + "</b><span>" + t("profil.serie") + "</span><small>" + t("profil.serieValeur", { n: s.serie }) + "</small></div>" +
       '<div class="stat-profil"><b>' + s.favoris + "</b><span>" + t("profil.favoris") + "</span></div>" +
       '<div class="stat-profil"><b>' + s.avis + "</b><span>" + t("profil.avis") + "</span></div>" +
       "</div>";
@@ -76,20 +143,19 @@
       "<span>" + t("profil.positions") + "</span></h2>";
     html += s.positions.length
       ? '<ul class="liste-profil section-play">' + s.positions.map((p) =>
-        ligne(p.jeu, p.jeu.nom, t("classement.titreEcran") + " " + t(periodes[p.periode]),
-          p.rang <= 3 ? Play.medaille(p.rang) : t("classement.rang", { rang: p.rang }))).join("") + "</ul>"
-      : '<p class="sous-titre-play">' + t("profil.aucunePosition") + "</p>";
-
-    // Temps de jeu par jeu (mesuré par Max it entre « Jouer » et la fermeture de la mini app)
-    html += '<h2 class="titre-play"><span class="pastille-genre pastille-titre" style="--gc: var(--play-g-course)">' + Play.icone("horloge", "f-play-white") + "</span>" +
-      "<span>" + t("profil.temps") + "</span></h2>";
-    html += s.temps.length
-      ? '<ul class="liste-profil section-play">' + s.temps.map((x) => ligne(x.jeu, x.jeu.nom, Play.nomGenre(x.jeu.genre), Play.duree(x.minutes))).join("") + "</ul>"
+        '<li><a class="ligne-profil" href="pv3-fiche-badges.html?jeu=' + p.jeu.id + '"><span class="vignette-cible">' + Play.visuel(p.jeu, 44, 44, "tuile") + "</span>" +
+        "<div><strong>" + p.jeu.nom + "</strong><small>" + t("classement.titreEcran") + " " + t(periodes[p.periode]) + "</small></div>" +
+        '<span class="valeur">' + (p.rang <= 3 ? Play.medaille(p.rang) : t("classement.rang", { rang: p.rang })) + "</span></a></li>").join("") + "</ul>"
       : '<p class="sous-titre-play">' + t("profil.aucunePosition") + "</p>";
 
     html += '<p class="aide-v2">' + Play.etiquetteV2() + " " + t("commun.v2Aide") + (s.moi ? " · " + t("profil.visible") : "") + "</p>";
     html += '<div class="fin-contenu"></div>';
     document.getElementById("page").innerHTML = html;
+
+    document.querySelectorAll("[data-periode]").forEach((b) => b.addEventListener("click", () => {
+      periode = b.dataset.periode;
+      rendre();
+    }));
   }
   Play.monter(rendre);
 </script>

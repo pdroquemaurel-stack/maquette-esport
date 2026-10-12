@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<!-- Écran pv4 (V2) — Modifier mon profil (pv4-modifier-profil.html), ouvert par « Modifier » sur pv1.
+     Pas d'écran Figma : composants de Play (cases à choisir, champ, bouton orange).
+     US : S11-01 — avatar emoji au choix ; pseudo proposé automatiquement et remplaçable ; unique sur les
+     17 pays (pseudo pris : refusé avec une proposition de rechange) ; commun à Play et à la plateforme de
+     tournois (clé « pseudo » partagée) ; modifiable au plus une fois tous les 30 jours ; après un pseudo
+     jugé offensant et remplacé, la limite ne s'applique pas. -->
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Modifier mon profil (V2)</title>
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-zone="play">
+<div class="cadre">
+  <div class="telephone play">
+    <div class="barre-etat" data-heure="9:30"></div>
+    <header class="entete-simple-play">
+      <a href="pv1-profil.html" class="retour-play" data-t-aria="commun.retour"></a>
+      <h1 id="titre"></h1>
+    </header>
+    <main class="contenu" id="page"></main>
+    <div class="barre-action barre-play"><button class="bouton-jouer" id="enregistrer"></button></div>
+  </div>
+</div>
+
+<script src="js/data-play.js"></script>
+<script src="js/textes-play.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/play.js"></script>
+<script src="js/demo.js"></script>
+<script>
+  let avatar = null;      // avatar choisi (pas encore enregistré)
+  let saisie = null;      // pseudo saisi (pas encore enregistré)
+
+  function rendre() {
+    Play.appliquerLangue();
+    const t = Play.t;
+    if (avatar === null) avatar = Play.monAvatar();
+    if (saisie === null) saisie = Play.pseudo();
+    const modifiable = Play.pseudoModifiable();
+    document.querySelector(".retour-play").innerHTML = Play.icone("retour");
+    document.getElementById("titre").innerHTML = t("modifier.titre") + " " + Play.etiquetteV2();
+    document.getElementById("enregistrer").textContent = t("modifier.enregistrer");
+
+    let html = '<div class="page-signaler">';
+    // Aperçu : avatar et pseudo
+    html += '<div class="apercu-profil"><span class="avatar-emoji avatar-profil" id="apercu" aria-hidden="true">' + avatar + "</span></div>";
+
+    // Avatar emoji
+    html += "<h2>" + t("modifier.avatar") + '</h2><p class="aide-avis">' + t("modifier.avatarAide") + "</p>" +
+      '<div class="grille-avatars" role="radiogroup" aria-label="' + t("modifier.avatar") + '">' + PLAY.avatars.map((e) =>
+        '<button class="choix-avatar" role="radio" data-avatar="' + e + '" aria-checked="' + (e === avatar) + '" aria-label="' + t("modifier.choisirAvatar", { emoji: e }) + '">' + e + "</button>"
+      ).join("") + "</div>";
+
+    // Pseudo : règles, limite de 30 jours, pseudo remplacé
+    html += '<h2><label for="pseudo">' + t("modifier.pseudo") + "</label></h2>";
+    if (Etat.get("pseudoOffensant")) {
+      html += '<div class="message-play" style="margin: 0 0 var(--space-3)">' + Play.icone("info", "f-primary") +
+        "<div><strong>" + t("profil.remplaceTitre") + "</strong><p>" + t("profil.remplaceTexte", { ancien: Etat.get("pseudoOffensant"), nouveau: Play.pseudo() }) + "</p></div></div>";
+    }
+    html += '<input class="champ-avis champ-pseudo" id="pseudo" maxlength="16" autocomplete="off" spellcheck="false" dir="ltr" value="' + saisie + '"' + (modifiable ? "" : " disabled") + ">" +
+      '<p class="erreur-play" id="erreur" role="alert" hidden></p>' +
+      '<div id="proposition"></div>' +
+      '<p class="aide-avis">' + t("modifier.regles") + "</p>" +
+      '<p class="aide-avis">' + (modifiable ? t("modifier.commun") : t("modifier.bloque", { date: Play.dateCourte(Play.prochainChangementPseudo().toISOString().slice(0, 10)) })) + "</p>";
+    html += '<div class="fin-contenu"></div></div>';
+    document.getElementById("page").innerHTML = html;
+
+    document.querySelectorAll("[data-avatar]").forEach((b) => b.addEventListener("click", () => {
+      avatar = b.dataset.avatar;
+      document.querySelectorAll("[data-avatar]").forEach((x) => x.setAttribute("aria-checked", x === b));
+      const apercu = document.getElementById("apercu");
+      apercu.textContent = avatar;
+      apercu.classList.remove("pop");
+      void apercu.offsetWidth;
+      apercu.classList.add("pop");
+    }));
+    const champ = document.getElementById("pseudo");
+    champ.addEventListener("input", () => {
+      saisie = champ.value.trim();
+      document.getElementById("erreur").hidden = true;
+      document.getElementById("proposition").innerHTML = "";
+      champ.classList.remove("en-erreur");
+    });
+  }
+
+  /* Erreur sur le pseudo, avec une proposition de rechange s'il est déjà pris (S11-01) */
+  function refuser(message, proposition) {
+    const t = Play.t;
+    const erreur = document.getElementById("erreur");
+    erreur.textContent = message;
+    erreur.hidden = false;
+    document.getElementById("pseudo").classList.add("en-erreur");
+    if (proposition) {
+      document.getElementById("proposition").innerHTML = '<button class="bouton-doux" id="prendre">' + t("modifier.utiliser", { nom: proposition }) + "</button>";
+      document.getElementById("prendre").addEventListener("click", () => {
+        saisie = proposition;
+        document.getElementById("pseudo").value = proposition;
+        document.getElementById("erreur").hidden = true;
+        document.getElementById("proposition").innerHTML = "";
+        document.getElementById("pseudo").classList.remove("en-erreur");
+      });
+    }
+  }
+
+  document.getElementById("enregistrer").addEventListener("click", () => {
+    const t = Play.t;
+    const nom = (saisie || "").trim();
+    const change = nom !== Play.pseudo();
+    if (change) {
+      if (!Play.pseudoValide(nom)) return refuser(t("modifier.invalide"));
+      if (Play.pseudoPris(nom)) return refuser(t("modifier.pris", { nom: nom, proposition: Play.pseudoRechange(nom) }), Play.pseudoRechange(nom));
+    }
+    Etat.set("playAvatar", avatar);
+    if (change && Play.pseudoModifiable()) Play.changerPseudo(nom);
+    Etat.set("toastSuivant", t("modifier.enregistre"));
+    ouvrirPage("pv1-profil.html");
+  });
+
+  // Rendu au chargement, et au changement de langue ; une saisie en cours n'est pas effacée par le reste du menu de démo
+  document.addEventListener("DOMContentLoaded", rendre);
+  document.addEventListener("etat-change", (e) => { if (e.detail && ["playLangue", "pseudoOffensant"].includes(e.detail.cle)) rendre(); });
+</script>
+</body>
+</html>

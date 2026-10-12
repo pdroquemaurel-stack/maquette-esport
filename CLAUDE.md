@@ -75,8 +75,13 @@ continue de mener à la plateforme e-sport, qui ne doit pas être modifiée.
   « Fourni par » active pour un partenaire et absente pour les autres.
 - Pseudo : au MVP, pas de profil ; un pseudo généré (« Joueur4821 ») s'affiche dans les
   classements et sous les avis.
-- Écrans V2 (profil joueur, assistant IA, badges) : à part, avec une étiquette « V2 », hors du
-  parcours MVP, ouverts depuis le menu de démo.
+- Fonctions V2 (toutes les US V2 du front) : étiquette « V2 » ; hors du parcours MVP par défaut ;
+  l'interrupteur « Afficher les fonctions V2 » du menu de démo les montre dans le parcours (profil
+  depuis l'accueil, assistant, recommandations personnalisées, badges, avatars et pseudos) ; écrans
+  pv1 à pv4 aussi ouverts depuis le menu de démo.
+- Profil joueur (V2) : indicateurs repris du profil joueur du Game Hub de Samsung (validé le
+  2026-10-12), pas sa charte graphique ; avatar emoji au choix ; pseudo commun avec les tournois
+  (clés d'état « pseudo », « pseudoModifieLe », « pseudoOffensant » partagées).
 - Langues : français, anglais et arabe (lecture de droite à gauche) ; propriétés CSS logiques.
   Les noms, descriptions des jeux et les avis restent en français.
 
@@ -94,7 +99,8 @@ continue de mener à la plateforme e-sport, qui ne doit pas être modifiée.
 ### Menu de démo — ajouts Play
 Langue (français, anglais, arabe) ; pays (Maroc, Sénégal) ; nouveau joueur (ni récents ni favoris) ;
 jeu momentanément indisponible ; lien partagé reçu par un ami qui a Max it, ou qui ne l'a pas
-(Android, iPhone) ; lien vers un jeu indisponible ; écrans V2.
+(Android, iPhone) ; lien vers un jeu indisponible ; interrupteur « Afficher les fonctions V2 » ;
+pseudo jugé offensant ; écrans V2.
 
 ### Visuels de référence Figma
 - Les écrans de reference/figma-play/ sont la maquette de l'équipe UI : ils font foi pour la

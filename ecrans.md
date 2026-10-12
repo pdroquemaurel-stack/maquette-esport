@@ -426,8 +426,10 @@ Pseudos : au MVP, pas de profil joueur ; un pseudo généré (« Joueur4821 ») 
 - Éléments : 5 raisons (ne se lance pas, plante ou bloque, contenu inapproprié, trop de publicité, autre) ; commentaire facultatif, obligatoire pour « autre » ; confirmation après l'envoi ; un même jeu une fois par jour.
 - Liens : retour et « Retour au jeu » → p03.
 
-### Écrans V2 (hors parcours MVP, étiquette « V2 », ouverts depuis le menu de démo)
-- **pv1 `pv1-profil.html`** (`?joueur=…` : un autre joueur) — S11-01, S11-02 : pseudo (commun avec les tournois), série de jours, parties jouées (total, semaine), jeux différents, genre préféré, temps de jeu (total et par jeu), favoris, avis, meilleures positions. Liens : jeux → pv3 ; retour → page précédente.
+### Fonctions V2 (étiquette « V2 », hors parcours MVP par défaut)
+Interrupteur « Afficher les fonctions V2 » du menu de démo (désactivé par défaut) : l'accueil montre le bouton du profil (S11-02) et l'accès à l'assistant IA (S09-04), « Recommandé pour vous » devient personnalisé (S09-03 : genres les plus joués, jeux pas encore lancés, mêlés à la sélection du pays ; un nouveau joueur voit la sélection), les fiches affichent les badges (S07-03), les classements et les avis montrent avatars et pseudos choisis, qui ouvrent le profil. Les écrans V2 s'ouvrent aussi depuis la rubrique « Écrans V2 » du menu de démo.
+- **pv1 `pv1-profil.html`** (`?joueur=…` : un autre joueur) — S11-01, S11-02, indicateurs repris du profil joueur du Game Hub de Samsung (charte de Play) : avatar emoji, pseudo et « Modifier » ; joué récemment (« il y a 41 min ») ; jeux joués et temps de jeu aujourd'hui ; historique sur 7 jours, 30 jours ou 6 mois (« Données jusqu'à hier ») : temps de jeu et jeux joués comparés aux autres joueurs du pays, genre et moment préférés, plus longue session, top 3 par temps, par lancements et par session ; et aussi : parties jouées, série de jours, favoris, avis, meilleures positions. Message si le pseudo a été jugé offensant. Liens : « Modifier » → pv4 ; jeux → pv3 ; retour → page précédente.
+- **pv4 `pv4-modifier-profil.html`** — S11-01 : 16 avatars emoji ; pseudo (3 à 16 caractères ; unique : un pseudo pris est refusé avec une proposition de rechange ; commun avec les tournois ; modifiable une fois tous les 30 jours, sans limite après un pseudo jugé offensant). Liens : « Enregistrer » et retour → pv1.
 - **pv2 `pv2-assistant.html`** — S09-04 : conversation avec l'assistant IA de Max it ; idées de demandes ; réponses en tuiles de jeux du catalogue disponible dans le pays, chacune avec un lien vers sa fiche (pv3). Compréhension simulée par mots-clés (genre, solo ou à plusieurs, langue, enfant).
 - **pv3 `pv3-fiche-badges.html?jeu=…`** — S07-03 : la fiche p03 avec les badges « Gratuit », « Sans pub » et « Sans consommation de data » (au Sénégal) ; pseudos choisis, qui ouvrent pv1. Les écrans p06, p07, p08 et p10 ouverts depuis pv3 restent en V2 (`v2=1`).
 
@@ -442,7 +444,7 @@ Pseudos : au MVP, pas de profil joueur ; un pseudo généré (« Joueur4821 ») 
                                               └─ « Signaler » ─► p10 ─► p03
 Lien partagé : ami avec Max it ─► p03 (fermer → p01) ; ami sans Max it ─► p09 store ─« Ouvrir »─► 00a
 Lien vers un jeu indisponible ─► p01 avec message
-V2 (menu de démo) : pv3 ─ pseudo ─► pv1 ; pv2 ─ tuile ─► pv3
+V2 (interrupteur ou menu de démo) : p01 ─ profil ─► pv1 ─ « Modifier » ─► pv4 ─► pv1 ; p01 ─ assistant ─► pv2 ─ tuile ─► pv3 ; pseudo ─► pv1
 ```
 
 **Visuels des jeux de Play** : une image par jeu dans `images/play/<id>.jpg`, déclarée dans `PLAY.images` (`js/data-play.js`). Elle sert partout où le jeu apparaît (tuiles, carte « à la une », en-tête et première capture de la fiche, partie simulée), recadrée au centre sans déformation ; les captures 2 et 3 de la galerie et les jeux sans image gardent leur dessin SVG (dégradé de deux couleurs de genre, bulles douces). Pour changer un visuel : remplacer le fichier en gardant son nom (ou ajouter une ligne à `PLAY.images`), puis reconstruire le fichier unique. 9 jeux ont une image : bloc-mania, commando-lagune, foot-lions, ludo-famille, ninja-sahel, rallye-dunes, robots-furie, taxi-brousse, tresor-baobab.
@@ -453,6 +455,7 @@ V2 (menu de démo) : pv3 ─ pseudo ─► pv1 ; pv2 ─ tuile ─► pv3
 | P1 | `data-play.js`, `play.js`, section « Play » de tokens.css et style.css, 00c (« Jouer »), p01 à p05, menu de démo, test `outils/parcours-play.html` | terminé |
 | P2 | Avis : bloc de la fiche (p03), p06 tous les avis, p07 donner son avis, signalement | terminé |
 | P3 | Visuels des jeux en image (`images/play/`) pour 9 jeux, intégrés au fichier unique | terminé |
+| P5 | Toutes les US V2 : interrupteur « Afficher les fonctions V2 », recommandations personnalisées (p01), profil façon Game Hub (pv1), avatar emoji et pseudo (pv4) | terminé |
 | P4 | Nouveau backlog : ordre de l'accueil et rangées par genre, classements (p03, p08), partage en deux parcours (p09), lancement direct (p04 supprimé, sortie Max it des hubs), signaler un jeu (p10), avis signalé masqué, pseudos générés, langues FR / EN / AR, écrans V2 (pv1 à pv3), direction « kid & family friendly » | terminé |
 
 ### Couverture des US de Play
@@ -469,9 +472,10 @@ V2 (menu de démo) : pv3 ─ pseudo ─► pv1 ; pv2 ─ tuile ─► pv3
 | S08-01, S08-02 | Couvertes | p03, p05 | Jeux simulés ; classement et défis des hubs non montrés. |
 | S08-03 | En partie | toutes | Indisponibilité forcée par le menu de démo, pas par de vrais échecs d'ouverture. |
 | S09-01, S09-02 | Couvertes | p03, p01 | Mémorisés dans le navigateur, pas sur le compte Max it. |
-| S09-03 (V2) | Non maquettée | — | Au MVP, « Recommandé pour vous » est la sélection du pays (S03-04). |
+| S09-03 (V2) | Couverte (V2) | p01 | Avec l'interrupteur V2 ; au MVP, « Recommandé pour vous » est la sélection du pays (S03-04). |
 | S09-04 (V2) | Couverte à part | pv2 | Assistant simulé par mots-clés. |
 | S10-01, S10-02 | Couvertes | p03, p06, p07 | Avis sous pseudo généré, publiés tout de suite. |
 | S10-03 | Couverte | p03, p06 | La modération (S04-01) relève du back-office. |
 | S10-04 | Couverte | p03, p10 | — |
-| S11-01, S11-02 (V2) | Couvertes à part | pv1, pv3 | Le choix et la modification du pseudo ne sont pas maquettés. |
+| S11-01, S11-02 (V2) | Couvertes (V2) | p01, pv1, pv4, pv3 | Statistiques fictives ; « Les autres » = moyenne des joueurs du pays. |
+| S07-03, S09-04 (V2) | Couvertes (V2) | pv3, p03, pv2 | Badges sur la fiche avec l'interrupteur V2 ; assistant simulé par mots-clés. |

@@ -67,7 +67,7 @@ const Fiche = (function () {
     html += '<button class="note-fiche" id="vers-avis">' + Play.etoiles(moyenne.note, 16) + "<b>" + Play.note(jeu) + "</b> · " + t("commun.avis", { n: moyenne.nombre }) + "</button>";
 
     // Badges (V2, S07-03) : Gratuit toujours, Sans pub selon la fiche, Sans consommation de data selon le pays
-    if (enV2) {
+    if (enV2 || Play.v2()) {
       html += '<div class="badges-play">' +
         '<span class="badge-play">' + Play.icone("gratuit", "f-play-free") + t("fiche.badgeGratuit") + "</span>" +
         (jeu.sansPub ? '<span class="badge-play">' + Play.icone("sansPub", "f-play-free") + t("fiche.badgeSansPub") + "</span>" : "") +
@@ -146,6 +146,7 @@ const Fiche = (function () {
     const podium = [0, 1, 2].map((i) => {
       const e = c.liste[i];
       return '<div class="marche marche-' + e.rang + '">' + Play.medaille(e.rang) +
+        (Play.v2() ? Play.avatarHtml(e.pseudo, "avatar-podium") : "") +
         '<span class="nom-podium">' + Play.pseudoHtml(e.pseudo) + "</span>" +
         '<span class="score-podium">' + t("classement.points", { n: Play.entier(e.score) }) + "</span>" +
         '<span class="socle" aria-hidden="true">' + e.rang + "</span></div>";

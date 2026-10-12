@@ -48,6 +48,7 @@ const ECRANS = {
   "pv1": { fichier: "pv1-profil.html", titre: "Profil joueur (V2)", pret: true },
   "pv2": { fichier: "pv2-assistant.html", titre: "Assistant IA (V2)", pret: true },
   "pv3": { fichier: "pv3-fiche-badges.html", titre: "Fiche avec badges (V2)", pret: true },
+  "pv4": { fichier: "pv4-modifier-profil.html", titre: "Modifier mon profil (V2)", pret: true },
   // Shop, la boutique de jeux (3e chantier, voir ecrans-shop.md)
   "s01": { fichier: "s01-accueil.html", titre: "Accueil du Shop", pret: true },
   "s02": { fichier: "s02-recherche.html", titre: "Recherche", pret: true },
@@ -146,6 +147,8 @@ const Etat = (function () {
     playNouveau: false,     // nouveau joueur : ni récents ni favoris (S06-02)
     playIndispo: false,     // un jeu momentanément indisponible (S08-03)
     playLangue: null,       // langue de Play : fr (par défaut), en ou ar (lecture de droite à gauche)
+    playV2: false,          // fonctions V2 affichées dans le parcours de Play (profil, assistant, badges…)
+    playAvatar: null,       // avatar emoji choisi dans Play (V2, S11-01) ; sinon celui de js/data-play.js
     playRecents: null,      // jeux récemment joués, du plus récent au plus ancien (S09-02)
     playLances: null,       // jeux déjà lancés au moins une fois (recommandations, avis)
     playFavoris: null,      // jeux favoris, le dernier ajouté en premier (S09-01)
