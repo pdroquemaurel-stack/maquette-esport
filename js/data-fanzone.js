@@ -1,5 +1,5 @@
 /* Données fictives de la Fan Zone EA FC (4e chantier) : finale du tournoi panafricain EA FC,
-   Tunis, 12 et 13 décembre 2026. Équipes, arbre, quiz, galerie, forfaits data et services payants.
+   Tunis, 12 et 13 décembre 2026. Équipes, arbre, questions du jour, galerie et forfaits data.
    Les joueurs et les pseudos sont inventés. */
 
 const FANZONE = {
@@ -66,7 +66,7 @@ const FANZONE = {
   ],
 
   /* Le Grand Tirage console : un seul tirage au sort, en direct pendant la finale.
-     Chances : questions du jour (+1 par jour réussi, 7 au plus) et Pass Fan achetés (+1 par achat, 5 au plus). */
+     Chances : questions du jour (+1 par jour réussi, 7 au plus) et Pass data achetés (1 à 3 chances selon le forfait, 5 au plus). */
   tirage: {
     nom: "Le Grand Tirage console",
     date: "2026-12-13T17:00:00Z",   // 13/12/2026 à 18h, heure de Tunis, pendant l'émission de la finale
@@ -96,7 +96,7 @@ const FANZONE = {
         { question: "Où regarder la finale en direct dans Max it ?", choix: ["Max it TV", "Max it Shop", "Max it Play"], bonne: 0 } ],
       [ { question: "Quel mode d'EA FC permet de construire son équipe de rêve avec des cartes ?", choix: ["Carrière", "Ultimate Team", "Volta"], bonne: 1 },
         { question: "Contre qui le Maroc a-t-il gagné son quart de finale ?", choix: ["Le Cameroun", "La Tunisie", "Le Mali"], bonne: 0 },
-        { question: "Combien de Pass Fan peuvent rapporter des chances au Grand Tirage ?", choix: ["1", "3", "5", "Sans limite"], bonne: 2 } ],
+        { question: "Combien de chances au Grand Tirage donne le Pass Fan 5 Go ?", choix: ["1", "2", "3", "5"], bonne: 2 } ],
       [ { question: "Que signifie « GG » à la fin d'un match ?", choix: ["Good game", "Go go", "Grand gagnant"], bonne: 0 },
         { question: "Quel pays joue la demi-finale à domicile ?", choix: ["Le Maroc", "La Tunisie", "L'Égypte"], bonne: 1 },
         { question: "Combien de codes EA FC Mobile au maximum par utilisateur ?", choix: ["1", "2", "5"], bonne: 1 } ],
@@ -110,26 +110,16 @@ const FANZONE = {
   codesMax: 2,               // codes maximum par utilisateur
   validiteCodes: "31/12/2026",
 
-  /* Forfaits data (tuile « Pass data » de f01, écran f05) et services payants (écran f12).
-     prix : TTC, dans la monnaie du pays soutenu (MAD, TND, EGP, FCFA, CDF) ; Maroc par défaut.
-     jours : durée d'activation ; code : un code EA FC Mobile offert (dans la limite de 2 par utilisateur). */
+  /* Forfaits data (tuile « Pass data » de f01, écran f05) : de la data Orange classique, sans durée propre à la Fan Zone,
+     avec un add-on Fan Zone : codes EA FC Mobile (dans la limite de 2 par utilisateur) et chances au Grand Tirage
+     (5 au plus grâce aux achats). prix : TTC, dans la monnaie du pays soutenu (MAD, TND, EGP, FCFA, CDF) ; Maroc par défaut. */
   forfaits: [
-    { id: "fan-1go", nom: "Pass Fan 1 Go", data: "1 Go", duree: "1 jour", jours: 1, code: false,
-      accroche: "Pour regarder une demi-finale", prix: { MAD: 10, TND: 3, EGP: 25, FCFA: 500, CDF: 1500 } },
-    { id: "fan-2go", nom: "Pass Fan EA FC", data: "2 Go", duree: "7 jours", jours: 7, code: true, conseille: true,
-      accroche: "Les deux jours de finale, et plus", prix: { MAD: 30, TND: 10, EGP: 75, FCFA: 1500, CDF: 4000 } },
-    { id: "fan-5go", nom: "Pass Fan 5 Go", data: "5 Go", duree: "30 jours", jours: 30, code: true,
-      accroche: "Tout le mois, live et replays", prix: { MAD: 60, TND: 20, EGP: 150, FCFA: 3000, CDF: 8000 } }
-  ],
-  services: [
-    { id: "live-hd", nom: "Pass Live HD", icone: "lecture", duree: "1 jour", jours: 1,
-      accroche: "Le live en HD sans consommer ta data, avec le multi-caméra",
-      confirmation: "Le live HD est débloqué : regarde la finale sans consommer ta data.",
-      prix: { MAD: 5, TND: 2, EGP: 15, FCFA: 300, CDF: 1000 } },
-    { id: "pack-supporter", nom: "Pack Supporter", icone: "avatar", duree: null,
-      accroche: "Fond d'écran et sonnerie aux couleurs de ton pays",
-      confirmation: "Ton fond d'écran et ta sonnerie sont dans Mes téléchargements Max it.",
-      prix: { MAD: 10, TND: 3, EGP: 30, FCFA: 500, CDF: 2000 } }
+    { id: "fan-1go", nom: "Pass Fan 1 Go", data: "1 Go", codes: 0, chances: 1,
+      accroche: "Pour suivre une demi-finale", prix: { MAD: 10, TND: 3, EGP: 25, FCFA: 500, CDF: 1500 } },
+    { id: "fan-2go", nom: "Pass Fan 2 Go", data: "2 Go", codes: 1, chances: 1, conseille: true,
+      accroche: "Les deux jours de finale", prix: { MAD: 30, TND: 10, EGP: 75, FCFA: 1500, CDF: 4000 } },
+    { id: "fan-5go", nom: "Pass Fan 5 Go", data: "5 Go", codes: 2, chances: 3,
+      accroche: "La finale, les replays et plus encore", prix: { MAD: 60, TND: 20, EGP: 150, FCFA: 3000, CDF: 8000 } }
   ],
 
   /* Galerie : vignettes colorées (couleurs du pays, ou orange pour l'organisation) */

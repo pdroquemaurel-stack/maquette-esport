@@ -1,14 +1,14 @@
 <!DOCTYPE html>
-<!-- Écran f07 — Mes codes : codes EA FC Mobile gagnés au quiz (f04) ou reçus avec le Pass Fan (f06).
+<!-- Écran f07 — Mes codes : codes EA FC Mobile gagnés au quiz (f04) ou reçus avec un Pass data (f06).
      Chaque code est masqué jusqu'à « Révéler », puis « Copier ». Compteur « x code(s) sur 2 maximum ».
-     Sans code : liens vers le quiz et le Pass Fan. Retour → f01. -->
+     Sans code : liens vers le quiz et les Pass data. Retour → f01. -->
 <html lang="fr">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Mes codes</title>
-  <link rel="stylesheet" href="css/tokens.css?v=eee3b623">
-  <link rel="stylesheet" href="css/style.css?v=eee3b623">
+  <link rel="stylesheet" href="css/tokens.css?v=f8ec85a1">
+  <link rel="stylesheet" href="css/style.css?v=f8ec85a1">
 </head>
 <body data-zone="fanzone">
 <div class="cadre">
@@ -19,10 +19,10 @@
   </div>
 </div>
 
-<script src="js/nav.js?v=eee3b623"></script>
-<script src="js/data-fanzone.js?v=eee3b623"></script>
-<script src="js/fanzone.js?v=eee3b623"></script>
-<script src="js/demo.js?v=eee3b623"></script>
+<script src="js/nav.js?v=f8ec85a1"></script>
+<script src="js/data-fanzone.js?v=f8ec85a1"></script>
+<script src="js/fanzone.js?v=f8ec85a1"></script>
+<script src="js/demo.js?v=f8ec85a1"></script>
 <script>
   document.getElementById("entete").innerHTML = Fz.entete("Mes codes", "f01-accueil.html");
 
@@ -35,9 +35,9 @@
     let html = '<div class="fz-page">';
     if (!liste.length) {
       html += '<div class="fz-carte fz-centre"><h2>Pas encore de code</h2>' +
-        '<p class="fz-intro">Gagne un code EA FC Mobile au quiz du jour, ou reçois-en un avec le Pass Fan EA FC.</p></div>' +
+        '<p class="fz-intro">Gagne un code EA FC Mobile au quiz du jour, ou reçois-en avec un Pass data de 2 Go ou 5 Go.</p></div>' +
         '<div class="fz-actions"><a href="f04-quiz.html" class="bouton bouton-primaire bouton-pleine-largeur">Jouer au quiz</a>' +
-        '<a href="f05-bundle.html" class="bouton fz-contour bouton-pleine-largeur">Voir le Pass Fan EA FC</a></div>';
+        '<a href="f05-bundle.html" class="bouton fz-contour bouton-pleine-largeur">Voir les Pass data</a></div>';
     } else {
       html += '<p class="fz-intro">' + liste.length + " code" + (liste.length > 1 ? "s" : "") + " sur " + FANZONE.codesMax + " maximum.</p>" +
         liste.map((c, i) =>

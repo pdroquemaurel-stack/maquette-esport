@@ -188,7 +188,7 @@ const Etat = (function () {
     fzCodes: null,          // codes EA FC Mobile gagnés au quiz ou achetés : [{ code, origine, date, revele }]
     fzHorloge: null,        // heure de la démo : { reel, simule } (départ : 7 décembre, avancée par le menu de démo)
     fzQuiz: null,           // questions du jour jouées : { "2026-12-07": { tentatives, gagne } }
-    fzAchatsPass: 0,        // Pass Fan achetés depuis la Fan Zone (1 chance au Grand Tirage chacun, 5 au plus)
+    fzAchatsPass: 0,        // chances au Grand Tirage gagnées par les Pass data achetés (1 à 3 par achat, 5 comptées au plus)
     fzSaut: null,           // saut dans le temps demandé par le menu de démo, appliqué à l'ouverture d'un écran de la Fan Zone
     scenario: null,         // état alternatif forcé pour l'écran visé
     origine: null           // écran à retrouver après le paiement (S11-03)
