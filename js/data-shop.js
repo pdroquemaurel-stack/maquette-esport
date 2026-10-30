@@ -44,7 +44,9 @@ const SHOP = {
     supercell: { nom: "Supercell", api: false, verification: false },
     roblox: { nom: "Roblox Corporation", api: false, verification: false },
     hoyoverse: { nom: "HoYoverse", api: true, verification: true },
-    gameloft: { nom: "Gameloft", api: true, verification: false }
+    gameloft: { nom: "Gameloft", api: true, verification: false },
+    sony: { nom: "Sony Interactive Entertainment", api: false, verification: false },
+    microsoft: { nom: "Microsoft", api: false, verification: false }
   },
 
   /* ---- Tags (S01-04) : ceux des jeux, et ceux des produits (calculés : type, promo) ---- */
@@ -55,7 +57,8 @@ const SHOP = {
     strategie: "Stratégie",
     aventure: "Aventure",
     course: "Course",
-    creation: "Création"
+    creation: "Création",
+    console: "Cartes console"
   },
   tagsProduits: { topup: "Top-up", voucher: "Voucher", pass: "Pass", promo: "Promo" },
 
@@ -118,6 +121,19 @@ const SHOP = {
       alias: ["asphalt 9", "asphalt legends unite", "gameloft"],
       images: null,
       identifiant: null   // Pass Gameloft et jetons livrés par code
+    },
+    // Cartes cadeaux console (relais depuis la Fan Zone EA FC, f01) : e-cards uniquement, aucun identifiant demandé
+    {
+      id: "playstation", nom: "PlayStation Store", editeur: "sony", tags: ["console"],
+      alias: ["ps", "ps4", "ps5", "psn", "playstation"],
+      images: null,
+      identifiant: null
+    },
+    {
+      id: "xbox", nom: "Xbox", editeur: "microsoft", tags: ["console"],
+      alias: ["xbox", "game pass", "microsoft"],
+      images: null,
+      identifiant: null
     }
   ],
 
@@ -213,7 +229,29 @@ const SHOP = {
       activation: "Dans Asphalt Legends, ouvre « Profil » puis « Activer un pass » et saisis le code." },
     { id: "gl-jetons", jeu: "asphalt", nom: "1 000 jetons", type: "voucher", livraison: "code", prix: 29, expiration: "2027-04-30",
       contenu: "1 000 jetons Asphalt Legends, à saisir dans le jeu.",
-      activation: "Dans Asphalt Legends, ouvre « Boutique » puis « Utiliser un code » et saisis le code." }
+      activation: "Dans Asphalt Legends, ouvre « Boutique » puis « Utiliser un code » et saisis le code." },
+
+    // PlayStation Store (import de fichier) : cartes de crédit du porte-monnaie PlayStation
+    { id: "ps-100", jeu: "playstation", nom: "Carte PlayStation Store 100 MAD", type: "voucher", livraison: "code", prix: 100, expiration: "2027-12-31",
+      contenu: "100 MAD ajoutés au porte-monnaie de ton compte PlayStation Network.",
+      activation: "Sur ta console ou dans l'appli PlayStation, ouvre « PlayStation Store » puis « Utiliser un code » et saisis le code." },
+    { id: "ps-200", jeu: "playstation", nom: "Carte PlayStation Store 200 MAD", type: "voucher", livraison: "code", prix: 200, expiration: "2027-12-31",
+      contenu: "200 MAD ajoutés au porte-monnaie de ton compte PlayStation Network.",
+      activation: "Sur ta console ou dans l'appli PlayStation, ouvre « PlayStation Store » puis « Utiliser un code » et saisis le code." },
+    { id: "ps-500", jeu: "playstation", nom: "Carte PlayStation Store 500 MAD", type: "voucher", livraison: "code", prix: 500, expiration: "2027-12-31", epuise: true,
+      contenu: "500 MAD ajoutés au porte-monnaie de ton compte PlayStation Network.",
+      activation: "Sur ta console ou dans l'appli PlayStation, ouvre « PlayStation Store » puis « Utiliser un code » et saisis le code." },
+
+    // Xbox (import de fichier) : cartes cadeaux et Game Pass
+    { id: "xbox-100", jeu: "xbox", nom: "Carte cadeau Xbox 100 MAD", type: "voucher", livraison: "code", prix: 100, expiration: "2027-12-31",
+      contenu: "100 MAD ajoutés au compte Microsoft, pour les jeux et contenus Xbox.",
+      activation: "Sur ta console Xbox, ouvre « Microsoft Store » puis « Utiliser un code » et saisis le code." },
+    { id: "xbox-250", jeu: "xbox", nom: "Carte cadeau Xbox 250 MAD", type: "voucher", livraison: "code", prix: 229, prixBarre: 250, expiration: "2027-12-31",
+      contenu: "250 MAD ajoutés au compte Microsoft, pour les jeux et contenus Xbox.",
+      activation: "Sur ta console Xbox, ouvre « Microsoft Store » puis « Utiliser un code » et saisis le code." },
+    { id: "xbox-gamepass", jeu: "xbox", nom: "Xbox Game Pass 1 mois", type: "pass", livraison: "code", prix: 119, duree: 30, reconduction: false,
+      contenu: "Des centaines de jeux sur console et PC pendant 1 mois.",
+      activation: "Sur ta console Xbox, ouvre « Microsoft Store » puis « Utiliser un code » et saisis le code." }
   ],
 
   /* ---- Accueil (S06-02) ----
@@ -226,7 +264,7 @@ const SHOP = {
     { id: "b-gi", titre: "Bénédiction de la lune", texte: "Genshin Impact · 49 MAD au lieu de 55 MAD", jeu: "genshin", produit: "gi-lune" }
   ],
   misesEnAvant: ["freefire", "genshin", "mlbb"],
-  populaires: ["freefire", "pubg", "mlbb", "efootball", "roblox", "clash-of-clans", "genshin", "asphalt"],
+  populaires: ["freefire", "pubg", "mlbb", "efootball", "playstation", "roblox", "xbox", "clash-of-clans", "genshin", "asphalt"],
 
   /* ---- Historique d'achats du joueur (E10), du plus récent au plus ancien ----
      Sert aussi à « Tes derniers achats » de l'accueil (S06-02). */
