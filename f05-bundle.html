@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<!-- Écran f05 — Bundle EA FC : offre « Pass Fan EA FC – 2 Go – 7 jours + 1 code EA FC Mobile »,
+     prix fictif en monnaie locale (selon le pays soutenu : MAD, TND, EGP, FCFA, CDF).
+     « Acheter » → f06 (choix Orange Money ou crédit, puis confirmation). Mentions sur le code.
+     Si le joueur a déjà 2 codes : le pass reste achetable, sans code. Retour → f01. -->
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bundle EA FC</title>
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-zone="fanzone">
+<div class="cadre">
+  <div class="telephone sombre fanzone">
+    <div class="barre-etat" data-heure="18:30"></div>
+    <div id="entete"></div>
+    <main class="contenu" id="page"></main>
+  </div>
+</div>
+
+<script src="js/nav.js"></script>
+<script src="js/data-fanzone.js"></script>
+<script src="js/fanzone.js"></script>
+<script src="js/demo.js"></script>
+<script>
+  document.getElementById("entete").innerHTML = Fz.entete("Bundle EA FC", "f01-accueil.html");
+
+  function rendre() {
+    const pass = FANZONE.pass;
+    const plafond = Fz.codes().length >= FANZONE.codesMax;
+    const soutenu = Fz.paysSoutenu();
+    let html = '<div class="fz-page"><p class="fz-intro">Suis la finale sans compter ta data, et reçois de quoi jouer sur EA FC Mobile.</p>' +
+      '<section class="fz-offre" aria-label="' + pass.nom + '">' +
+      '<p class="fz-offre-nom">' + pass.nom + "</p>" +
+      '<p class="fz-offre-data">' + pass.data + " <small>· " + pass.duree + "</small></p>" +
+      '<p class="fz-offre-plus">' + Fz.icone("cadeau", "f-fz-neon") + "+ 1 code EA FC Mobile</p>" +
+      '<p class="fz-prix">' + Fz.prixPass() + " <small>TTC" + (soutenu ? " · offre " + soutenu.nom : "") + "</small></p>" +
+      '<div class="fz-actions"><a href="f06-achat.html" class="bouton bouton-primaire bouton-pleine-largeur">Acheter</a></div>' +
+      "</section>";
+
+    if (plafond) {
+      html += '<div class="fz-encart orange">' + Fz.icone("cadeau", "f-primary") +
+        "<span>Tu as déjà " + FANZONE.codesMax + " codes EA FC Mobile : le pass sera activé avec la data seulement.</span></div>";
+    }
+
+    html += '<div class="fz-carte"><h2>Bon à savoir</h2><ul class="fz-liste-mentions">' +
+      "<li>Code valable uniquement sur EA FC Mobile.</li>" +
+      "<li>Code valable jusqu'au " + FANZONE.validiteCodes + ".</li>" +
+      "<li>" + FANZONE.codesMax + " codes maximum par utilisateur.</li>" +
+      "<li>Les " + pass.data + " sont utilisables pendant " + pass.duree + " à partir de l'achat.</li></ul></div>" +
+      '<div class="fz-actions"><a href="f07-mes-codes.html" class="fz-lien">Mes codes' + Fz.icone("chevron", "f-primary") + "</a></div></div>";
+    document.getElementById("page").innerHTML = html;
+  }
+
+  Fz.monter(rendre);
+</script>
+</body>
+</html>

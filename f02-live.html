@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<!-- Écran f02 — Lecteur vidéo simulé « Max it TV » : Finale EA FC – Jour 1, émission live avec les streamers.
+     En direct : lecteur (pause, plein écran hors périmètre), nombre de spectateurs, programme du jour à l'heure locale.
+     Avant le live (menu de démo) : le lecteur affiche le compte à rebours et le rappel. Retour → f01. -->
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Max it TV</title>
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-zone="fanzone">
+<div class="cadre">
+  <div class="telephone sombre fanzone">
+    <div class="barre-etat" data-heure="18:30"></div>
+    <div id="entete"></div>
+    <main class="contenu" id="page"></main>
+  </div>
+</div>
+
+<script src="js/nav.js"></script>
+<script src="js/data-fanzone.js"></script>
+<script src="js/fanzone.js"></script>
+<script src="js/demo.js"></script>
+<script>
+  document.getElementById("entete").innerHTML = Fz.entete("Max it TV", "f01-accueil.html");
+
+  let enPause = false;   // lecture simulée
+
+  /* Image du lecteur : plateau, écran géant avec le match, deux joueurs */
+  const IMAGE =
+    '<svg viewBox="0 0 320 180" preserveAspectRatio="xMidYMid slice" aria-hidden="true">' +
+    '<rect class="f-fz-bg" width="320" height="180"/>' +
+    '<rect class="f-fz-card" x="40" y="12" width="240" height="112" rx="6"/>' +
+    '<g class="s-fz-neon" fill="none" stroke-width="1.4" opacity=".7"><rect x="54" y="24" width="212" height="88" rx="2"/>' +
+    '<path d="M160 24v88"/><circle cx="160" cy="68" r="15"/><path d="M54 50h18v36H54M266 50h-18v36h18"/></g>' +
+    '<circle class="f-primary" cx="118" cy="56" r="3.5"/><circle class="f-white" cx="196" cy="80" r="3.5"/><circle class="f-white" cx="150" cy="70" r="2.5"/>' +
+    '<g class="f-gray-dark"><circle cx="64" cy="134" r="13"/><path d="M40 180c0-28 11-40 24-40s24 12 24 40z"/>' +
+    '<circle cx="256" cy="134" r="13"/><path d="M232 180c0-28 11-40 24-40s24 12 24 40z"/></g>' +
+    '<g class="f-fz-black"><path d="M50 134c0-9 6-16 14-16s14 7 14 16h-3c0-7-5-13-11-13s-11 6-11 13z"/>' +
+    '<path d="M242 134c0-9 6-16 14-16s14 7 14 16h-3c0-7-5-13-11-13s-11 6-11 13z"/></g>' +
+    '<rect class="f-primary" x="24" y="156" width="80" height="6" rx="2"/><rect class="f-fz-neon" x="216" y="156" width="80" height="6" rx="2"/>' +
+    '<text class="f-white" x="160" y="146" text-anchor="middle" font-size="13" font-weight="700">MAR 1 – 1 TUN</text></svg>';
+
+  /* Heure locale d'un moment du programme, en minutes après le début du live */
+  function heure(minutes) {
+    return new Date(new Date(FANZONE.debutLive).getTime() + minutes * 60000)
+      .toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+  }
+
+  function rendre() {
+    let html = "";
+    if (Fz.enDirect()) {
+      html += '<div class="fz-lecteur">' + IMAGE +
+        '<span class="fz-maxit-tv">Max it <span>TV</span></span><span class="fz-badge-direct">EN DIRECT</span>' +
+        '<div class="fz-controles">' +
+        '<button class="bouton-icone" data-pause aria-label="' + (enPause ? "Reprendre" : "Mettre en pause") + '">' + Fz.icone(enPause ? "lecture" : "pause") + "</button>" +
+        '<span class="fz-direct-point">' + (enPause ? "En pause" : "Direct") + "</span>" +
+        '<button class="bouton-icone" data-hors="Le plein écran" aria-label="Plein écran">' + Fz.icone("plein") + "</button>" +
+        "</div></div>";
+      html += '<div class="fz-page"><h2 class="fz-titre-live">Finale EA FC – Jour 1</h2>' +
+        '<p class="fz-intro">Émission live avec les streamers · 12 438 spectateurs</p>' +
+        '<div class="fz-carte"><h2>Programme du jour</h2><ul class="fz-programme">' +
+        "<li><b>" + heure(0) + "</b><span>Ouverture : plateau avec les streamers</span></li>" +
+        "<li><b>" + heure(60) + '</b><span class="fz-encours">Demi-finale 1 : Maroc – Tunisie (en cours)</span></li>' +
+        "<li><b>" + heure(180) + "</b><span>Demi-finale 2 : Égypte – Côte d'Ivoire</span></li>" +
+        "<li><b>" + heure(300) + "</b><span>Débrief et pronostics pour la finale</span></li></ul></div>" +
+        '<div class="fz-actions"><a href="f10-arbre.html" class="bouton fz-contour bouton-pleine-largeur">Voir l\'arbre de la compétition</a></div>' +
+        "</div>";
+    } else {
+      // Avant le live : le lecteur attend le début de l'émission
+      const rappel = Etat.get("fzRappel");
+      html += '<div class="fz-lecteur"><span class="fz-maxit-tv">Max it <span>TV</span></span>' +
+        '<div class="fz-lecteur-attente"><strong>Le live n\'a pas encore commencé</strong>' +
+        "<small>Début : " + Fz.debutLocal() + " (ton heure)</small></div></div>" +
+        '<div class="fz-page"><div class="fz-rebours fz-centre" role="timer">' +
+        [["jours", "jours"], ["heures", "heures"], ["min", "min"], ["sec", "sec"]].map((c) =>
+          '<span><b data-rebours="' + c[0] + '">00</b><small>' + c[1] + "</small></span>").join("") + "</div>" +
+        '<div class="fz-actions"><button class="bouton bouton-primaire bouton-pleine-largeur fz-bouton-rappel' + (rappel ? " actif" : "") + '" data-rappel>' +
+        Fz.icone(rappel ? "coche" : "cloche", rappel ? "f-primary" : "f-white") + (rappel ? "Rappel activé" : "Me rappeler le début du live") + "</button>" +
+        '<a href="f01-accueil.html" class="bouton fz-contour bouton-pleine-largeur">Retour à la Fan Zone</a></div></div>';
+    }
+    document.getElementById("page").innerHTML = html;
+    if (!Fz.enDirect()) Fz.compteRebours();
+  }
+
+  document.getElementById("page").addEventListener("click", (evenement) => {
+    if (evenement.target.closest("[data-pause]")) {
+      enPause = !enPause;
+      rendre();
+    } else if (evenement.target.closest("[data-rappel]")) {
+      const actif = !Etat.get("fzRappel");
+      Etat.set("fzRappel", actif);
+      Nav.toast(actif ? "Rappel activé" : "Rappel désactivé");
+    }
+  });
+
+  Fz.monter(rendre);
+</script>
+</body>
+</html>

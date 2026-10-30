@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<!-- Écran f07 — Mes codes : codes EA FC Mobile gagnés au quiz (f04) ou reçus avec le Pass Fan (f06).
+     Chaque code est masqué jusqu'à « Révéler », puis « Copier ». Compteur « x code(s) sur 2 maximum ».
+     Sans code : liens vers le quiz et le Pass Fan. Retour → f01. -->
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mes codes</title>
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-zone="fanzone">
+<div class="cadre">
+  <div class="telephone sombre fanzone">
+    <div class="barre-etat" data-heure="18:30"></div>
+    <div id="entete"></div>
+    <main class="contenu" id="page"></main>
+  </div>
+</div>
+
+<script src="js/nav.js"></script>
+<script src="js/data-fanzone.js"></script>
+<script src="js/fanzone.js"></script>
+<script src="js/demo.js"></script>
+<script>
+  document.getElementById("entete").innerHTML = Fz.entete("Mes codes", "f01-accueil.html");
+
+  function dateCourte(iso) {
+    return new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "long" });
+  }
+
+  function rendre() {
+    const liste = Fz.codes();
+    let html = '<div class="fz-page">';
+    if (!liste.length) {
+      html += '<div class="fz-carte fz-centre"><h2>Pas encore de code</h2>' +
+        '<p class="fz-intro">Gagne un code EA FC Mobile au quiz du jour, ou reçois-en un avec le Pass Fan EA FC.</p></div>' +
+        '<div class="fz-actions"><a href="f04-quiz.html" class="bouton bouton-primaire bouton-pleine-largeur">Jouer au quiz</a>' +
+        '<a href="f05-bundle.html" class="bouton fz-contour bouton-pleine-largeur">Voir le Pass Fan EA FC</a></div>';
+    } else {
+      html += '<p class="fz-intro">' + liste.length + " code" + (liste.length > 1 ? "s" : "") + " sur " + FANZONE.codesMax + " maximum.</p>" +
+        liste.map((c, i) =>
+          '<section class="fz-carte fz-code-carte"><div class="fz-code-meta"><b>' + c.origine + "</b><span>Obtenu le " + dateCourte(c.date) + "</span></div>" +
+          '<p class="fz-code">' + Fz.codeAffiche(c) + "</p>" +
+          (c.revele
+            ? '<button class="bouton fz-contour bouton-pleine-largeur" data-copier="' + i + '">' + Fz.icone("copier") + "Copier le code</button>"
+            : '<button class="bouton bouton-primaire bouton-pleine-largeur" data-reveler="' + i + '">' + Fz.icone("oeil") + "Révéler mon code</button>") +
+          '<div class="fz-code-meta fz-mention"><span>EA FC Mobile uniquement</span><span>Valable jusqu\'au ' + FANZONE.validiteCodes + "</span></div></section>"
+        ).join("") +
+        '<div class="fz-carte"><h2>Utiliser mon code</h2><ol class="fz-etapes-code">' +
+        "<li>Ouvre EA FC Mobile.</li><li>Va dans Boutique, puis « Utiliser un code ».</li><li>Colle ton code et valide.</li></ol></div>";
+      if (liste.length < FANZONE.codesMax) {
+        html += '<div class="fz-actions"><a href="f04-quiz.html" class="fz-lien">Gagner un autre code au quiz' + Fz.icone("chevron", "f-primary") + "</a></div>";
+      }
+    }
+    html += '<p class="fz-mention">' + FANZONE.codesMax + " codes maximum par utilisateur – valables jusqu'au " + FANZONE.validiteCodes + ".</p></div>";
+    document.getElementById("page").innerHTML = html;
+  }
+
+  document.getElementById("page").addEventListener("click", (evenement) => {
+    const reveler = evenement.target.closest("[data-reveler]");
+    if (reveler) Fz.revelerCode(Number(reveler.dataset.reveler));
+    if (evenement.target.closest("[data-copier]")) Nav.toast("Code copié");
+  });
+
+  Fz.monter(rendre);
+</script>
+</body>
+</html>

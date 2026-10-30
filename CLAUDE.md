@@ -132,7 +132,7 @@ simulés dans js/data-shop.js. Les US V2 (S06-04, S06-09, S06-12, S10-03) ne son
 Si des visuels Figma sont dans reference/figma-shop/, ils font foi, comme pour Play.
 
 ### Entrées
-- Depuis 00c (univers gaming), le bouton du Shop ouvre l'accueil du Shop.
+- Depuis 00c (univers gaming), le bouton du Shop (tuile « Boutique ») ouvre l'accueil du Shop.
 - Depuis la page d'un jeu de l'e-sport (13), le lien « Boutique Max it » ouvre la page de ce
   jeu dans le Shop.
 - Les entrées E-sport et Jouer ne doivent pas être modifiées.
@@ -157,3 +157,31 @@ Premier achat (conditions de vente à accepter) ; conditions de vente modifiées
 jeu introuvable ; solde Orange Money insuffisant ; montant hors plafond DCB ; paiement sans
 réponse (« Vérification en cours ») ; livraison en échec puis remboursement ; pass qui expire
 dans 3 jours ; envoi du code par SMS activé ou non.
+
+## Section Fan Zone — Fan Zone EA FC (4e chantier)
+
+### Objectif
+Espace « FAN ZONE EA FC » de Max it, dédié à la finale du tournoi panafricain EA FC (Tunis, 12 et 13 décembre 2026).
+Adaptation de l'ancienne Fan zone de la CAN : garder sa structure, son style et sa hiérarchie visuelle, remplacer
+uniquement les contenus football par des contenus e-sport EA FC. Plan des écrans : ecrans-fanzone.md (validé le 2026-10-30).
+
+### Entrée
+Depuis 00c, le visuel de la rubrique « Découvrir » ouvre l'accueil de la Fan Zone (f01). Les entrées Jouer, Boutique
+et E-sport ne changent pas.
+
+### Règles propres à la Fan Zone
+- Fichiers préfixés « f » (f01-accueil.html…) ; données dans js/data-fanzone.js ; fonctions communes dans js/fanzone.js.
+- Réutiliser tokens.css, style.css, nav.js et demo.js. Couleurs dans la section « Fan Zone » de tokens.css :
+  fond #0D0D0D, cartes #1E1E1E (16 px), orange Max it en accent, gris clair, néon vert #00E37A (direct, arbre),
+  badge rouge « EN DIRECT », couleurs des drapeaux.
+- Mini app : en-tête avec retour et titre centré, pas de barre du bas.
+- Pays soutenu choisi à la première ouverture (« Quel pays soutiens-tu ? ») et mémorisé : drapeau sous l'avatar,
+  équipe mise en avant, entourage orange dans l'arbre, monnaie du Pass Fan (MAD, TND, EGP, FCFA, CDF).
+- 8 pays en quarts (Maroc, Tunisie, Égypte, Côte d'Ivoire qualifiés ; Sénégal, Cameroun, Mali, RD Congo éliminés),
+  joueurs et pseudos inventés. Logo EA FC : simple emplacement, pas de reproduction du vrai logo.
+- Codes EA FC Mobile fictifs : 2 maximum par utilisateur, valables jusqu'au 31/12/2026, regroupés dans « Mes codes » (f07).
+- La photo de l'avatar reste dans le téléphone ; l'avatar est un dessin SVG aux couleurs du pays.
+- L'interrupteur gratuit / abonné n'a aucun effet dans la Fan Zone.
+
+### Menu de démo — ajouts Fan Zone
+État de la page : avant le live / en direct ; rejouer le choix du pays ; nouveau supporter (sans pays, avatar ni codes).

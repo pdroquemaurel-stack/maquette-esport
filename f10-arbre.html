@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<!-- Écran f10 — Arbre de la compétition, défilant horizontalement : quarts (joués en ligne) → demi-finales
+     (12 décembre, Tunis) → finale (13 décembre). Scores fictifs, vainqueurs en surbrillance verte (néon),
+     pays soutenu entouré d'orange. En direct (menu de démo) : la demi-finale 1 est en cours, avec son score.
+     Ligne d'un pays → fiche de l'équipe (f09). Retour → f01. -->
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Arbre</title>
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-zone="fanzone">
+<div class="cadre">
+  <div class="telephone sombre fanzone">
+    <div class="barre-etat" data-heure="18:30"></div>
+    <div id="entete"></div>
+    <main class="contenu" id="page"></main>
+  </div>
+</div>
+
+<script src="js/nav.js"></script>
+<script src="js/data-fanzone.js"></script>
+<script src="js/fanzone.js"></script>
+<script src="js/demo.js"></script>
+<script>
+  document.getElementById("entete").innerHTML = Fz.entete("Arbre", "f01-accueil.html");
+
+  /* Une ligne du match : drapeau, pays, score ; vainqueur en néon, pays soutenu entouré d'orange */
+  function ligne(code, score, gagnant) {
+    if (!code) return '<div class="fz-ligne-match vide"><span class="fz-nom">À déterminer</span></div>';
+    const p = Fz.pays(code);
+    const classes = (gagnant ? " gagnant" : "") + (code === Etat.get("fzPays") ? " soutenu" : "");
+    return '<a href="f09-equipe.html?pays=' + code + '" class="fz-ligne-match' + classes + '">' + Fz.drapeau(code) +
+      '<span class="fz-nom">' + p.nom + "</span>" +
+      '<span class="fz-score">' + (score === null ? "–" : score) + "</span></a>";
+  }
+
+  function match(m) {
+    const live = Fz.enDirect() && m.enDirect;
+    const scores = m.scores || (live ? m.enDirect : null);
+    const termine = !!m.scores;
+    return '<div class="fz-match' + (live ? " live" : "") + '">' +
+      (live ? '<div class="fz-match-tete"><span class="fz-live-mini">EN DIRECT</span></div>' : "") +
+      ligne(m.a, scores ? scores[0] : null, termine && scores[0] > scores[1]) +
+      ligne(m.b, scores ? scores[1] : null, termine && scores[1] > scores[0]) + "</div>";
+  }
+
+  function rendre() {
+    document.getElementById("page").innerHTML = '<div class="fz-page">' +
+      '<p class="fz-intro">Fais glisser l\'arbre pour voir la suite, jusqu\'à la finale du 13 décembre.</p>' +
+      '<div class="fz-arbre">' + FANZONE.arbre.map((tour) =>
+        '<section class="fz-tour"><h2>' + tour.tour + "</h2><p>" + tour.date + "</p>" +
+        '<div class="fz-tour-matchs">' + tour.matchs.map(match).join("") + "</div></section>").join("") + "</div>" +
+      '<div class="fz-legende"><span><i class="gagnant"></i>Vainqueur</span><span><i class="soutenu"></i>Ton équipe</span></div>' +
+      (Fz.enDirect() ? '<div class="fz-actions"><a href="f02-live.html" class="bouton bouton-primaire bouton-pleine-largeur">' + Fz.icone("lecture") + "Regarder le live</a></div>" : "") +
+      "</div>";
+  }
+
+  Fz.monter(rendre);
+</script>
+</body>
+</html>

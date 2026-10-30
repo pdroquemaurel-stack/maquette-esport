@@ -24,7 +24,7 @@ En-tête : cloche → 25 Notifications.
 ### 00c `00c-maxit-gaming.html` — Game corner
 - Référence : `reference/03-gaming.png` (thème sombre).
 - Éléments : retour, recherche ; titre « Game corner » ; tuiles Play, Gameshop, Esport ; « Discover » ; « Continue playing ».
-- Liens : Esport → 02 au premier accès, sinon 03 ; Jouer → p01 (Max it Gaming Play) ; Gameshop et visuel « Discover » → s01 (Shop, voir ecrans-shop.md) ; retour → 00b.
+- Liens : Esport → 02 au premier accès, sinon 03 ; Jouer → p01 (Max it Gaming Play) ; Gameshop → s01 (Shop, voir ecrans-shop.md) ; visuel « Discover » (Fan Zone EA FC) → f01 (voir ecrans-fanzone.md) ; retour → 00b.
 - État (menu de démo) : compte Max it suspendu → message « Accès aux tournois impossible » au lieu d'entrer dans la plateforme (S01-01).
 
 ---

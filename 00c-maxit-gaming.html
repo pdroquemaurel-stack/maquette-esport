@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <!-- Écran 00c — Univers Gaming « Game corner », reproduit d'après reference/03-gaming.png.
      « Jouer » ouvre Play, la mini app des mini-jeux (p01).
-     « Boutique » et le visuel « Les meilleurs jeux au meilleur prix » ouvrent le Shop (s01).
+     « Boutique » ouvre le Shop (s01).
+     Le visuel « Fan Zone EA FC » (rubrique « Découvrir ») ouvre la Fan Zone de la finale EA FC (f01).
      « E-sport » ouvre la plateforme : 02 au premier accès, sinon 03.
      État de démonstration : compte Max it suspendu → message bloquant (S01-01). -->
 <html lang="fr">
@@ -111,6 +112,10 @@
       color: var(--illu-gold-light);
       margin-top: var(--space-1);
     }
+    /* Visuel « Fan Zone EA FC » : titre plus grand, « EA FC » en orange */
+    .visuel .accroche-fanzone { font-size: var(--font-size-xxl); top: 30%; }
+    .visuel .accroche-fanzone em { color: var(--color-primary); }
+    .visuel .accroche-fanzone small { font-size: var(--font-size-xs); color: var(--fz-text-secondary); }
     .derniere { margin-bottom: var(--space-8); }
   </style>
 </head>
@@ -181,32 +186,28 @@
       </nav>
 
       <h2 class="titre-section">Découvrir</h2>
-      <a href="s01-accueil.html" class="visuel">
+      <a href="f01-accueil.html" class="visuel visuel-fanzone">
         <svg viewBox="0 0 368 206" aria-hidden="true">
-          <rect class="f-purple-dark" width="368" height="206"/>
-          <rect class="f-purple-deep" x="140" width="228" height="206" opacity=".7"/>
-          <g fill="none" stroke-width="2.5" stroke-linejoin="round">
-            <path class="s-pink" d="M8 6l30 28-24 4z"/>
-            <path class="s-blue" d="M50 8l18 34-26-8z"/>
-            <path class="s-blue" d="M10 46l26 14H12z"/>
-            <path class="s-yellow" d="M150 12l10 12 4-10 8 16"/>
-            <path class="s-yellow" d="M330 22l6 10-6 2 8 12"/>
-            <path class="s-yellow" d="M18 168l16-4-8 8 16-2"/>
-            <path class="s-pink" d="M180 190l18-22-2 26z"/>
-            <path class="s-blue" d="M208 196l8-26 4 26"/>
-            <!-- Console stylisée -->
-            <rect class="s-blue" x="250" y="56" width="90" height="56" rx="6"/>
-            <rect class="s-yellow" x="266" y="44" width="58" height="22" rx="3"/>
-            <path class="s-blue" d="M262 112c-14 6-24 22-26 34m94-34c14 6 24 22 26 34"/>
-            <rect class="s-yellow" x="244" y="134" width="44" height="26" rx="10" transform="rotate(-10 266 147)"/>
-            <rect class="s-yellow" x="302" y="134" width="44" height="26" rx="10" transform="rotate(10 324 147)"/>
-            <circle class="s-pink" cx="120" cy="28" r="5"/>
-            <circle class="s-pink" cx="248" cy="30" r="4"/>
-            <circle class="s-blue" cx="148" cy="184" r="4"/>
-            <circle class="s-blue" cx="196" cy="128" r="3"/>
+          <rect class="f-fz-bg" width="368" height="206"/>
+          <circle class="f-primary" cx="330" cy="20" r="38" opacity=".25"/>
+          <circle class="f-fz-neon" cx="40" cy="196" r="40" opacity=".12"/>
+          <!-- Terrain néon en perspective -->
+          <g class="s-fz-neon" fill="none" stroke-width="1.5" opacity=".45">
+            <path d="M150 206l52-120h120l40 120"/>
+            <path d="M178 142h162"/>
+            <ellipse cx="260" cy="142" rx="34" ry="9"/>
+            <path d="M232 86v12h56V86"/>
           </g>
+          <!-- Manette orange avec halo -->
+          <g transform="translate(232 28)">
+            <path class="f-primary" d="M14 8h28c8 0 12 5 13 14l2 10c1 8-6 11-11 6l-6-6H18l-6 6c-5 5-12 2-11-6l2-10C4 13 6 8 14 8z"/>
+            <path class="f-fz-bg" d="M14 18h3v3h3v3h-3v3h-3v-3h-3v-3h3z"/>
+            <circle class="f-fz-bg" cx="40" cy="19" r="2.2"/><circle class="f-fz-bg" cx="45" cy="24" r="2.2"/>
+          </g>
+          <rect class="f-alert" x="16" y="16" width="70" height="20" rx="4"/>
+          <text class="f-white" x="51" y="30" text-anchor="middle" font-size="10" font-weight="700">12 &amp; 13 DÉC.</text>
         </svg>
-        <p class="accroche">LES MEILLEURS JEUX<em>AU MEILLEUR PRIX</em><small>Les meilleurs jeux, à petit prix.</small></p>
+        <p class="accroche accroche-fanzone">FAN ZONE<em>EA FC</em><small>Finale panafricaine · Tunis</small></p>
       </a>
 
       <h2 class="titre-section">Continuer à jouer</h2>

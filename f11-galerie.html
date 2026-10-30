@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<!-- Écran f11 — Galerie : vignettes des équipes (emplacements colorés aux couleurs du pays) avec légendes.
+     Vignette → vue agrandie, avec photo précédente / suivante et fermeture. Retour → f01. -->
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Galerie</title>
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-zone="fanzone">
+<div class="cadre">
+  <div class="telephone sombre fanzone">
+    <div class="barre-etat" data-heure="18:30"></div>
+    <div id="entete"></div>
+    <main class="contenu" id="page"></main>
+  </div>
+</div>
+
+<script src="js/nav.js"></script>
+<script src="js/data-fanzone.js"></script>
+<script src="js/fanzone.js"></script>
+<script src="js/demo.js"></script>
+<script>
+  document.getElementById("entete").innerHTML = Fz.entete("Galerie", "f01-accueil.html");
+
+  const PHOTOS = FANZONE.galerie;
+  let ouverte = null;   // photo affichée en grand, ou null
+
+  /* Emplacement d'une photo : dégradé du pays, pictogramme, petit drapeau */
+  function image(photo) {
+    return '<span class="fz-image" style="' + Fz.degrade(photo.pays) + '">' + Fz.icone("photo") +
+      (photo.pays ? Fz.drapeau(photo.pays) : "") + "</span>";
+  }
+
+  function rendre() {
+    let html = '<div class="fz-page"><p class="fz-intro">Les coulisses de la compétition, des qualifications à Tunis.</p>' +
+      '<div class="fz-galerie">' + PHOTOS.map((p, i) =>
+        '<button class="fz-vignette" data-photo="' + i + '">' + image(p) + "<span>" + p.legende + "</span></button>").join("") +
+      "</div></div>";
+    if (ouverte !== null) {
+      const p = PHOTOS[ouverte];
+      html += '<div class="fz-visionneuse" role="dialog" aria-modal="true" aria-label="' + p.legende + '">' +
+        '<button class="bouton-icone" data-fermer-photo aria-label="Fermer">' + Fz.icone("croix") + "</button>" +
+        image(p) + "<p>" + p.legende + "</p>" +
+        '<div class="fz-visionneuse-nav">' +
+        '<button class="bouton-icone" data-photo="' + ((ouverte + PHOTOS.length - 1) % PHOTOS.length) + '" aria-label="Photo précédente">' + Fz.icone("precedent") + "</button>" +
+        "<span>" + (ouverte + 1) + " / " + PHOTOS.length + "</span>" +
+        '<button class="bouton-icone" data-photo="' + ((ouverte + 1) % PHOTOS.length) + '" aria-label="Photo suivante">' + Fz.icone("chevron") + "</button>" +
+        "</div></div>";
+    }
+    document.getElementById("page").innerHTML = html;
+  }
+
+  document.getElementById("page").addEventListener("click", (evenement) => {
+    const photo = evenement.target.closest("[data-photo]");
+    if (photo) {
+      ouverte = Number(photo.dataset.photo);
+      rendre();
+    } else if (evenement.target.closest("[data-fermer-photo]")) {
+      ouverte = null;
+      rendre();
+    }
+  });
+
+  Fz.monter(rendre);
+</script>
+</body>
+</html>
