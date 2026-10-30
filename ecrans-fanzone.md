@@ -2,7 +2,7 @@
 
 Espace « FAN ZONE EA FC » dans Max it, dédié à la finale du tournoi panafricain EA FC (Tunis, 12 et 13 décembre 2026).
 Adaptation de l'ancienne Fan zone de la CAN : même structure, même style, même hiérarchie ; contenus e-sport à la place du football.
-Plan validé le 2026-10-30, complété le même jour (retours : temps accéléré, Pass data, logo EA SPORTS FC, services payants,
+Plan validé le 2026-10-30, complété le même jour (retours : temps accéléré, Pass data, logo EA SPORTS FC, services,
 relais Shop et Play, carrousel des équipes, Grand Tirage console). Données fictives dans `js/data-fanzone.js`, fonctions
 communes dans `js/fanzone.js`.
 
@@ -15,7 +15,7 @@ l'équipe mise en avant, l'entourage orange dans l'arbre et la monnaie du Pass F
 Égypte, Côte d'Ivoire), 4 éliminés (Sénégal, Cameroun, Mali, RD Congo). Joueurs et pseudos inventés.
 **Heure de la démo** : départ le 7 décembre 2026 à 10h30 (heure du téléphone), puis le temps s'écoule ; le menu de démo l'avance.
 **Le Grand Tirage console** : un seul tirage au sort, en direct pendant la finale le 13/12 à 18h (heure de Tunis), 3 consoles à gagner.
-Chances : questions du jour (+1 par jour réussi, 7 au plus) et Pass Fan achetés dans la Fan Zone (+1 par achat, 5 au plus).
+Chances : questions du jour (+1 par jour réussi, 7 au plus) et Pass data achetés dans la Fan Zone (1 à 3 chances selon le forfait, 5 au plus).
 **Interrupteur gratuit / abonné** : aucun effet dans la Fan Zone.
 
 ---
@@ -31,12 +31,12 @@ Chances : questions du jour (+1 par jour réussi, 7 au plus) et Pass Fan acheté
   « Rappel activé », à nouveau pour désactiver). À zéro, la carte bascule seule en direct (toast « Le live commence ! »).
   En direct : badge « EN DIRECT », « Finale EA FC – Jour 1 », « Émission live avec les streamers », bouton « Regarder » → f02.
 - Tuiles « Pass data » (« Regarde le live sans compter ») → f05 et « Jouer & Gagner » (questions du jour) → f04.
-- Bloc « Mes chances » au Grand Tirage console : total, détail (questions du jour, Pass Fan), compte à rebours du tirage → f13.
+- Bloc « Mes chances » au Grand Tirage console : total, détail (questions du jour, Pass data), compte à rebours du tirage → f13.
 - Icônes Équipes → f08, Arbre → f10, Galerie → f11, Services → f12.
 - « Les équipes » : carrousel de portraits au doigt (équipe soutenue d'abord) → f09 ; « Voir tout » → f08.
 - « À ne pas manquer » : cartes cadeaux gaming (Shop s01 ; pastilles PlayStation, Xbox, PUBG, Free Fire, Roblox → s03 du jeu,
   retour vers f01) ; Play, les mini-jeux Max it → p01.
-- Carrousel de 4 bannières orange (toutes les 4 s, points de pagination) : avatar → f03, Pass Fan → f05, questions du jour → f04,
+- Carrousel de 4 bannières orange (toutes les 4 s, points de pagination) : avatar → f03, Pass data → f05, questions du jour → f04,
   mini-jeux → p01.
 - Première ouverture : fenêtre « Quel pays soutiens-tu ? ».
 
@@ -64,21 +64,22 @@ Chances : questions du jour (+1 par jour réussi, 7 au plus) et Pass Fan acheté
 - Déjà gagné aujourd'hui, plus de tentative, avant 10h, avant le 5 ou après le 11 décembre : message adapté. Pas de rattrapage.
 
 ### f05 `f05-bundle.html` — Pass data
-- 3 forfaits, prix en monnaie locale : Pass Fan 1 Go (1 jour) ; Pass Fan EA FC 2 Go (7 jours, « Le plus choisi ») et 5 Go
-  (30 jours), chacun avec 1 code EA FC Mobile et +1 chance au Grand Tirage. « Acheter » → f06?offre=….
-- Plafonds atteints (2 codes, 5 chances par les achats) : encarts ; les pass restent achetables.
+- 3 forfaits de data Orange, sans durée (ce n'est pas une data réservée à la Fan Zone), prix en monnaie locale :
+  Pass Fan 1 Go, 2 Go (« Le plus choisi ») et 5 Go. Add-on Fan Zone : 1 Go → +1 chance au Grand Tirage ; 2 Go → +1 code EA FC Mobile et +1 chance ; 5 Go → +2 codes et +3 chances.
+  « Acheter » → f06?offre=….
+- Plafonds atteints (2 codes par utilisateur, 5 chances par les achats) : encarts ; les pass restent achetables.
 - Mentions ; liens « Mes chances au Grand Tirage » → f13 et « Mes codes » → f07.
 
-### f06 `f06-achat.html?offre=…` — Achat d'une offre
-- Forfait (f05) ou service (f12) : récapitulatif (data, code, chance ; ou contenu et durée), Orange Money ou crédit,
+### f06 `f06-achat.html?offre=…` — Achat d'un Pass data
+- Récapitulatif (data, codes, chances, selon les plafonds restants), Orange Money ou crédit,
   « Confirmer et payer », paiement simulé (1,5 s).
-- Pass Fan : « Achat confirmé, ton code est disponible dans Mes codes », +1 chance (ou plafond), date de fin ; « Voir mes codes »,
-  « Mes chances au Grand Tirage ». Service : message propre (live HD débloqué, fond d'écran et sonnerie disponibles).
-- Retour → f05 ou f12 ; offre inconnue : Pass Fan EA FC.
+- « Achat confirmé » : data ajoutée au forfait Orange, codes reçus (« Mes codes ») et chances ajoutées, ou message de plafond ;
+  « Voir mes codes », « Mes chances au Grand Tirage », « Retour à la Fan Zone ».
+- Retour → f05 ; offre inconnue : Pass Fan 2 Go.
 
 ### f07 `f07-mes-codes.html` — Mes codes
 - Codes gagnés au quiz ou reçus avec le pass : origine, date, code masqué → « Révéler », puis « Copier ». Mode d'emploi du code.
-- Sans code : liens vers le quiz (f04) et le Pass Fan (f05).
+- Sans code : liens vers le quiz (f04) et les Pass data (f05).
 
 ### f08 `f08-equipes.html` — Équipes
 - Carrousel des 8 pays, qui défile seul toutes les 4 s et au doigt (le toucher arrête le défilement), points de pagination.
@@ -98,16 +99,14 @@ Chances : questions du jour (+1 par jour réussi, 7 au plus) et Pass Fan acheté
 - 9 vignettes colorées (couleurs du pays, orange pour l'organisation) avec légendes ; vue agrandie avec précédente / suivante.
 
 ### f12 `f12-services.html` — Services
-- Pass Live HD (le live en HD sans consommer sa data, multi-caméra, 1 jour) et Pack Supporter (fond d'écran et sonnerie aux
-  couleurs du pays) → f06?offre=…, prix en monnaie locale.
-- Abonnement e-sport Max it → page d'offre de l'e-sport (21), dont le retour ramène ici.
+- Services partenaires : emplacement réservé, « à définir ».
 - « Aussi dans Max it » : Pass data → f05, cartes cadeaux gaming → s01.
 
 ### f13 `f13-tirage.html` — Le Grand Tirage console
 - Lots (3 consoles de jeu), date et heure du tirage à l'heure locale.
-- Bloc « Mes chances » : total, détail par source (questions du jour x/7, Pass Fan x/5), compte à rebours jusqu'au tirage.
+- Bloc « Mes chances » : total, détail par source (questions du jour x/7, Pass data x/5), compte à rebours jusqu'au tirage.
   Au moment du tirage : « EN DIRECT », « Regarder le tirage » → f02.
-- « Gagne plus de chances » : questions du jour → f04, Pass Fan → f05. Règlement en bref.
+- « Gagne plus de chances » : questions du jour → f04, Pass data → f05. Règlement en bref.
 
 ## Menu de démo — Fan Zone EA FC
 - « État de la page : Avant le live / En direct » : remet l'heure au 7 décembre 10h30, ou la place 1 h après le début du live.

@@ -1,15 +1,15 @@
 <!DOCTYPE html>
 <!-- Écran f13 — Le Grand Tirage console : un seul tirage au sort, en direct pendant la finale (13/12 à 18h, heure de Tunis).
-     Bloc « Mes chances » : total, détail par source (questions du jour, Pass Fan), compte à rebours jusqu'au tirage
+     Bloc « Mes chances » : total, détail par source (questions du jour, Pass data), compte à rebours jusqu'au tirage
      (au moment du tirage : « EN DIRECT » et « Regarder » → f02). Les lots, deux façons de gagner des chances
-     (questions du jour → f04 ; Pass Fan → f05), règlement résumé. Retour → f01. -->
+     (questions du jour → f04 ; Pass data → f05), règlement résumé. Retour → f01. -->
 <html lang="fr">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Le Grand Tirage console</title>
-  <link rel="stylesheet" href="css/tokens.css?v=eee3b623">
-  <link rel="stylesheet" href="css/style.css?v=eee3b623">
+  <link rel="stylesheet" href="css/tokens.css?v=f8ec85a1">
+  <link rel="stylesheet" href="css/style.css?v=f8ec85a1">
 </head>
 <body data-zone="fanzone">
 <div class="cadre">
@@ -20,10 +20,10 @@
   </div>
 </div>
 
-<script src="js/nav.js?v=eee3b623"></script>
-<script src="js/data-fanzone.js?v=eee3b623"></script>
-<script src="js/fanzone.js?v=eee3b623"></script>
-<script src="js/demo.js?v=eee3b623"></script>
+<script src="js/nav.js?v=f8ec85a1"></script>
+<script src="js/data-fanzone.js?v=f8ec85a1"></script>
+<script src="js/fanzone.js?v=f8ec85a1"></script>
+<script src="js/demo.js?v=f8ec85a1"></script>
 <script>
   document.getElementById("entete").innerHTML = Fz.entete("Grand Tirage", "f01-accueil.html");
 
@@ -48,7 +48,7 @@
       "<span><strong>Questions du jour</strong><small>Du 5 au 11 décembre, 3 questions à " + FANZONE.questionsDuJour.heure + "h. " +
       "2 bonnes réponses = +1 chance (7 au plus)." + (quizOuvert ? "" : " Terminé.") + "</small></span>" + Fz.icone("chevron", "f-primary") + "</a>" +
       '<a href="f05-bundle.html" class="fz-relais-carte fz-relais-lien"><span class="fz-pastille">' + Fz.icone("bundle", "f-fz-neon") + "</span>" +
-      "<span><strong>Pass Fan</strong><small>Chaque achat dans la Fan Zone = +1 chance, en plus du code EA FC Mobile (" +
+      "<span><strong>Pass data</strong><small>1 Go = +1 chance, 2 Go = +1 chance, 5 Go = +3 chances, avec des codes EA FC Mobile dès 2 Go (" +
       tirage.plafondAchats + " chances au plus).</small></span>" + Fz.icone("chevron", "f-primary") + "</a>";
 
     html += '<div class="fz-carte"><h2>Règlement en bref</h2><ul class="fz-liste-mentions">' +

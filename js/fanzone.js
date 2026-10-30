@@ -165,9 +165,16 @@ const Fz = (function () {
       (y.code === soutenu) - (x.code === soutenu) || (y.statut === "qualifie") - (x.statut === "qualifie"));
   }
 
-  /* ---- Offres : forfaits data et services payants ---- */
+  /* ---- Offres : forfaits data et leur add-on Fan Zone ---- */
   function offre(id) {
-    return FANZONE.forfaits.concat(FANZONE.services).find((o) => o.id === id) || null;
+    return FANZONE.forfaits.find((o) => o.id === id) || null;
+  }
+  /* Lignes de l'add-on d'un forfait : « + 2 codes EA FC Mobile », « + 3 chances au Grand Tirage » */
+  function addOn(f) {
+    const lignes = [];
+    if (f.codes) lignes.push({ icone: "cadeau", texte: "+ " + f.codes + " code" + (f.codes > 1 ? "s" : "") + " EA FC Mobile" });
+    lignes.push({ icone: "manette", texte: "+ " + nbChances(f.chances) + " au Grand Tirage" });
+    return lignes;
   }
   /* Prix d'une offre dans la monnaie du pays soutenu (Maroc par défaut) : « 1 500 FCFA » */
   function prix(o) {
@@ -240,17 +247,17 @@ const Fz = (function () {
     Etat.set("fzQuiz", tout);
   }
 
-  /* ---- Chances au Grand Tirage : questions du jour réussies et Pass Fan achetés (plafonnés) ---- */
+  /* ---- Chances au Grand Tirage : questions du jour réussies et Pass data achetés (plafonnés) ---- */
   function chances() {
     const quiz = Object.values(Etat.get("fzQuiz") || {}).filter((j) => j.gagne).length;
     const achats = Math.min(Etat.get("fzAchatsPass") || 0, FANZONE.tirage.plafondAchats);
     return { quiz: quiz, achats: achats, total: quiz + achats };
   }
-  /* Achat d'un Pass Fan : +1 chance, sauf plafond atteint. Renvoie true si une chance est ajoutée. */
-  function ajouterAchatPass() {
+  /* Achat d'un Pass data : « n » chances de plus, dans la limite du plafond. Renvoie le nombre de chances ajoutées. */
+  function ajouterChancesAchat(n) {
     const avant = chances().achats;
-    Etat.set("fzAchatsPass", (Etat.get("fzAchatsPass") || 0) + 1);
-    return chances().achats > avant;
+    Etat.set("fzAchatsPass", (Etat.get("fzAchatsPass") || 0) + n);
+    return chances().achats - avant;
   }
   /* Le tirage a-t-il commencé ? (13/12 à 18h, heure de Tunis) */
   function tirageEnCours() {
@@ -375,7 +382,7 @@ const Fz = (function () {
       "<span><small>" + FANZONE.tirage.nom + "</small><strong>Tu as " + nbChances(c.total) + "</strong></span>" +
       (lien ? icone("chevron", "f-primary") : "") + "</div>" +
       '<div class="fz-chances-detail"><span>' + icone("etoile", "f-fz-neon") + "Questions du jour <b>" + c.quiz + "/" + FANZONE.questionsDuJour.jours.length + "</b></span>" +
-      "<span>" + icone("bundle", "f-fz-neon") + "Pass Fan <b>" + c.achats + "/" + FANZONE.tirage.plafondAchats + "</b></span></div>" +
+      "<span>" + icone("bundle", "f-fz-neon") + "Pass data <b>" + c.achats + "/" + FANZONE.tirage.plafondAchats + "</b></span></div>" +
       (tirageEnCours()
         ? '<p class="fz-chances-direct"><span class="fz-badge-direct">EN DIRECT</span>Le tirage a lieu maintenant dans l\'émission</p>'
         : "<p class=\"fz-chances-quand\">Tirage en direct le 13 décembre, dans</p>" + cases("data-rebours-tirage", "fz-rebours-petit")) +
@@ -406,9 +413,9 @@ const Fz = (function () {
   }
 
   return {
-    icone, drapeau, avatar, portrait, logo, degrade, pays, paysSoutenu, avecArticle, equipesOrdonnees, offre, prix, maintenant, enDirect,
+    icone, drapeau, avatar, portrait, logo, degrade, pays, paysSoutenu, avecArticle, equipesOrdonnees, offre, addOn, prix, maintenant, enDirect,
     codes, ajouterCode, revelerCode, codeAffiche, lotsRestants,
-    reglerHorloge, jourIso, jourQuestions, quizDuJour, enregistrerQuiz, chances, ajouterAchatPass, tirageEnCours, nbChances, blocChances,
+    reglerHorloge, jourIso, jourQuestions, quizDuJour, enregistrerQuiz, chances, ajouterChancesAchat, tirageEnCours, nbChances, blocChances,
     entete, minuteur, monter, compteRebours, cases, debutLocal, choisirPays
   };
 })();
