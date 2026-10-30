@@ -14,6 +14,10 @@ const fs = require("fs");
 const path = require("path");
 
 const RACINE = path.join(__dirname, "..");
+
+/* ---- D'abord, numéro de version des CSS et JS dans les liens des écrans (outils/versionner.js) ---- */
+require("./versionner")();
+
 const lire = (fichier) => fs.readFileSync(path.join(RACINE, fichier), "utf8");
 
 /* ---- Écrans : ceux du registre de js/nav.js ---- */
@@ -39,11 +43,11 @@ const JS = {
 const PAGES = {};
 fichiersEcrans.forEach((fichier) => {
   let html = lire(fichier);
-  html = html.replace(/<link rel="stylesheet" href="css\/(\w+)\.css">/g, (m, nom) => {
+  html = html.replace(/<link rel="stylesheet" href="css\/(\w+)\.css(?:\?v=\w+)?">/g, (m, nom) => {
     if (!CSS[nom]) throw new Error(fichier + " : feuille inconnue css/" + nom + ".css");
     return "@@CSS:" + nom + "@@";
   });
-  html = html.replace(/<script src="js\/([\w-]+)\.js"><\/script>/g, (m, nom) => {
+  html = html.replace(/<script src="js\/([\w-]+)\.js(?:\?v=\w+)?"><\/script>/g, (m, nom) => {
     if (!JS[nom]) throw new Error(fichier + " : script inconnu js/" + nom + ".js");
     return "@@JS:" + nom + "@@";
   });

@@ -36,6 +36,10 @@ la page d'offre, accès aux contenus. Le choix est mémorisé entre les pages.
 - Après chaque lot, vérifier qu'aucun lien n'est cassé et qu'aucun écran n'est une impasse.
 - Pas de captures d'écran. Fin de chaque lot : page de contrôle automatique dans les deux modes, liens et impasses, puis commit.
   (Page de contrôle : outils/controle.html#gratuit et #abonne ; y ajouter les nouveaux écrans.)
+- Avant chaque commit : node outils/construire-fichier-unique.js. Il reconstruit le fichier unique et met à jour le
+  numéro de version des CSS et JS dans les liens de chaque écran (outils/versionner.js, « ?v=… »), pour qu'après une
+  mise en ligne le navigateur ne garde jamais une ancienne feuille de style ou un ancien script. Un nouvel écran
+  reprend ces liens tels quels ; le numéro est remis à jour au prochain lancement.
 - Ne jamais modifier le dossier reference/.
 
 
