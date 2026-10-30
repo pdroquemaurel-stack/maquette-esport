@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<!-- Écran f03 — Avatar Supporter, parcours en 3 étapes avec indicateur d'étapes :
+     1. Envoyer sa photo (zone de dépôt, ou photo d'exemple) + consentement obligatoire ;
+     2. Choisir son pays (liste avec drapeaux, le pays soutenu présélectionné) ;
+     3. Résultat : avatar simulé aux couleurs du pays (maillot e-sport, casque gaming), « Partager »,
+        « Utiliser comme photo de profil ».
+     Une fois l'avatar créé, il apparaît dans l'en-tête de f01 et le pays choisi devient le pays soutenu.
+     La photo reste dans le téléphone : rien n'est envoyé. Retour → f01. -->
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Avatar Supporter</title>
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-zone="fanzone">
+<div class="cadre">
+  <div class="telephone sombre fanzone">
+    <div class="barre-etat" data-heure="18:30"></div>
+    <div id="entete"></div>
+    <main class="contenu" id="page"></main>
+  </div>
+</div>
+
+<script src="js/nav.js"></script>
+<script src="js/data-fanzone.js"></script>
+<script src="js/fanzone.js"></script>
+<script src="js/demo.js"></script>
+<script>
+  document.getElementById("entete").innerHTML = Fz.entete("Avatar Supporter", "f01-accueil.html");
+
+  /* État du parcours, propre à la page */
+  let etape = 1;                                  // 1 photo, 2 pays, 3 résultat
+  let photo = null;                               // adresse locale de la photo choisie, ou "exemple"
+  let consentement = false;
+  let paysChoisi = Etat.get("fzPays") || null;
+  let creation = false;                           // animation « Création de ton avatar… »
+
+  function indicateur() {
+    const noms = ["Photo", "Pays", "Avatar"];
+    return '<ol class="fz-etapes" aria-label="Étape ' + etape + ' sur 3">' + noms.map((n, i) => {
+      const num = i + 1;
+      const classe = num < etape ? "faite" : num === etape ? "active" : "";
+      return '<li class="fz-etape ' + classe + '"' + (num === etape ? ' aria-current="step"' : "") + "><b>" +
+        (num < etape ? Fz.icone("coche") : num) + "</b>" + n + "</li>";
+    }).join("") + "</ol>";
+  }
+
+  function etapePhoto() {
+    const apercu = photo === "exemple"
+      ? '<span class="fz-avatar-cercle">' + Fz.icone("avatar", "f-fz-gris") + "</span>"
+      : photo ? '<img class="fz-apercu" src="' + photo + '" alt="Ta photo">' : Fz.icone("photo", "f-primary");
+    return '<h2 class="fz-question">Envoie ta photo</h2>' +
+      '<p class="fz-intro">Une photo de face, bien éclairée. Elle sert uniquement à créer ton avatar.</p>' +
+      '<label class="fz-depot fz-carte">' + apercu +
+      "<strong>" + (photo ? "Photo ajoutée" : "Dépose ta photo ici") + "</strong>" +
+      "<small>" + (photo ? "Touche pour en choisir une autre" : "ou touche pour ouvrir ta galerie · JPG ou PNG") + "</small>" +
+      '<input type="file" accept="image/*" class="cache-visuel" id="fichier"></label>' +
+      (photo ? "" : '<button class="fz-lien" data-exemple>Utiliser une photo d\'exemple</button>') +
+      '<label class="fz-consentement"><input type="checkbox" id="consentement"' + (consentement ? " checked" : "") + ">" +
+      "<span>J'accepte que ma photo soit utilisée pour générer mon avatar</span></label>" +
+      '<button class="bouton bouton-primaire bouton-pleine-largeur" data-suivant' + (photo && consentement ? "" : " disabled") + ">Continuer</button>";
+  }
+
+  function etapePays() {
+    return '<h2 class="fz-question">Choisis ton pays</h2>' +
+      '<p class="fz-intro">Ton avatar portera ses couleurs.</p>' +
+      '<div class="fz-liste-pays fz-carte">' + FANZONE.pays.map((p) =>
+        '<button class="fz-choix-pays' + (p.code === paysChoisi ? " actif" : "") + '" data-pays="' + p.code + '" aria-pressed="' + (p.code === paysChoisi) + '">' +
+        Fz.drapeau(p.code) + "<span>" + p.nom + "</span></button>").join("") + "</div>" +
+      '<div class="fz-actions"><button class="bouton bouton-primaire bouton-pleine-largeur" data-generer' + (paysChoisi ? "" : " disabled") + ">Créer mon avatar</button>" +
+      '<button class="bouton fz-contour bouton-pleine-largeur" data-precedent>Retour à la photo</button></div>';
+  }
+
+  function etapeResultat() {
+    if (creation) return '<div class="fz-spinner"></div><p class="fz-centre">Création de ton avatar…</p>';
+    const p = Fz.pays(paysChoisi);
+    return '<div class="fz-avatar-grand">' + Fz.avatar(p.code) + "</div>" +
+      '<p class="fz-supporter">' + Fz.drapeau(p.code) + "Supporter " + (p.code === "TN" || p.code === "CI" || p.code === "CD" ? "de la " : p.code === "EG" ? "de l'" : "du ") + p.nom + "</p>" +
+      '<p class="fz-intro fz-centre">Ton avatar e-sport est prêt : maillot aux couleurs de ton pays et casque gaming.</p>' +
+      '<div class="fz-actions">' +
+      '<button class="bouton bouton-primaire bouton-pleine-largeur" data-profil>Utiliser comme photo de profil</button>' +
+      '<button class="bouton fz-contour bouton-pleine-largeur" data-partager>' + Fz.icone("partager") + "Partager</button>" +
+      '<a href="f01-accueil.html" class="bouton fz-contour bouton-pleine-largeur">Retour à la Fan Zone</a>' +
+      '<button class="fz-lien" data-recommencer>Recommencer</button></div>';
+  }
+
+  function rendre() {
+    const corps = etape === 1 ? etapePhoto() : etape === 2 ? etapePays() : etapeResultat();
+    document.getElementById("page").innerHTML = '<div class="fz-page">' + indicateur() + corps + "</div>";
+  }
+
+  const page = document.getElementById("page");
+
+  // Photo choisie dans la galerie du téléphone : affichée en aperçu, jamais envoyée
+  page.addEventListener("change", (evenement) => {
+    if (evenement.target.id === "fichier" && evenement.target.files[0]) {
+      photo = URL.createObjectURL(evenement.target.files[0]);
+      rendre();
+    } else if (evenement.target.id === "consentement") {
+      consentement = evenement.target.checked;
+      rendre();
+    }
+  });
+
+  page.addEventListener("click", (evenement) => {
+    const cible = evenement.target;
+    if (cible.closest("[data-exemple]")) {
+      photo = "exemple";
+      rendre();
+    } else if (cible.closest("[data-suivant]")) {
+      etape = 2;
+      rendre();
+    } else if (cible.closest("[data-precedent]")) {
+      etape = 1;
+      rendre();
+    } else if (cible.closest("[data-pays]")) {
+      paysChoisi = cible.closest("[data-pays]").dataset.pays;
+      rendre();
+    } else if (cible.closest("[data-generer]")) {
+      etape = 3;
+      creation = true;
+      rendre();
+      setTimeout(() => {
+        creation = false;
+        // Avatar terminé : affiché dans l'en-tête de la Fan Zone, pays mémorisé
+        Etat.set("fzAvatar", paysChoisi);
+        Etat.set("fzPays", paysChoisi);
+      }, 1200);
+    } else if (cible.closest("[data-profil]")) {
+      Etat.set("toastSuivant", "Avatar utilisé comme photo de profil");
+      ouvrirPage("f01-accueil.html");
+    } else if (cible.closest("[data-partager]")) {
+      Nav.toast("Lien de ton avatar copié : colle-le où tu veux");
+    } else if (cible.closest("[data-recommencer]")) {
+      etape = 1;
+      photo = null;
+      consentement = false;
+      rendre();
+    }
+  });
+
+  Fz.monter(rendre);
+</script>
+</body>
+</html>

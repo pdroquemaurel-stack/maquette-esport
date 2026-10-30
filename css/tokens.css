@@ -190,4 +190,27 @@
   --play-gallery-height: 300px;
   --play-cta-height: 56px;           /* bouton « Jouer » */
   --play-sheet-top: 64px;            /* haut de la feuille de la fiche, sous la barre d'état */
+
+  /* =====================================================================
+     Fan Zone EA FC (4e chantier) — reprise de la charte de la Fan zone CAN
+     Fond noir, cartes anthracite, orange Max it en accent (--color-primary),
+     halo néon vert sur le direct et l'arbre, badge rouge du direct (--color-alert).
+     ===================================================================== */
+  --fz-bg: #0d0d0d;                  /* fond des écrans */
+  --fz-card: #1e1e1e;                /* cartes anthracite */
+  --fz-card-high: #2a2a2a;           /* éléments posés sur une carte (cases, puces) */
+  --fz-text-secondary: #b3b3b3;      /* texte gris clair */
+  --fz-neon: #00e37a;                /* touche e-sport : direct, arbre, vainqueurs */
+  --fz-neon-soft: rgba(0, 227, 122, 0.14);
+  --fz-glow: 0 0 14px rgba(0, 227, 122, 0.55);  /* halo néon */
+  --fz-shade: rgba(0, 0, 0, 0.6);    /* dégradé sous le texte des visuels */
+  --fz-radius: 16px;                 /* coins des cartes */
+
+  /* ---- Couleurs des drapeaux (pays de la compétition) ---- */
+  --fz-flag-red: #ce1126;
+  --fz-flag-green: #007a3d;
+  --fz-flag-yellow: #fcd116;
+  --fz-flag-orange: #f77f00;
+  --fz-flag-blue: #007fff;
+  --fz-flag-black: #000000;
 }

@@ -61,7 +61,19 @@ const ECRANS = {
   "s09": { fichier: "s09-commande.html", titre: "Détail d'une commande", pret: true },
   "s10": { fichier: "s10-signaler.html", titre: "Signaler un problème", pret: true },
   "s11": { fichier: "s11-aide.html", titre: "Aide", pret: true },
-  "s12": { fichier: "s12-conditions.html", titre: "Conditions de vente", pret: true }
+  "s12": { fichier: "s12-conditions.html", titre: "Conditions de vente", pret: true },
+  // Fan Zone EA FC, finale du tournoi panafricain (4e chantier, voir ecrans-fanzone.md)
+  "f01": { fichier: "f01-accueil.html", titre: "Accueil de la Fan Zone", pret: true },
+  "f02": { fichier: "f02-live.html", titre: "Live Max it TV", pret: true },
+  "f03": { fichier: "f03-avatar.html", titre: "Avatar Supporter", pret: true },
+  "f04": { fichier: "f04-quiz.html", titre: "Jouer & Gagner", pret: true },
+  "f05": { fichier: "f05-bundle.html", titre: "Bundle EA FC", pret: true },
+  "f06": { fichier: "f06-achat.html", titre: "Achat du Pass Fan", pret: true },
+  "f07": { fichier: "f07-mes-codes.html", titre: "Mes codes", pret: true },
+  "f08": { fichier: "f08-equipes.html", titre: "Équipes", pret: true },
+  "f09": { fichier: "f09-equipe.html", titre: "Fiche d'une équipe", pret: true },
+  "f10": { fichier: "f10-arbre.html", titre: "Arbre de la compétition", pret: true },
+  "f11": { fichier: "f11-galerie.html", titre: "Galerie", pret: true }
 };
 
 /* ---- Fichier unique (maquette-esport.html) ----
@@ -166,6 +178,12 @@ const Etat = (function () {
     shopEpuises: null,      // produits épuisés pendant la démo (S02-04)
     shopSansSms: false,     // pays sans envoi du code par SMS (S09-02)
     shopReclamations: null, // réclamations envoyées depuis une commande (S10-04)
+    // Fan Zone EA FC
+    fzLive: false,          // état de la page : avant le live (false) ou en direct (true)
+    fzPays: null,           // pays soutenu, choisi à la première ouverture (null : fenêtre « Quel pays soutiens-tu ? »)
+    fzAvatar: null,         // avatar supporter créé : code du pays de ses couleurs
+    fzRappel: false,        // rappel du début du live activé
+    fzCodes: null,          // codes EA FC Mobile gagnés au quiz ou achetés : [{ code, origine, date, revele }]
     scenario: null,         // état alternatif forcé pour l'écran visé
     origine: null           // écran à retrouver après le paiement (S11-03)
   };

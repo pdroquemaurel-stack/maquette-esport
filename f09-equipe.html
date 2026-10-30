@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<!-- Écran f09 — Fiche d'une équipe (f09-equipe.html?pays=MA) : photo (emplacement), pays, joueur, pseudo, statut,
+     parcours en qualification. Pays inconnu : première équipe de la liste. Retour → f08 ; « Voir l'arbre » → f10. -->
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Équipe</title>
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-zone="fanzone">
+<div class="cadre">
+  <div class="telephone sombre fanzone">
+    <div class="barre-etat" data-heure="18:30"></div>
+    <div id="entete"></div>
+    <main class="contenu" id="page"></main>
+  </div>
+</div>
+
+<script src="js/nav.js"></script>
+<script src="js/data-fanzone.js"></script>
+<script src="js/fanzone.js"></script>
+<script src="js/demo.js"></script>
+<script>
+  const equipe = Fz.pays(Nav.param("pays")) || FANZONE.pays[0];
+  document.getElementById("entete").innerHTML = Fz.entete(equipe.nom, "f08-equipes.html");
+
+  /* Emplacement de la photo du joueur : dégradé aux couleurs du pays et silhouette casquée */
+  function photo() {
+    return '<div class="fz-photo" style="' + Fz.degrade(equipe.code) + '">' +
+      '<svg viewBox="0 0 100 100" aria-hidden="true"><g class="f-fz-bg" opacity=".85">' +
+      '<circle cx="50" cy="40" r="17"/><path d="M14 100c2-22 17-34 36-34s34 12 36 34z"/></g>' +
+      '<path class="f-fz-black" d="M30 42c0-14 9-24 20-24s20 10 20 24h-4c0-11-7-20-16-20s-16 9-16 20z"/>' +
+      '<rect class="f-fz-neon" x="27" y="36" width="7" height="13" rx="3"/><rect class="f-fz-neon" x="66" y="36" width="7" height="13" rx="3"/></svg>' +
+      '<span class="fz-legende-photo">Photo à venir</span>' +
+      '<span class="fz-statut ' + equipe.statut + '">' + (equipe.statut === "qualifie" ? "Qualifié" : "Éliminé") + "</span></div>";
+  }
+
+  function rendre() {
+    const soutenu = Etat.get("fzPays") === equipe.code;
+    document.getElementById("page").innerHTML = '<div class="fz-page">' + photo() +
+      '<div class="fz-identite-joueur">' + Fz.drapeau(equipe.code) +
+      "<div><h2>" + equipe.joueur + "</h2><p>" + equipe.pseudo + " · " + equipe.nom + (soutenu ? " · ton équipe" : "") + "</p></div></div>" +
+      '<div class="fz-carte"><h2>Parcours en qualification</h2><ul class="fz-parcours">' +
+      equipe.parcours.map((etape) => "<li>" + etape + "</li>").join("") + "</ul></div>" +
+      '<div class="fz-actions"><a href="f10-arbre.html" class="bouton bouton-primaire bouton-pleine-largeur">Voir l\'arbre de la compétition</a>' +
+      '<a href="f08-equipes.html" class="bouton fz-contour bouton-pleine-largeur">Toutes les équipes</a></div></div>';
+  }
+
+  Fz.monter(rendre);
+</script>
+</body>
+</html>

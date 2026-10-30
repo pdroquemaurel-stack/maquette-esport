@@ -5,7 +5,7 @@ Le back-office (E01 à E04, E11, E12) est simulé dans `js/data-shop.js` ; les f
 Pas de maquette Figma (`reference/figma-shop/` absent) : composants Max it et e-sport, thème clair, couleurs de `css/tokens.css`.
 
 **Mini app** : en-tête avec retour, titre, « Mes achats » (s08) et aide (s11) ; pas de barre du bas.
-**Entrées** : 00c (tuile « Boutique » et visuel « Les meilleurs jeux au meilleur prix ») → s01 ; page d'un jeu de l'e-sport (13), « Ouvrir la boutique Max it » → s03 du jeu ; lien direct (menu de démo) → s03 ou s04.
+**Entrées** : 00c (tuile « Boutique ») → s01 (le visuel « Découvrir » ouvre la Fan Zone EA FC depuis le 2026-10-30) ; page d'un jeu de l'e-sport (13), « Ouvrir la boutique Max it » → s03 du jeu ; lien direct (menu de démo) → s03 ou s04.
 **Catalogue** : 8 jeux (Free Fire, PUBG Mobile, eFootball de l'e-sport ; Mobile Legends, Roblox, Clash of Clans, Genshin Impact, Asphalt Legends), 3 à 6 produits par jeu, prix en MAD TTC, quelques promotions (prix barré) et produits épuisés. Call of Duty: Mobile n'est pas vendu : sa page e-sport (13) n'a pas de lien boutique.
 **Interrupteur gratuit / abonné** : aucun effet dans le Shop (décision du 2026-10-09).
 
@@ -86,7 +86,7 @@ Pas de maquette Figma (`reference/figma-shop/` absent) : composants Max it et e-
 
 ## Modifications hors Shop
 
-- **00c** : la tuile « Boutique » et le visuel « Les meilleurs jeux au meilleur prix » ouvrent s01. « Jouer » et « E-sport » ne changent pas.
+- **00c** : la tuile « Boutique » ouvre s01 (le visuel « Découvrir » mène à la Fan Zone EA FC depuis le 2026-10-30). « Jouer » et « E-sport » ne changent pas.
 - **13** : la section « Boutique Max it » affiche les 3 premiers produits achetables du Shop et ouvre s03 du jeu (le retour ramène sur 13). Absente pour Call of Duty: Mobile, qui n'est pas vendu. Les offres de `js/data.js` (`boutique`) sont supprimées : les prix viennent du seul `js/data-shop.js`.
 - **22** : mode Shop (`?commande=`) dans un bloc de script séparé ; le mode e-sport (`?offre=`) est inchangé.
 - **css/style.css** : section « Shop » ; la règle de texte de la carte « à la une » de Play est limitée à Play (elle déplaçait aussi le texte des cartes « à la une » de l'accueil e-sport, 03).
@@ -114,7 +114,7 @@ Pas de maquette Figma (`reference/figma-shop/` absent) : composants Max it et e-
 ## Schéma de navigation
 
 ```
-00c ──Boutique / visuel « meilleurs jeux »──► s01 Accueil
+00c ──Boutique──► s01 Accueil
 13 ──Ouvrir la boutique Max it──► s03 (retour → 13)
 Lien direct (démo) ──► s03 ou s04 (retour → 00c)
 

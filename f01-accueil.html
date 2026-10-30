@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<!-- Écran f01 — Accueil de la Fan Zone EA FC (finale du tournoi panafricain EA FC, Tunis, 12 et 13 décembre 2026).
+     Adaptation de la Fan zone CAN : même structure et même hiérarchie, contenus e-sport.
+     De haut en bas : en-tête (retour vers Max it, « FanZone Orange »), logos et avatar du supporter avec le drapeau
+     du pays soutenu ; carte stream 16:9 (avant le live : compte à rebours et rappel ; en direct : « Regarder ») ;
+     tuiles « Avatar Supporter » et « Jouer & Gagner » ; Équipes, Arbre, Galerie, Bundle EA FC ; carrousel de bannières.
+     Première ouverture : fenêtre « Quel pays soutiens-tu ? ».
+     Menu de démo : « État de la page : Avant le live / En direct », « Rejouer le choix du pays ». -->
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FanZone Orange</title>
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-zone="fanzone">
+<div class="cadre">
+  <div class="telephone sombre fanzone">
+    <div class="barre-etat" data-heure="18:30"></div>
+    <header class="fz-entete">
+      <a href="00c-maxit-gaming.html" class="bouton-icone" aria-label="Retour à Max it" id="retour"></a>
+      <h1 class="fz-titre">FanZone <span>Orange</span></h1>
+      <span class="fz-entete-espace"></span>
+    </header>
+    <main class="contenu" id="page"></main>
+  </div>
+</div>
+
+<script src="js/nav.js"></script>
+<script src="js/data-fanzone.js"></script>
+<script src="js/fanzone.js"></script>
+<script src="js/demo.js"></script>
+<script>
+  document.getElementById("retour").innerHTML = Fz.icone("retour");
+
+  /* Bannières du carrousel : chacune ouvre la section correspondante */
+  const BANNIERES = [
+    { titre: "Crée ton avatar e-sport aux couleurs de ton pays", texte: "Photo, pays, et c'est prêt !", lien: "f03-avatar.html", illu: "avatar" },
+    { titre: "Pass data + code EA FC Mobile offert", texte: "2 Go pendant 7 jours", lien: "f05-bundle.html", illu: "bundle" },
+    { titre: "Quiz du jour : gagne des codes EA FC Mobile", texte: "3 questions, 1 code à gagner", lien: "f04-quiz.html", illu: "trophee" }
+  ];
+  let banniere = 0;   // bannière affichée
+
+  /* Décor de la carte « avant le live » : terrain néon en perspective, halos */
+  const DECOR_AVANT =
+    '<svg class="fz-stream-decor" viewBox="0 0 320 180" preserveAspectRatio="xMidYMid slice" aria-hidden="true">' +
+    '<rect class="f-fz-card" width="320" height="180"/>' +
+    '<circle class="f-primary" cx="266" cy="0" r="54" opacity=".2"/><circle class="f-fz-neon" cx="60" cy="180" r="60" opacity=".12"/>' +
+    '<g class="s-fz-neon" fill="none" stroke-width="1.2" opacity=".3">' +
+    '<path d="M30 180 108 64h104l78 116"/><path d="M68 122h184"/><ellipse cx="160" cy="122" rx="34" ry="9"/>' +
+    '<path d="M130 64v10h60V64"/></g></svg>';
+
+  /* Décor de la carte « en direct » : plateau avec écran géant et deux joueurs */
+  const DECOR_LIVE =
+    '<svg class="fz-stream-decor" viewBox="0 0 320 180" preserveAspectRatio="xMidYMid slice" aria-hidden="true">' +
+    '<defs><linearGradient id="fz-ombre" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color: var(--fz-bg); stop-opacity: 0"/>' +
+    '<stop offset="1" style="stop-color: var(--fz-bg)"/></linearGradient></defs>' +
+    '<rect class="f-fz-bg" width="320" height="180"/>' +
+    '<rect class="f-fz-card" x="50" y="14" width="220" height="104" rx="6"/>' +
+    '<g class="s-fz-neon" fill="none" stroke-width="1.4" opacity=".6"><rect x="64" y="26" width="192" height="80" rx="2"/><path d="M160 26v80"/><circle cx="160" cy="66" r="14"/></g>' +
+    '<circle class="f-primary" cx="122" cy="58" r="3"/><circle class="f-white" cx="190" cy="76" r="3"/>' +
+    '<g class="f-gray-dark"><circle cx="70" cy="130" r="12"/><path d="M48 180c0-26 10-38 22-38s22 12 22 38z"/>' +
+    '<circle cx="250" cy="130" r="12"/><path d="M228 180c0-26 10-38 22-38s22 12 22 38z"/></g>' +
+    '<rect class="f-primary" x="30" y="150" width="80" height="6" rx="2" opacity=".8"/><rect class="f-fz-neon" x="210" y="150" width="80" height="6" rx="2" opacity=".8"/>' +
+    '<rect y="96" width="320" height="84" fill="url(#fz-ombre)"/></svg>';
+
+  /* Carte principale : stream, selon l'état de la page (menu de démo) */
+  function carteStream() {
+    if (Fz.enDirect()) {
+      return '<section class="fz-stream live" aria-label="Finale EA FC en direct">' + DECOR_LIVE +
+        '<span class="fz-badge-direct">EN DIRECT</span>' +
+        '<a href="f02-live.html" class="fz-lecture"><span class="fz-rond">' + Fz.icone("lecture") + "</span>Regarder</a>" +
+        '<div class="fz-stream-infos"><strong>Finale EA FC – Jour 1</strong><small>Émission live avec les streamers</small></div></section>';
+    }
+    const rappel = Etat.get("fzRappel");
+    const cases = [["jours", "jours"], ["heures", "heures"], ["min", "min"], ["sec", "sec"]];
+    return '<section class="fz-stream" aria-label="Finale EA FC : avant le live">' + DECOR_AVANT +
+      '<p class="fz-stream-titre">Finale EA FC – Tunis – 12 & 13 décembre</p>' +
+      '<div class="fz-rebours" role="timer" aria-label="Temps restant avant le live">' + cases.map((c) =>
+        '<span><b data-rebours="' + c[0] + '">00</b><small>' + c[1] + "</small></span>").join("") + "</div>" +
+      '<p class="fz-stream-heure">Début du live : ' + Fz.debutLocal() + " (ton heure)</p>" +
+      '<button class="bouton bouton-primaire fz-bouton-rappel' + (rappel ? " actif" : "") + '" data-rappel aria-pressed="' + !!rappel + '">' +
+      Fz.icone(rappel ? "coche" : "cloche", rappel ? "f-primary" : "f-white") +
+      (rappel ? "Rappel activé" : "Me rappeler le début du live") + "</button></section>";
+  }
+
+  /* Illustration ronde d'une bannière */
+  function illuBanniere(b) {
+    if (b.illu === "avatar") return Fz.avatar(Etat.get("fzPays") || "MA");
+    return Fz.icone(b.illu, "f-primary");
+  }
+
+  function rendre() {
+    const avatar = Etat.get("fzAvatar");
+    const soutenu = Fz.paysSoutenu();
+    let html = "";
+
+    // Logos et avatar du supporter (avec le drapeau du pays soutenu)
+    html += '<div class="fz-identite">' +
+      '<div class="fz-logo-evt" aria-label="Emplacement du logo EA FC et Orange eSport"><b>EA FC</b>Orange eSport</div>' +
+      '<a href="f03-avatar.html" class="fz-avatar-entete" aria-label="' + (avatar ? "Mon avatar supporter" : "Crée ton avatar") + '">' +
+      '<span class="fz-avatar-cercle">' + (avatar ? Fz.avatar(avatar) : Fz.icone("plus", "f-primary")) + "</span>" +
+      (soutenu ? Fz.drapeau(soutenu.code) : "") +
+      "<small>" + (avatar ? "Supporter " + (soutenu ? "· " + soutenu.nom : "") : "Crée ton avatar") + "</small></a>" +
+      '<div class="fz-logo-orange" aria-label="Orange est là"><span>orange</span><small>est là</small></div>' +
+      "</div>";
+
+    html += carteStream();
+
+    // Deux tuiles principales
+    html += '<div class="fz-tuiles">' +
+      '<a href="f03-avatar.html" class="fz-tuile"><span class="fz-pastille">' + Fz.icone("avatar") + "</span>" +
+      "<span><strong>Avatar Supporter</strong><small>Aux couleurs de ton pays</small></span></a>" +
+      '<a href="f04-quiz.html" class="fz-tuile"><span class="fz-pastille">' + Fz.icone("cadeau") + "</span>" +
+      "<span><strong>Jouer & Gagner</strong><small>Gagne des codes EA FC Mobile</small></span></a></div>";
+
+    // Rangée de 4 icônes carrées
+    const raccourcis = [
+      { lien: "f08-equipes.html", icone: "equipes", libelle: "Équipes" },
+      { lien: "f10-arbre.html", icone: "arbre", libelle: "Arbre", neon: true },
+      { lien: "f11-galerie.html", icone: "galerie", libelle: "Galerie" },
+      { lien: "f05-bundle.html", icone: "bundle", libelle: "Bundle EA FC" }
+    ];
+    html += '<nav class="fz-raccourcis" aria-label="Rubriques de la Fan Zone">' + raccourcis.map((r) =>
+      '<a href="' + r.lien + '" class="fz-raccourci"><span class="fz-carre' + (r.neon ? " neon" : "") + '">' +
+      Fz.icone(r.icone, r.neon ? "f-fz-neon" : "f-primary") + "</span>" + r.libelle + "</a>").join("") + "</nav>";
+
+    // Carrousel de bannières, défilement automatique toutes les 4 s
+    html += '<div class="fz-bannieres" aria-roledescription="carrousel" aria-label="Bannières">' +
+      '<div class="fz-piste" id="piste">' + BANNIERES.map((b, i) =>
+        '<a href="' + b.lien + '" class="fz-banniere" aria-label="' + (i + 1) + " sur " + BANNIERES.length + " : " + b.titre + '">' +
+        "<span><strong>" + b.titre + "</strong><small>" + b.texte + "</small></span>" +
+        '<span class="fz-illu">' + illuBanniere(b) + "</span></a>").join("") + "</div></div>" +
+      '<div class="fz-points" id="points">' + BANNIERES.map((b, i) =>
+        '<button data-banniere="' + i + '" aria-label="Bannière ' + (i + 1) + '"></button>').join("") + "</div>";
+
+    html += '<div class="fz-fin"></div>';
+    document.getElementById("page").innerHTML = html;
+
+    if (!Fz.enDirect()) Fz.compteRebours();
+    montrerBanniere(banniere);
+    Fz.minuteur(() => montrerBanniere((banniere + 1) % BANNIERES.length), 4000);
+  }
+
+  function montrerBanniere(i) {
+    banniere = i;
+    document.getElementById("piste").style.transform = "translateX(" + (-100 * i) + "%)";
+    document.querySelectorAll("#points button").forEach((b, j) => {
+      b.classList.toggle("actif", j === i);
+      b.setAttribute("aria-current", j === i ? "true" : "false");
+    });
+  }
+
+  document.getElementById("page").addEventListener("click", (evenement) => {
+    // Rappel du début du live
+    if (evenement.target.closest("[data-rappel]")) {
+      const actif = !Etat.get("fzRappel");
+      Etat.set("fzRappel", actif);
+      Nav.toast(actif ? "Rappel activé" : "Rappel désactivé");
+      return;
+    }
+    const point = evenement.target.closest("[data-banniere]");
+    if (point) montrerBanniere(Number(point.dataset.banniere));
+  });
+
+  Fz.monter(rendre);
+
+  // Première ouverture : « Quel pays soutiens-tu ? »
+  if (!Etat.get("fzPays")) Fz.choisirPays();
+</script>
+</body>
+</html>

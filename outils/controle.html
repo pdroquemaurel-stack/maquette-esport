@@ -30,6 +30,9 @@
       moyen: "orange-money", montant: 49, statut: statut }, plus || {});
   }
 
+  /* Fan Zone : code EA FC Mobile gagné au quiz, encore masqué */
+  const FZ_CODE = { code: "EAFC-7K2Q-M4XD", origine: "Quiz du jour", date: "2026-10-30", revele: false };
+
   /* Écrans contrôlés, avec les variantes utiles (tournois dans différents états) */
   const PAGES = [
     "00a-maxit-accueil.html", "00b-maxit-univers.html", "00c-maxit-gaming.html", "02-pseudo.html",
@@ -121,13 +124,26 @@
     "s09-commande.html?id=inconnue",
     "s10-signaler.html?commande=SH-26100312-2954",
     ["s10-signaler.html?commande=SH-26100312-2954", { shopReclamations: [{ numero: "RC-004217", commande: "SH-26100312-2954", motif: "Le code ne fonctionne pas", commentaire: "", date: "2026-10-09" }] }],
-    "s11-aide.html", "s11-aide.html?jeu=efootball&depuis=s01-accueil.html"
+    "s11-aide.html", "s11-aide.html?jeu=efootball&depuis=s01-accueil.html",
+    // Fan Zone EA FC : accueil (sans pays : fenêtre du choix ; avant le live ; en direct ; avec avatar), écrans secondaires
+    "f01-accueil.html", ["f01-accueil.html", { fzPays: "MA" }], ["f01-accueil.html", { fzPays: "CI", fzLive: true }],
+    ["f01-accueil.html", { fzPays: "SN", fzAvatar: "SN", fzRappel: true }],
+    ["f02-live.html", { fzPays: "MA" }], ["f02-live.html", { fzPays: "MA", fzLive: true }],
+    ["f03-avatar.html", { fzPays: "TN" }], ["f04-quiz.html", { fzPays: "MA" }],
+    ["f05-bundle.html", { fzPays: "MA" }], ["f05-bundle.html", { fzPays: "SN", fzCodes: [FZ_CODE, FZ_CODE] }], "f05-bundle.html",
+    ["f06-achat.html", { fzPays: "EG" }],
+    "f07-mes-codes.html", ["f07-mes-codes.html", { fzCodes: [FZ_CODE, Object.assign({}, FZ_CODE, { revele: true, origine: "Pass Fan EA FC" })] }],
+    ["f08-equipes.html", { fzPays: "SN" }], "f08-equipes.html",
+    ["f09-equipe.html?pays=MA", { fzPays: "MA" }], "f09-equipe.html?pays=CD", "f09-equipe.html?pays=inconnu",
+    ["f10-arbre.html", { fzPays: "MA" }], ["f10-arbre.html", { fzPays: "TN", fzLive: true }],
+    ["f11-galerie.html", { fzPays: "MA" }]
   ];
   const abonne = location.hash === "#abonne";
   const sortie = document.getElementById("sortie");
   // Zones qui défilent horizontalement : un débordement y est normal
   // (.fond-fiche : l'accueil de Play rogné derrière la feuille de la fiche jeu, p03)
-  const DEFILANTS = ".carrousel, .puces, .arbre, .offres-jeu, .visuel-jeu, .collection-courte, .fond-fiche";
+  // (Fan Zone : .fz-bannieres, carrousel de bannières ; .fz-arbre, arbre de compétition)
+  const DEFILANTS = ".carrousel, .puces, .arbre, .offres-jeu, .visuel-jeu, .collection-courte, .fond-fiche, .fz-bannieres, .fz-arbre";
 
   function decrire(e) {
     const classes = typeof e.className === "string" && e.className.trim() ? "." + e.className.trim().split(/\s+/).join(".") : "";

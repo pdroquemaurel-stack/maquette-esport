@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<!-- Écran f08 — Équipes : grille des 8 pays des quarts de finale (drapeau, pays, joueur, pseudo,
+     statut « Qualifié » pour Tunis ou « Éliminé »). L'équipe du pays soutenu est mise en avant en premier.
+     Carte → fiche de l'équipe (f09). Retour → f01. -->
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Équipes</title>
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-zone="fanzone">
+<div class="cadre">
+  <div class="telephone sombre fanzone">
+    <div class="barre-etat" data-heure="18:30"></div>
+    <div id="entete"></div>
+    <main class="contenu" id="page"></main>
+  </div>
+</div>
+
+<script src="js/nav.js"></script>
+<script src="js/data-fanzone.js"></script>
+<script src="js/fanzone.js"></script>
+<script src="js/demo.js"></script>
+<script>
+  document.getElementById("entete").innerHTML = Fz.entete("Équipes", "f01-accueil.html");
+
+  function rendre() {
+    const soutenu = Etat.get("fzPays");
+    const qualifies = FANZONE.pays.filter((p) => p.statut === "qualifie").length;
+    document.getElementById("page").innerHTML = '<div class="fz-page">' +
+      '<p class="fz-intro">' + FANZONE.pays.length + " pays en quarts de finale, " + qualifies + " qualifiés pour les demi-finales à Tunis.</p>" +
+      '<div class="fz-grille-equipes">' + Fz.equipesOrdonnees().map((p) =>
+        '<a href="f09-equipe.html?pays=' + p.code + '" class="fz-equipe' + (p.code === soutenu ? " soutenue" : "") + '">' +
+        (p.code === soutenu ? '<span class="fz-ton-equipe">Ton équipe</span>' : "") +
+        Fz.drapeau(p.code) + "<strong>" + p.nom + "</strong>" +
+        '<span class="fz-joueur">' + p.joueur + '</span><span class="fz-pseudo">' + p.pseudo + "</span>" +
+        '<span class="fz-statut ' + p.statut + '">' + (p.statut === "qualifie" ? "Qualifié" : "Éliminé") + "</span></a>"
+      ).join("") + "</div></div>";
+  }
+
+  Fz.monter(rendre);
+</script>
+</body>
+</html>

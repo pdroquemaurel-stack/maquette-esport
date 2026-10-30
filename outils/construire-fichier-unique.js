@@ -31,7 +31,8 @@ CSS.style = CSS.style.replace(/url\("\.\.\/(fonts\/[\w.-]+\.woff2)"\)/g, (m, che
 const JS = {
   data: lire("js/data.js"), nav: nav, esport: lire("js/esport.js"), demo: lire("js/demo.js"),
   "data-play": lire("js/data-play.js"), "textes-play": lire("js/textes-play.js"), play: lire("js/play.js"), "play-fiche": lire("js/play-fiche.js"),
-  "data-shop": lire("js/data-shop.js"), shop: lire("js/shop.js")
+  "data-shop": lire("js/data-shop.js"), shop: lire("js/shop.js"),
+  "data-fanzone": lire("js/data-fanzone.js"), fanzone: lire("js/fanzone.js")
 };
 
 /* ---- Modèles d'écran : repères à la place des ressources externes ---- */

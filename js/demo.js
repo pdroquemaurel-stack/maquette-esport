@@ -162,6 +162,17 @@ const Demo = (function () {
         "<span>" + r.libelle + "<small>" + (r.notification ? r.aide : "Écran " + r.ecran + " · " + ECRANS[r.ecran].titre) + "</small></span>" + ICONE_FLECHE + "</button>";
     });
 
+    // Fan Zone EA FC : état de la carte principale, choix du pays à rejouer
+    const live = Etat.get("fzLive");
+    html += '<p class="demo-groupe">Fan Zone EA FC</p>' +
+      '<p class="demo-aide">État de la page</p>' +
+      '<div class="segment" role="radiogroup" aria-label="État de la page de la Fan Zone">' +
+      '<button role="radio" data-fz-live="non" aria-checked="' + !live + '" class="' + (live ? "" : "actif") + '">Avant le live</button>' +
+      '<button role="radio" data-fz-live="oui" aria-checked="' + !!live + '" class="' + (live ? "actif" : "") + '">En direct</button>' +
+      "</div>" +
+      '<button class="demo-ligne" data-fz-pays><span>Rejouer le choix du pays<small>Écran f01 · « Quel pays soutiens-tu ? »</small></span>' + ICONE_FLECHE + "</button>" +
+      '<button class="demo-ligne" data-fz-zero><span>Nouveau supporter<small>Écran f01 · sans pays, ni avatar, ni codes</small></span>' + ICONE_FLECHE + "</button>";
+
     html += '<p class="demo-groupe">États alternatifs</p>';
     RACCOURCIS.forEach((r, i) => {
       if (r.action) {
@@ -216,6 +227,20 @@ const Demo = (function () {
       Etat.set("playPays", pays.dataset.pays);
       Nav.toast("Play : joueur au " + (pays.dataset.pays === "SN" ? "Sénégal" : "Maroc"));
       return ouvrir();
+    }
+
+    // Fan Zone EA FC
+    const fzLive = cible.closest("[data-fz-live]");
+    if (fzLive) {
+      Etat.set("fzLive", fzLive.dataset.fzLive === "oui");
+      Nav.toast("Fan Zone : " + (Etat.get("fzLive") ? "en direct" : "avant le live"));
+      return ouvrir();
+    }
+    if (cible.closest("[data-fz-pays], [data-fz-zero]")) {
+      const cles = cible.closest("[data-fz-zero]") ? ["fzPays", "fzAvatar", "fzCodes", "fzRappel"] : ["fzPays"];
+      cles.forEach((cle) => Etat.set(cle, null));
+      fermer();
+      return Nav.aller("f01");
     }
 
     const bascule = cible.closest("[data-bascule]");
