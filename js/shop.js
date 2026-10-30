@@ -402,7 +402,11 @@ const Shop = (function () {
     // Étoile à quatre branches
     genshin: '<path d="M12 2c1 6 4 9 10 10-6 1-9 4-10 10-1-6-4-9-10-10 6-1 9-4 10-10z"/>',
     // Voiture de course
-    asphalt: '<path d="M5 11l2-5h10l2 5h1a1 1 0 0 1 1 1v5h-2a2 2 0 0 1-4 0H9a2 2 0 0 1-4 0H3v-5a1 1 0 0 1 1-1zm3.3-3-1.2 3h9.8l-1.2-3z"/>'
+    asphalt: '<path d="M5 11l2-5h10l2 5h1a1 1 0 0 1 1 1v5h-2a2 2 0 0 1-4 0H9a2 2 0 0 1-4 0H3v-5a1 1 0 0 1 1-1zm3.3-3-1.2 3h9.8l-1.2-3z"/>',
+    // Manette (cartes console)
+    playstation: '<path d="M7 6h10c3 0 4.6 2.3 5 5.6l.5 4.2c.4 3-2.3 4.3-4.3 2.4L15.6 16H8.4l-2.6 2.2c-2 1.9-4.7.6-4.3-2.4l.5-4.2C2.4 8.3 4 6 7 6zm0 3v2H5v2h2v2h2v-2h2v-2H9V9zm9 0a1.2 1.2 0 1 0 0 2.4A1.2 1.2 0 0 0 16 9zm2.5 2.6a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 0 0 0-2.4z"/>',
+    // Carte cadeau
+    xbox: '<path d="M3 6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zm2 3v2h14V9zm0 5v2h6v-2z"/>'
   };
 
   /* Bloc visuel. taille : « petit » (44 px), « grand » (remplit son conteneur) ou rien (tuile, 100 %) */

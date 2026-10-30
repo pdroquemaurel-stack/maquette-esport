@@ -5,8 +5,8 @@ Le back-office (E01 à E04, E11, E12) est simulé dans `js/data-shop.js` ; les f
 Pas de maquette Figma (`reference/figma-shop/` absent) : composants Max it et e-sport, thème clair, couleurs de `css/tokens.css`.
 
 **Mini app** : en-tête avec retour, titre, « Mes achats » (s08) et aide (s11) ; pas de barre du bas.
-**Entrées** : 00c (tuile « Boutique ») → s01 (le visuel « Découvrir » ouvre la Fan Zone EA FC depuis le 2026-10-30) ; page d'un jeu de l'e-sport (13), « Ouvrir la boutique Max it » → s03 du jeu ; lien direct (menu de démo) → s03 ou s04.
-**Catalogue** : 8 jeux (Free Fire, PUBG Mobile, eFootball de l'e-sport ; Mobile Legends, Roblox, Clash of Clans, Genshin Impact, Asphalt Legends), 3 à 6 produits par jeu, prix en MAD TTC, quelques promotions (prix barré) et produits épuisés. Call of Duty: Mobile n'est pas vendu : sa page e-sport (13) n'a pas de lien boutique.
+**Entrées** : 00c (tuile « Boutique ») → s01 (le visuel « Découvrir » ouvre la Fan Zone EA FC depuis le 2026-10-30) ; page d'un jeu de l'e-sport (13), « Ouvrir la boutique Max it » → s03 du jeu ; Fan Zone EA FC (f01 « Cartes cadeaux gaming » → s01, ou s03 de PlayStation, Xbox, PUBG, Free Fire, Roblox, retour vers f01 ; f12) ; lien direct (menu de démo) → s03 ou s04.
+**Catalogue** : 8 jeux (Free Fire, PUBG Mobile, eFootball de l'e-sport ; Mobile Legends, Roblox, Clash of Clans, Genshin Impact, Asphalt Legends) et 2 cartes console ajoutées le 2026-10-30 pour la Fan Zone (PlayStation Store : cartes 100, 200, 500 MAD ; Xbox : cartes 100 et 250 MAD, Game Pass 1 mois ; tag « Cartes console », livraison par code), 3 à 6 produits par jeu, prix en MAD TTC, quelques promotions (prix barré) et produits épuisés. Call of Duty: Mobile n'est pas vendu : sa page e-sport (13) n'a pas de lien boutique.
 **Interrupteur gratuit / abonné** : aucun effet dans le Shop (décision du 2026-10-09).
 
 ---

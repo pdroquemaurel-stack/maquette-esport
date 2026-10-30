@@ -66,16 +66,17 @@ Total : 16 min 30 avec l'étape 10 bis. Pour finir : menu de démo → « Réini
 | 6 | s08 → s09 → s10 | Mes achats : statuts simples. Pass Gameloft « Expire dans 3 j » → « Me réabonner ». Carte Robux → « Signaler un problème » → numéro de réclamation. | « Pass qui expire dans 3 jours », « Notification : crédit arrivé », « Notification : pass renouvelé » : bandeau Max it, même sur 00c. |
 | 7 | s11, s12 | Aide : « Où trouver mon identifiant ? » jeu par jeu. Conditions de vente : version acceptée. | « Conditions de vente modifiées » : à réaccepter au prochain achat. |
 
-## Fan Zone EA FC — 4 minutes
+## Fan Zone EA FC — 6 minutes
 
 | # | Écrans | Ce qu'on montre | Menu de démo |
 |---|---|---|---|
-| 1 | 00c → f01 | Visuel « Fan Zone EA FC » de la rubrique « Découvrir ». Fenêtre « Quel pays soutiens-tu ? » → Maroc : drapeau sous l'avatar. Carte stream : compte à rebours jusqu'au 12 décembre à 14h (heure de Tunis, affichée à l'heure locale), « Me rappeler le début du live ». Carrousel de bannières (4 s). | « Rejouer le choix du pays » ou « Nouveau supporter ». |
+| 1 | 00c → f01 | Visuel « Fan Zone EA FC » de la rubrique « Découvrir ». Fenêtre « Quel pays soutiens-tu ? » → Maroc : drapeau sous l'avatar, logo EA SPORTS FC. La démo commence le 7 décembre à 10h30. Carte stream : compte à rebours jusqu'au 12 décembre à 14h (heure de Tunis, affichée à l'heure locale), « Me rappeler le début du live ». Bloc « Mes chances » au Grand Tirage console. Carrousel des équipes, « À ne pas manquer » (cartes cadeaux gaming du Shop, Play), bannières (4 s). | « Rejouer le choix du pays » ou « Nouveau supporter ». |
 | 2 | f03 | Avatar Supporter : « Utiliser une photo d'exemple », consentement, pays, avatar aux couleurs du pays → « Utiliser comme photo de profil » : il apparaît dans l'en-tête. | — |
-| 3 | f04 → f07 | Quiz : 3 questions, 2 bonnes réponses au moins → code masqué, « Révéler mon code », lots restants −1. « Mes codes ». | — |
-| 4 | f05 → f06 → f07 | Pass Fan EA FC (2 Go, 7 jours, + 1 code), prix en MAD (en FCFA pour le Sénégal…), Orange Money ou crédit → « Achat confirmé ». Un 3e code est refusé : 2 codes maximum. | — |
-| 5 | f08 → f09 → f10 → f11 | Équipes (la sienne en premier), fiche et parcours, arbre (vainqueurs en vert, son pays entouré d'orange), galerie. | — |
-| 6 | f01 → f02 → f10 | Passage en direct : badge « EN DIRECT », « Regarder » → lecteur Max it TV ; dans l'arbre, la demi-finale Maroc – Tunisie est en cours. | « État de la page : En direct ». |
+| 3 | f04 → f13 | Questions du jour : calendrier des 7 jours (5 et 6 décembre manqués), 3 questions, 2 bonnes réponses au moins → +1 chance et code EA FC Mobile en bonus ; 2 tentatives par jour. Puis « Jour suivant » : notification « La question du jour est en ligne ». Grand Tirage : chances par source, compte à rebours. | « Questions du jour : jour suivant, 10h30 ». |
+| 4 | f05 → f06 → f07 | Pass data : 3 forfaits, prix en MAD (en FCFA pour le Sénégal…). Pass Fan EA FC (2 Go, 7 jours, + 1 code, + 1 chance), Orange Money ou crédit → « Achat confirmé ». Un 3e code est refusé : 2 codes maximum ; 5 chances au plus par les achats. Services (f12) : Pass Live HD, Pack Supporter, abonnement e-sport. | — |
+| 5 | f08 → f09 → f10 → f11 | Équipes : carrousel qui défile seul (la sienne en premier), fiche et parcours, arbre (vainqueurs en vert, son pays entouré d'orange), galerie. | — |
+| 6 | f01 → f02 → f10 | Passage en direct : le compte à rebours arrive à zéro et la carte bascule « EN DIRECT », « Regarder » → lecteur Max it TV ; dans l'arbre, la demi-finale Maroc – Tunisie est en cours. | « Avancer le temps : le live dans 10 s » (ou « État de la page : En direct »). |
+| 7 | f13 → f02 | Le Grand Tirage passe en direct : « Regarder le tirage ». | « Grand Tirage dans 10 s ». |
 
 ## Bon à savoir
 

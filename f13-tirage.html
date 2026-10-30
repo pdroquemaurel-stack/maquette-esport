@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<!-- Écran f13 — Le Grand Tirage console : un seul tirage au sort, en direct pendant la finale (13/12 à 18h, heure de Tunis).
+     Bloc « Mes chances » : total, détail par source (questions du jour, Pass Fan), compte à rebours jusqu'au tirage
+     (au moment du tirage : « EN DIRECT » et « Regarder » → f02). Les lots, deux façons de gagner des chances
+     (questions du jour → f04 ; Pass Fan → f05), règlement résumé. Retour → f01. -->
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Le Grand Tirage console</title>
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-zone="fanzone">
+<div class="cadre">
+  <div class="telephone sombre fanzone">
+    <div class="barre-etat" data-heure="18:30"></div>
+    <div id="entete"></div>
+    <main class="contenu" id="page"></main>
+  </div>
+</div>
+
+<script src="js/nav.js"></script>
+<script src="js/data-fanzone.js"></script>
+<script src="js/fanzone.js"></script>
+<script src="js/demo.js"></script>
+<script>
+  document.getElementById("entete").innerHTML = Fz.entete("Grand Tirage", "f01-accueil.html");
+
+  function rendre() {
+    const tirage = FANZONE.tirage;
+    const c = Fz.chances();
+    const jour = Fz.jourQuestions();
+    const quizOuvert = jour.index >= 0 && !jour.fini;
+    let html = '<div class="fz-page">' +
+      '<section class="fz-tirage-tete"><span class="fz-pastille">' + Fz.icone("manette", "f-primary") + "</span>" +
+      "<h2>" + tirage.nom + "</h2><p>À gagner : " + tirage.lots + ".</p>" +
+      '<p class="fz-intro">Tirage au sort en direct pendant la finale, le ' + Fz.debutLocal(tirage.date) + " (ton heure).</p></section>" +
+      Fz.blocChances(false);
+
+    if (Fz.tirageEnCours()) {
+      html += '<div class="fz-actions"><a href="f02-live.html" class="bouton bouton-primaire bouton-pleine-largeur">' + Fz.icone("lecture") + "Regarder le tirage</a></div>";
+    }
+
+    // Deux façons de cumuler des chances
+    html += '<h2 class="fz-question">Gagne plus de chances</h2>' +
+      '<a href="f04-quiz.html" class="fz-relais-carte fz-relais-lien"><span class="fz-pastille">' + Fz.icone("etoile", "f-fz-neon") + "</span>" +
+      "<span><strong>Questions du jour</strong><small>Du 5 au 11 décembre, 3 questions à " + FANZONE.questionsDuJour.heure + "h. " +
+      "2 bonnes réponses = +1 chance (7 au plus)." + (quizOuvert ? "" : " Terminé.") + "</small></span>" + Fz.icone("chevron", "f-primary") + "</a>" +
+      '<a href="f05-bundle.html" class="fz-relais-carte fz-relais-lien"><span class="fz-pastille">' + Fz.icone("bundle", "f-fz-neon") + "</span>" +
+      "<span><strong>Pass Fan</strong><small>Chaque achat dans la Fan Zone = +1 chance, en plus du code EA FC Mobile (" +
+      tirage.plafondAchats + " chances au plus).</small></span>" + Fz.icone("chevron", "f-primary") + "</a>";
+
+    html += '<div class="fz-carte"><h2>Règlement en bref</h2><ul class="fz-liste-mentions">' +
+      "<li>Un seul tirage au sort, en direct dans l'émission de la finale sur Max it TV.</li>" +
+      "<li>Chaque chance compte pour une participation : plus tu en as, plus tu as de chances de gagner.</li>" +
+      "<li>Une journée de questions manquée est perdue, sans rattrapage.</li>" +
+      "<li>Les gagnants sont prévenus par SMS et dans Max it.</li></ul></div></div>";
+    document.getElementById("page").innerHTML = html;
+    Fz.compteRebours();
+  }
+
+  Fz.monter(rendre);
+</script>
+</body>
+</html>

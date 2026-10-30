@@ -1,14 +1,15 @@
 <!DOCTYPE html>
-<!-- Écran f04 — Jouer & Gagner : quiz du jour, 3 questions à choix multiples sur EA FC et l'e-sport,
-     barre de progression, compteur « Lots restants aujourd'hui ».
-     Écran final : score ; à partir de 2 bonnes réponses, « Tu as gagné un code EA FC Mobile ! » avec le code masqué
-     et « Révéler mon code » (le code rejoint « Mes codes », f07). 2 codes maximum par utilisateur.
-     Retour → f01. -->
+<!-- Écran f04 — Jouer & Gagner : les questions du jour du Grand Tirage console.
+     Du 5 au 11 décembre, 3 nouvelles questions chaque jour à 10h (heure du téléphone, heure de la démo),
+     3 ou 4 réponses au choix, 2 tentatives par jour. Au moins 2 bonnes réponses : +1 chance au tirage (7 au plus),
+     et un code EA FC Mobile en bonus, dans la limite des lots du jour et de 2 codes par utilisateur.
+     Une journée manquée est perdue (pas de rattrapage) : calendrier des 7 jours, compteur « Tu as N chances ».
+     Avant 10h, avant le 5 ou après le 11 décembre : message d'attente ou de fin. Retour → f01. -->
 <html lang="fr">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Jouer & Gagner</title>
+  <title>Questions du jour</title>
   <link rel="stylesheet" href="css/tokens.css">
   <link rel="stylesheet" href="css/style.css">
 </head>
@@ -26,30 +27,85 @@
 <script src="js/fanzone.js"></script>
 <script src="js/demo.js"></script>
 <script>
-  document.getElementById("entete").innerHTML = Fz.entete("Jouer & Gagner", "f01-accueil.html");
+  document.getElementById("entete").innerHTML = Fz.entete("Questions du jour", "f01-accueil.html");
 
-  const QUESTIONS = FANZONE.quiz;
+  const QDJ = FANZONE.questionsDuJour;
+  let phase = "accueil";  // accueil, question, fin
+  let questions = [];     // questions du jour en cours
   let index = 0;          // question affichée
   let reponses = [];      // index choisi pour chaque question
-  let gain = null;        // fin du quiz : { index } du code gagné, « max » si plafond atteint, null sinon
-  let fini = false;
+  let gagne = false;      // tentative réussie (au moins 2 bonnes réponses)
+  let gain = null;        // code bonus : index dans « Mes codes », « max » si plafond atteint, null sinon
 
-  const MENTION = '<p class="fz-mention">' + FANZONE.codesMax + " codes maximum par utilisateur – valables jusqu'au " + FANZONE.validiteCodes + ".</p>";
+  const MENTION = '<p class="fz-mention">2 bonnes réponses sur 3 = +1 chance au Grand Tirage, ' + QDJ.tentatives +
+    " tentatives par jour. Une journée manquée ne se rattrape pas. Code EA FC Mobile en bonus : " + FANZONE.codesMax +
+    " maximum par utilisateur, valables jusqu'au " + FANZONE.validiteCodes + ".</p>";
 
-  function compteurLots() {
-    return '<div class="fz-encart">' + Fz.icone("cadeau", "f-fz-neon") +
-      "<span>Lots restants aujourd'hui : <b>" + Fz.lotsRestants() + "</b></span></div>";
+  function score() {
+    return reponses.filter((r, i) => r === questions[i].bonne).length;
+  }
+
+  /* Compteur de chances et calendrier des 7 jours (gagné, manqué, aujourd'hui, à venir) */
+  function calendrier() {
+    const jour = Fz.jourQuestions();
+    const debut = new Date(QDJ.debut + "T12:00:00");
+    return '<div class="fz-encart">' + Fz.icone("manette", "f-fz-neon") +
+      "<span>Tu as <b>" + Fz.nbChances(Fz.chances().total) + "</b> au Grand Tirage</span></div>" +
+      '<ol class="fz-calendrier" aria-label="Les 7 jours des questions">' + QDJ.jours.map((q, i) => {
+        const moment = new Date(debut.getTime() + i * 86400000);
+        const joue = Fz.quizDuJour(Fz.jourIso(moment));
+        let etat = "avenir", libelle = "à venir", marque = "";
+        if (joue.gagne) { etat = "gagne"; libelle = "chance gagnée"; marque = Fz.icone("coche", "f-fz-neon"); }
+        else if (i < jour.index || (i === jour.index && joue.tentatives >= QDJ.tentatives)) { etat = "manque"; libelle = "manqué"; marque = Fz.icone("croix", "f-white"); }
+        else if (i === jour.index) { etat = "aujourdhui"; libelle = "aujourd'hui"; }
+        return '<li class="' + etat + '" aria-label="' + moment.getDate() + " décembre : " + libelle + '"><small>' +
+          moment.toLocaleDateString("fr-FR", { weekday: "short" }).replace(".", "") + "</small><b>" + moment.getDate() + "</b>" + marque + "</li>";
+      }).join("") + "</ol>";
+  }
+
+  /* Écran d'arrivée : selon le jour et l'heure de la démo */
+  function ecranAccueil() {
+    const jour = Fz.jourQuestions();
+    let html = calendrier();
+    if (jour.index < 0) {
+      return html + '<div class="fz-carte fz-centre"><h2>Rendez-vous le 5 décembre</h2>' +
+        '<p class="fz-intro">Les questions du jour commencent le 5 décembre à ' + QDJ.heure + "h.</p></div>" + MENTION;
+    }
+    if (jour.fini) {
+      return html + '<div class="fz-carte fz-centre"><h2>Les questions du jour sont terminées</h2>' +
+        '<p class="fz-intro">Merci d\'avoir joué ! Rendez-vous au Grand Tirage, en direct pendant la finale.</p></div>' +
+        '<div class="fz-actions"><a href="f13-tirage.html" class="bouton bouton-primaire bouton-pleine-largeur">Voir mes chances</a></div>' + MENTION;
+    }
+    if (!jour.ouvert) {
+      return html + '<div class="fz-carte fz-centre"><h2>Les questions arrivent à ' + QDJ.heure + "h</h2>" +
+        '<p class="fz-intro">Reviens tout à l\'heure : 3 nouvelles questions t\'attendent.</p></div>' + MENTION;
+    }
+    const joue = Fz.quizDuJour(jour.date);
+    if (joue.gagne) {
+      return html + '<div class="fz-carte fz-centre"><h2>Chance du jour gagnée !</h2>' +
+        '<p class="fz-intro">Reviens demain à ' + QDJ.heure + "h pour 3 nouvelles questions.</p></div>" +
+        '<div class="fz-actions"><a href="f13-tirage.html" class="bouton fz-contour bouton-pleine-largeur">Voir mes chances</a></div>' + MENTION;
+    }
+    if (joue.tentatives >= QDJ.tentatives) {
+      return html + '<div class="fz-carte fz-centre"><h2>Plus de tentative aujourd\'hui</h2>' +
+        '<p class="fz-intro">Reviens demain à ' + QDJ.heure + "h : 3 nouvelles questions, une nouvelle chance.</p></div>" + MENTION;
+    }
+    return html + '<div class="fz-carte"><h2>Les 3 questions du ' + new Date(jour.date + "T12:00:00").toLocaleDateString("fr-FR", { day: "numeric", month: "long" }) + "</h2>" +
+      '<p class="fz-intro">EA FC, e-sport et équipes en compétition. 2 bonnes réponses = +1 chance au tirage.</p>' +
+      '<p class="fz-intro">Tentative ' + (joue.tentatives + 1) + " sur " + QDJ.tentatives + "</p>" +
+      '<div class="fz-actions"><button class="bouton bouton-primaire bouton-pleine-largeur" data-commencer>C\'est parti</button></div></div>' +
+      '<div class="fz-encart">' + Fz.icone("cadeau", "f-fz-neon") + "<span>Codes EA FC Mobile en bonus restants aujourd'hui : <b>" + Fz.lotsRestants() + "</b></span></div>" +
+      MENTION;
   }
 
   function ecranQuestion() {
-    const q = QUESTIONS[index];
+    const q = questions[index];
     const choisi = reponses[index];
     const repondu = choisi !== undefined;
-    return compteurLots() +
-      '<div class="fz-etat-quiz"><span>Question ' + (index + 1) + " sur " + QUESTIONS.length + "</span>" +
-      "<span>" + reponses.filter((r, i) => r === QUESTIONS[i].bonne).length + " bonne(s) réponse(s)</span></div>" +
-      '<div class="fz-progression" role="progressbar" aria-valuemin="0" aria-valuemax="' + QUESTIONS.length + '" aria-valuenow="' + (index + (repondu ? 1 : 0)) + '">' +
-      '<span style="width:' + Math.round(100 * (index + (repondu ? 1 : 0)) / QUESTIONS.length) + '%"></span></div>' +
+    return '<div class="fz-etat-quiz"><span>Question ' + (index + 1) + " sur " + questions.length + "</span>" +
+      "<span>" + score() + " bonne(s) réponse(s)</span></div>" +
+      '<div class="fz-progression" role="progressbar" aria-valuemin="0" aria-valuemax="' + questions.length + '" aria-valuenow="' + (index + (repondu ? 1 : 0)) + '">' +
+      '<span style="width:' + Math.round(100 * (index + (repondu ? 1 : 0)) / questions.length) + '%"></span></div>' +
       '<h2 class="fz-question">' + q.question + "</h2>" +
       q.choix.map((c, i) => {
         let classe = "", marque = "";
@@ -60,40 +116,58 @@
       (repondu
         ? '<p class="fz-intro" role="status">' + (choisi === q.bonne ? "Bonne réponse !" : "Raté : la bonne réponse est « " + q.choix[q.bonne] + " ».") + "</p>" +
           '<div class="fz-actions"><button class="bouton bouton-primaire bouton-pleine-largeur" data-suivante>' +
-          (index + 1 < QUESTIONS.length ? "Question suivante" : "Voir mon score") + "</button></div>"
+          (index + 1 < questions.length ? "Question suivante" : "Voir mon score") + "</button></div>"
         : "") +
       MENTION;
   }
 
   function ecranFin() {
-    const score = reponses.filter((r, i) => r === QUESTIONS[i].bonne).length;
-    let html = '<div class="fz-centre"><p class="fz-score">' + score + "/" + QUESTIONS.length + "</p>" +
-      '<p class="fz-intro">bonne' + (score > 1 ? "s" : "") + " réponse" + (score > 1 ? "s" : "") + "</p></div>";
-    if (gain === "max") {
-      html += '<div class="fz-carte fz-centre"><h2>Bravo !</h2><p class="fz-intro">Tu as déjà gagné ' + FANZONE.codesMax +
-        " codes EA FC Mobile : c'est le maximum par utilisateur.</p></div>" +
-        '<div class="fz-actions"><a href="f07-mes-codes.html" class="bouton bouton-primaire bouton-pleine-largeur">Voir mes codes</a>';
-    } else if (gain !== null) {
-      const code = Fz.codes()[gain];
-      html += '<div class="fz-carte fz-centre"><h2>Tu as gagné un code EA FC Mobile !</h2>' +
-        '<p class="fz-code" aria-live="polite">' + Fz.codeAffiche(code) + "</p>" +
-        (code.revele
-          ? '<p class="fz-intro">À saisir dans EA FC Mobile. Il t\'attend aussi dans « Mes codes ».</p>'
-          : '<button class="bouton bouton-primaire bouton-pleine-largeur" data-reveler>' + Fz.icone("oeil") + "Révéler mon code</button>") +
-        "</div>" +
-        '<div class="fz-actions"><a href="f07-mes-codes.html" class="bouton fz-contour bouton-pleine-largeur">Voir mes codes</a>';
+    const jour = Fz.jourQuestions();
+    const restantes = QDJ.tentatives - Fz.quizDuJour(jour.date).tentatives;
+    let html = '<div class="fz-centre"><p class="fz-score">' + score() + "/" + questions.length + "</p>" +
+      '<p class="fz-intro">bonne' + (score() > 1 ? "s" : "") + " réponse" + (score() > 1 ? "s" : "") + "</p></div>";
+    if (gagne) {
+      html += '<div class="fz-carte fz-centre"><h2>+1 chance au Grand Tirage !</h2>' +
+        '<p class="fz-intro">Tu as maintenant <b>' + Fz.nbChances(Fz.chances().total) + "</b>. Reviens demain à " + QDJ.heure + "h.</p></div>";
+      if (gain === "max") {
+        html += '<div class="fz-encart">' + Fz.icone("cadeau", "f-fz-neon") + "<span>Tu as déjà " + FANZONE.codesMax + " codes EA FC Mobile : pas de code bonus.</span></div>";
+      } else if (gain !== null) {
+        const code = Fz.codes()[gain];
+        html += '<div class="fz-carte fz-centre"><h2>Bonus : un code EA FC Mobile</h2>' +
+          '<p class="fz-code" aria-live="polite">' + Fz.codeAffiche(code) + "</p>" +
+          (code.revele
+            ? '<p class="fz-intro">À saisir dans EA FC Mobile. Il t\'attend aussi dans « Mes codes ».</p>'
+            : '<button class="bouton bouton-primaire bouton-pleine-largeur" data-reveler>' + Fz.icone("oeil") + "Révéler mon code</button>") + "</div>";
+      }
+      html += '<div class="fz-actions"><a href="f13-tirage.html" class="bouton bouton-primaire bouton-pleine-largeur">Voir mes chances</a>';
+    } else if (restantes > 0) {
+      html += '<div class="fz-carte fz-centre"><h2>Pas de chance cette fois…</h2>' +
+        '<p class="fz-intro">Il faut au moins 2 bonnes réponses. Il te reste ' + restantes + " tentative aujourd'hui.</p></div>" +
+        '<div class="fz-actions"><button class="bouton bouton-primaire bouton-pleine-largeur" data-rejouer>Retenter</button>';
     } else {
-      html += '<div class="fz-carte fz-centre"><h2>Pas de code cette fois…</h2>' +
-        '<p class="fz-intro">Il faut au moins 2 bonnes réponses. Retente ta chance !</p></div>' +
-        '<div class="fz-actions"><button class="bouton bouton-primaire bouton-pleine-largeur" data-rejouer>Rejouer</button>';
+      html += '<div class="fz-carte fz-centre"><h2>Plus de tentative aujourd\'hui</h2>' +
+        '<p class="fz-intro">Reviens demain à ' + QDJ.heure + "h : 3 nouvelles questions, une nouvelle chance.</p></div>" +
+        '<div class="fz-actions">';
     }
-    html += '<a href="f01-accueil.html" class="bouton fz-contour bouton-pleine-largeur">Retour à la Fan Zone</a></div>' +
-      compteurLots() + MENTION;
-    return html;
+    return html + '<a href="f01-accueil.html" class="bouton fz-contour bouton-pleine-largeur">Retour à la Fan Zone</a></div>' + MENTION;
   }
 
   function rendre() {
-    document.getElementById("page").innerHTML = '<div class="fz-page">' + (fini ? ecranFin() : ecranQuestion()) + "</div>";
+    const contenu = phase === "question" ? ecranQuestion() : phase === "fin" ? ecranFin() : ecranAccueil();
+    document.getElementById("page").innerHTML = '<div class="fz-page">' + contenu + "</div>";
+  }
+
+  /* Nouvelle tentative : les questions du jour, dans un ordre mélangé à la 2e tentative */
+  function commencer() {
+    const jour = Fz.jourQuestions();
+    questions = QDJ.jours[jour.index].slice();
+    if (Fz.quizDuJour(jour.date).tentatives > 0) questions.reverse();
+    index = 0;
+    reponses = [];
+    gagne = false;
+    gain = null;
+    phase = "question";
+    rendre();
   }
 
   document.getElementById("page").addEventListener("click", (evenement) => {
@@ -102,28 +176,24 @@
     if (choix && !choix.disabled) {
       reponses[index] = Number(choix.dataset.choix);
       rendre();
+    } else if (cible.closest("[data-commencer], [data-rejouer]")) {
+      commencer();
     } else if (cible.closest("[data-suivante]")) {
-      if (index + 1 < QUESTIONS.length) {
+      if (index + 1 < questions.length) {
         index++;
         rendre();
         return;
       }
-      // Fin du quiz : un code si au moins 2 bonnes réponses, dans la limite par utilisateur
-      fini = true;
-      const score = reponses.filter((r, i) => r === QUESTIONS[i].bonne).length;
-      if (score >= 2) {
+      // Fin de la tentative : +1 chance si au moins 2 bonnes réponses, et un code bonus dans la limite par utilisateur
+      phase = "fin";
+      gagne = score() >= 2;
+      if (gagne && Fz.lotsRestants() > 0) {
         const code = Fz.ajouterCode("Quiz du jour");
         gain = code ? Fz.codes().length - 1 : "max";
       }
-      rendre();
+      Fz.enregistrerQuiz(Fz.jourQuestions().date, gagne);
     } else if (cible.closest("[data-reveler]")) {
       Fz.revelerCode(gain);
-    } else if (cible.closest("[data-rejouer]")) {
-      index = 0;
-      reponses = [];
-      gain = null;
-      fini = false;
-      rendre();
     }
   });
 

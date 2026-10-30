@@ -162,16 +162,20 @@ const Demo = (function () {
         "<span>" + r.libelle + "<small>" + (r.notification ? r.aide : "Écran " + r.ecran + " · " + ECRANS[r.ecran].titre) + "</small></span>" + ICONE_FLECHE + "</button>";
     });
 
-    // Fan Zone EA FC : état de la carte principale, choix du pays à rejouer
+    // Fan Zone EA FC : état de la page et heure de la démo (appliquée par js/fanzone.js à l'ouverture de l'écran),
+    // choix du pays à rejouer, nouveau supporter
     const live = Etat.get("fzLive");
     html += '<p class="demo-groupe">Fan Zone EA FC</p>' +
       '<p class="demo-aide">État de la page</p>' +
       '<div class="segment" role="radiogroup" aria-label="État de la page de la Fan Zone">' +
-      '<button role="radio" data-fz-live="non" aria-checked="' + !live + '" class="' + (live ? "" : "actif") + '">Avant le live</button>' +
-      '<button role="radio" data-fz-live="oui" aria-checked="' + !!live + '" class="' + (live ? "actif" : "") + '">En direct</button>' +
+      '<button role="radio" data-fz-saut="debut" aria-checked="' + !live + '" class="' + (live ? "" : "actif") + '">Avant le live</button>' +
+      '<button role="radio" data-fz-saut="direct" aria-checked="' + !!live + '" class="' + (live ? "actif" : "") + '">En direct</button>' +
       "</div>" +
+      '<button class="demo-ligne" data-fz-saut="live10"><span>Avancer le temps : le live dans 10 s<small>Écran f01 · le compte à rebours bascule en direct</small></span>' + ICONE_FLECHE + "</button>" +
+      '<button class="demo-ligne" data-fz-saut="jourSuivant"><span>Questions du jour : jour suivant, 10h30<small>Notification « La question du jour est en ligne »</small></span>' + ICONE_FLECHE + "</button>" +
+      '<button class="demo-ligne" data-fz-saut="tirage10"><span>Grand Tirage dans 10 s<small>Écran f13 · le tirage passe en direct</small></span>' + ICONE_FLECHE + "</button>" +
       '<button class="demo-ligne" data-fz-pays><span>Rejouer le choix du pays<small>Écran f01 · « Quel pays soutiens-tu ? »</small></span>' + ICONE_FLECHE + "</button>" +
-      '<button class="demo-ligne" data-fz-zero><span>Nouveau supporter<small>Écran f01 · sans pays, ni avatar, ni codes</small></span>' + ICONE_FLECHE + "</button>";
+      '<button class="demo-ligne" data-fz-zero><span>Nouveau supporter<small>Écran f01 · sans pays, ni avatar, ni codes, ni chances</small></span>' + ICONE_FLECHE + "</button>";
 
     html += '<p class="demo-groupe">États alternatifs</p>';
     RACCOURCIS.forEach((r, i) => {
@@ -230,14 +234,23 @@ const Demo = (function () {
     }
 
     // Fan Zone EA FC
-    const fzLive = cible.closest("[data-fz-live]");
-    if (fzLive) {
-      Etat.set("fzLive", fzLive.dataset.fzLive === "oui");
-      Nav.toast("Fan Zone : " + (Etat.get("fzLive") ? "en direct" : "avant le live"));
-      return ouvrir();
+    // Saut dans le temps : js/fanzone.js l'applique à l'ouverture de l'écran (il connaît les dates de data-fanzone.js)
+    const saut = cible.closest("[data-fz-saut]");
+    if (saut) {
+      const sens = saut.dataset.fzSaut;
+      Etat.set("fzSaut", sens);
+      fermer();
+      // Écran d'arrivée : le tirage pour « tirage10 », les questions pour « jourSuivant », l'écran courant
+      // s'il est dans la Fan Zone pour l'état de la page, l'accueil sinon
+      const page = pageCourante();
+      if (sens === "tirage10") return Nav.aller("f13");
+      if (sens === "live10") return Nav.aller("f01");
+      if (/^f\d\d-/.test(page) && sens !== "jourSuivant") return ouvrirPage(page + rechercheCourante());
+      return Nav.aller("f01");
     }
     if (cible.closest("[data-fz-pays], [data-fz-zero]")) {
-      const cles = cible.closest("[data-fz-zero]") ? ["fzPays", "fzAvatar", "fzCodes", "fzRappel"] : ["fzPays"];
+      const cles = cible.closest("[data-fz-zero]")
+        ? ["fzPays", "fzAvatar", "fzCodes", "fzRappel", "fzQuiz", "fzAchatsPass", "fzLive", "fzHorloge"] : ["fzPays"];
       cles.forEach((cle) => Etat.set(cle, null));
       fermer();
       return Nav.aller("f01");

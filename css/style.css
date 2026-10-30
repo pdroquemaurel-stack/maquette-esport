@@ -2198,6 +2198,8 @@ svg { display: block; flex-shrink: 0; }
 .jeu-clash-of-clans { background: linear-gradient(135deg, var(--illu-hair), var(--illu-gold)); }
 .jeu-genshin { background: linear-gradient(135deg, var(--color-game-blue-bg), var(--illu-gold-light)); }
 .jeu-asphalt { background: linear-gradient(135deg, var(--illu-purple-deep), var(--illu-neon-pink)); }
+.jeu-playstation { background: linear-gradient(135deg, var(--illu-black), var(--fz-flag-blue)); }
+.jeu-xbox { background: linear-gradient(135deg, var(--illu-black), var(--fz-flag-green)); }
 .visuel-tuile-shop { width: 100%; height: auto; aspect-ratio: 1; }
 .visuel-tuile-shop svg { width: 40%; height: 40%; }
 
@@ -3240,3 +3242,172 @@ svg { display: block; flex-shrink: 0; }
 }
 
 .fz-rebours.fz-centre { justify-content: center; margin-top: var(--space-4); }
+
+/* ============ Fan Zone : retours du 2026-10-30 (logo, Mes chances, équipes, relais, services) ============ */
+
+/* Logo EA SPORTS FC : image noire sur fond blanc, inversée en blanc et fondue dans le fond noir */
+.fz-logo-evt { border: 0; width: auto; height: auto; gap: var(--space-1); }
+.fz-logo-eafc { width: 84px; height: auto; filter: invert(1); mix-blend-mode: screen; }
+.fz-logo-evt small { font-size: var(--font-size-xs); color: var(--fz-text-secondary); }
+
+/* Pastilles sur cartes sombres : fond gris anthracite, icône orange ou néon */
+.fz-chances .fz-pastille, .fz-relais-carte .fz-pastille, .fz-service .fz-pastille, .fz-tirage-tete .fz-pastille { background: var(--fz-card-high); overflow: hidden; }
+.fz-service .fz-pastille .fz-avatar-svg { width: 100%; height: 100%; }
+
+/* Titre de section de l'accueil, avec « Voir tout » */
+.fz-section-tete { display: flex; align-items: center; justify-content: space-between; padding: var(--space-5) var(--page-gutter) var(--space-2); }
+.fz-section-tete h2 { font-size: var(--font-size-lg); }
+.fz-bloc { padding: var(--space-3) var(--page-gutter) 0; }
+
+/* ---- Mes chances au Grand Tirage (f01, f13) ---- */
+.fz-chances {
+  display: block;
+  background: linear-gradient(140deg, var(--fz-card), var(--fz-card-high));
+  border: 1px solid var(--color-primary);
+  border-radius: var(--fz-radius);
+  padding: var(--space-3) var(--space-4);
+  margin-top: var(--space-3);
+}
+.fz-bloc .fz-chances { margin-top: 0; }
+.fz-chances-tete { display: flex; align-items: center; gap: var(--space-3); }
+.fz-chances-tete > span:nth-child(2) { flex: 1; min-width: 0; }
+.fz-chances-tete small { display: block; font-size: var(--font-size-xs); color: var(--color-primary); font-weight: var(--font-weight-bold); text-transform: uppercase; letter-spacing: .04em; }
+.fz-chances-tete strong { display: block; font-size: var(--font-size-xl); line-height: var(--line-height-tight); }
+.fz-chances-tete > svg { width: 22px; height: 22px; }
+.fz-chances-detail { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4); margin-top: var(--space-3); font-size: var(--font-size-sm); color: var(--fz-text-secondary); }
+.fz-chances-detail span { display: inline-flex; align-items: center; gap: var(--space-1); }
+.fz-chances-detail svg { width: 18px; height: 18px; }
+.fz-chances-detail b { color: var(--color-text-on-dark); }
+.fz-chances-quand { font-size: var(--font-size-xs); color: var(--fz-text-secondary); margin-top: var(--space-3); }
+.fz-chances-direct { display: flex; align-items: center; gap: var(--space-2); margin-top: var(--space-3); font-size: var(--font-size-sm); font-weight: var(--font-weight-bold); }
+.fz-rebours-petit span { width: 52px; }
+.fz-rebours-petit b { font-size: var(--font-size-lg); }
+
+/* ---- Grand Tirage (f13) ---- */
+.fz-tirage-tete { text-align: center; padding-top: var(--space-3); }
+.fz-tirage-tete .fz-pastille { width: 64px; height: 64px; margin: 0 auto var(--space-3); border-radius: var(--fz-radius); box-shadow: var(--fz-glow); }
+.fz-tirage-tete .fz-pastille svg { width: 36px; height: 36px; }
+.fz-tirage-tete h2 { font-size: var(--font-size-xl); }
+.fz-tirage-tete p { color: var(--fz-text-secondary); margin-top: var(--space-1); }
+
+/* ---- Questions du jour : calendrier des 7 jours (f04) ---- */
+.fz-calendrier { display: grid; grid-template-columns: repeat(7, 1fr); gap: var(--space-1); margin-top: var(--space-3); list-style: none; padding: 0; }
+.fz-calendrier li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--space-1) 0;
+  border-radius: var(--radius-sm);
+  background: var(--fz-card);
+  border: 1px solid var(--fz-card);
+  font-size: var(--font-size-xs);
+  color: var(--fz-text-secondary);
+}
+.fz-calendrier b { font-size: var(--font-size-md); color: var(--color-text-on-dark); }
+.fz-calendrier svg { width: 16px; height: 16px; }
+.fz-calendrier li.gagne { border-color: var(--fz-neon); }
+.fz-calendrier li.manque { opacity: .5; }
+.fz-calendrier li.aujourdhui { border-color: var(--color-primary); }
+.fz-gain { display: flex; align-items: center; justify-content: center; gap: var(--space-2); font-weight: var(--font-weight-bold); }
+.fz-gain svg { width: 22px; height: 22px; }
+
+/* ---- Accueil : mini carrousel des équipes (défile au doigt) ---- */
+.fz-mini-equipes { display: flex; gap: var(--space-3); overflow-x: auto; padding: 0 var(--page-gutter); scroll-snap-type: x mandatory; scrollbar-width: none; }
+.fz-mini-equipes::-webkit-scrollbar { display: none; }
+.fz-mini-equipe { flex: 0 0 112px; scroll-snap-align: start; display: flex; flex-direction: column; gap: var(--space-1); }
+.fz-mini-equipe .fz-portrait { width: 112px; height: 132px; border-radius: var(--fz-radius); border: 2px solid transparent; }
+.fz-mini-equipe.soutenue .fz-portrait { border-color: var(--color-primary); }
+.fz-mini-nom { display: flex; align-items: center; gap: var(--space-1); font-size: var(--font-size-sm); font-weight: var(--font-weight-bold); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fz-mini-nom .fz-drapeau { width: 21px; height: 14px; flex-shrink: 0; }
+
+/* Portrait d'une équipe : dégradé aux couleurs du pays, joueur dessiné (ou photo par-dessus) */
+.fz-portrait { position: relative; display: block; overflow: hidden; }
+.fz-portrait .fz-avatar-svg { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: 100%; }
+.fz-portrait img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+
+/* ---- Accueil : À ne pas manquer (cartes cadeaux du Shop, Play) ---- */
+.fz-relais { display: flex; flex-direction: column; gap: var(--space-3); padding: 0 var(--page-gutter); }
+.fz-relais-carte { display: block; background: var(--fz-card); border-radius: var(--fz-radius); padding: var(--space-3); margin-top: var(--space-3); }
+.fz-relais .fz-relais-carte { margin-top: 0; }
+.fz-relais-lien { display: flex; align-items: center; gap: var(--space-3); min-height: var(--touch-target); }
+.fz-relais-lien > span:nth-child(2) { flex: 1; min-width: 0; }
+.fz-relais-lien strong { display: block; font-size: var(--font-size-md); line-height: var(--line-height-tight); }
+.fz-relais-lien small { display: block; font-size: var(--font-size-xs); color: var(--fz-text-secondary); margin-top: 2px; }
+.fz-relais-lien > svg { width: 20px; height: 20px; flex-shrink: 0; }
+.fz-puces { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-3); }
+.fz-puce {
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--fz-card-high);
+  background: var(--fz-bg);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+}
+
+/* ---- Pass data : 3 forfaits (f05) ---- */
+.fz-offre { border-color: var(--fz-card-high); }
+.fz-offre.conseillee { border-color: var(--color-primary); }
+.fz-offre-badge {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-3);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  color: var(--fz-bg);
+  background: var(--color-primary);
+  border-radius: var(--radius-pill);
+  padding: 2px var(--space-2);
+}
+
+/* ---- Services (f12) ---- */
+.fz-service {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--space-3);
+  background: var(--fz-card);
+  border-radius: var(--fz-radius);
+  padding: var(--space-4);
+  margin-top: var(--space-3);
+}
+.fz-service h2 { font-size: var(--font-size-md); }
+.fz-service p { font-size: var(--font-size-sm); color: var(--fz-text-secondary); margin-top: 2px; }
+.fz-service .fz-prix { font-size: var(--font-size-lg); color: var(--color-text-on-dark); margin-top: var(--space-2); }
+.fz-service .bouton { grid-column: 1 / -1; }
+
+/* ---- Équipes : grand carrousel (f08) ---- */
+.fz-carrousel {
+  display: flex;
+  gap: var(--space-3);
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding: var(--space-3) 10%;
+  scrollbar-width: none;
+}
+.fz-carrousel::-webkit-scrollbar { display: none; }
+.fz-carte-equipe {
+  position: relative;
+  flex: 0 0 80%;
+  scroll-snap-align: center;
+  border-radius: var(--fz-radius);
+  overflow: hidden;
+  background: var(--fz-card);
+  border: 2px solid var(--fz-card);
+}
+.fz-carte-equipe.soutenue { border-color: var(--color-primary); }
+.fz-carte-equipe .fz-portrait { width: 100%; aspect-ratio: 1; }
+.fz-carte-equipe-infos { display: flex; flex-direction: column; padding: var(--space-3) var(--space-4) var(--space-4); }
+.fz-carte-equipe-infos .fz-drapeau { width: 36px; height: 24px; margin-bottom: var(--space-2); }
+.fz-carte-equipe-infos strong { font-size: var(--font-size-lg); }
+.fz-pseudo-grand { font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); color: var(--color-primary); }
+.fz-carte-equipe-infos .fz-joueur { font-size: var(--font-size-sm); color: var(--fz-text-secondary); }
+.fz-liste-equipes { display: flex; flex-direction: column; gap: var(--space-2); }
+.fz-ligne-equipe { display: flex; align-items: center; gap: var(--space-3); background: var(--fz-card); border-radius: var(--fz-radius); padding: var(--space-2) var(--space-3); min-height: var(--touch-target); border: 1px solid var(--fz-card); }
+.fz-ligne-equipe.soutenue { border-color: var(--color-primary); }
+.fz-ligne-equipe .fz-drapeau { width: 30px; height: 20px; flex-shrink: 0; }
+.fz-ligne-equipe > span:nth-of-type(1) { flex: 1; min-width: 0; }
+.fz-ligne-equipe strong { display: block; font-size: var(--font-size-md); }
+.fz-ligne-equipe small { font-size: var(--font-size-xs); color: var(--fz-text-secondary); }
+.fz-ligne-equipe .fz-statut { margin-top: 0; align-self: center; }

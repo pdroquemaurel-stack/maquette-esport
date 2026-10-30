@@ -1,5 +1,6 @@
-/* Fonctions communes de la Fan Zone EA FC (écrans f01 à f11) :
-   en-tête, drapeaux et avatar en SVG, pays soutenu, codes gagnés, compte à rebours,
+/* Fonctions communes de la Fan Zone EA FC (écrans f01 à f12) :
+   en-tête, logo, drapeaux, avatar et portraits en SVG, pays soutenu, prix des offres, codes gagnés,
+   heure de la démo (temps avancé depuis le menu de démo), compte à rebours,
    fenêtre « Quel pays soutiens-tu ? ». Données : js/data-fanzone.js. */
 
 const Fz = (function () {
@@ -26,7 +27,10 @@ const Fz = (function () {
     chevron: '<path d="M9.3 5.3 15.9 12l-6.6 6.7-1.4-1.4 5.2-5.3-5.2-5.3z"/>',
     precedent: '<path d="M14.7 5.3 8.1 12l6.6 6.7 1.4-1.4-5.2-5.3 5.2-5.3z"/>',
     pause: '<path d="M7 5h3v14H7zm7 0h3v14h-3z"/>',
-    plein: '<path d="M4 4h6v2H6v4H4zm10 0h6v6h-2V6h-4zM4 14h2v4h4v2H4zm14 0h2v6h-6v-2h4z"/>'
+    plein: '<path d="M4 4h6v2H6v4H4zm10 0h6v6h-2V6h-4zM4 14h2v4h4v2H4zm14 0h2v6h-6v-2h4z"/>',
+    manette: '<path d="M7 6h10c3 0 4.6 2.3 5 5.6l.5 4.2c.4 3-2.3 4.3-4.3 2.4L15.6 16H8.4l-2.6 2.2c-2 1.9-4.7.6-4.3-2.4l.5-4.2C2.4 8.3 4 6 7 6zm0 3v2H5v2h2v2h2v-2h2v-2H9V9zm9 0a1.2 1.2 0 1 0 0 2.4A1.2 1.2 0 0 0 16 9zm2.5 2.6a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 0 0 0-2.4z"/>',
+    carte: '<path d="M3 6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zm2 3v2h14V9zm0 5v2h6v-2z"/>',
+    etoile: '<path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6-4.9-4.6 6.6-.8z"/>'
   };
   function icone(nom, classe) {
     return '<svg viewBox="0 0 24 24" aria-hidden="true"><g class="' + (classe || "f-white") + '">' + ICONES[nom] + "</g></svg>";
@@ -92,12 +96,13 @@ const Fz = (function () {
   }
 
   /* Avatar e-sport simulé : silhouette stylisée, maillot aux couleurs du pays, casque gaming */
-  function avatar(code) {
+  /* sansFond : sans le fond (portraits des équipes, posés sur un dégradé) */
+  function avatar(code, sansFond) {
     const p = pays(code) || pays("MA");
     const c1 = REMPLI[p.couleurs[0]], c2 = REMPLI[p.couleurs[1]];
     return '<svg class="fz-avatar-svg" viewBox="0 0 100 100" aria-hidden="true">' +
-      '<rect class="f-fz-card" width="100" height="100"/>' +
-      '<circle class="' + c1 + '" cx="50" cy="50" r="50" opacity=".35"/>' +
+      (sansFond ? "" : '<rect class="f-fz-card" width="100" height="100"/>' +
+      '<circle class="' + c1 + '" cx="50" cy="50" r="50" opacity=".35"/>') +
       // Maillot e-sport : couleur principale, bande centrale, col blanc, numéro
       '<path class="' + c1 + '" d="M10 100c2-18 17-29 40-29s38 11 40 29z"/>' +
       '<path class="' + c2 + '" d="M43 72h14v28H43z"/>' +
@@ -128,6 +133,18 @@ const Fz = (function () {
     return "background: linear-gradient(135deg, " + couleurs[0] + ", " + couleurs[1] + ")";
   }
 
+  /* Photo d'une équipe (FANZONE.photos) ; sans photo, portrait dessiné sur un dégradé aux couleurs du pays */
+  function portrait(code) {
+    const photo = FANZONE.photos[code];
+    return '<span class="fz-portrait" style="' + degrade(code) + '">' + avatar(code, true) +
+      (photo ? '<img src="' + ressource(photo) + '" alt="" onerror="this.remove()">' : "") + "</span>";
+  }
+
+  /* Logo EA SPORTS FC (image fournie, affichée en blanc sur le fond noir) */
+  function logo() {
+    return '<img class="fz-logo-eafc" src="' + ressource(FANZONE.logo) + '" alt="EA SPORTS FC">';
+  }
+
   /* ---- Pays ---- */
   function pays(code) {
     return FANZONE.pays.find((p) => p.code === code) || null;
@@ -148,13 +165,103 @@ const Fz = (function () {
       (y.code === soutenu) - (x.code === soutenu) || (y.statut === "qualifie") - (x.statut === "qualifie"));
   }
 
-  /* ---- Prix du Pass Fan, en monnaie locale (pays soutenu, Maroc par défaut) ---- */
-  function prixPass() {
-    const p = paysSoutenu() || pays("MA");
-    return p.prixPass.toLocaleString("fr-FR").replace(/\s/g, " ") + " " + p.monnaie;
+  /* ---- Offres : forfaits data et services payants ---- */
+  function offre(id) {
+    return FANZONE.forfaits.concat(FANZONE.services).find((o) => o.id === id) || null;
+  }
+  /* Prix d'une offre dans la monnaie du pays soutenu (Maroc par défaut) : « 1 500 FCFA » */
+  function prix(o) {
+    const monnaie = (paysSoutenu() || pays("MA")).monnaie;
+    return o.prix[monnaie].toLocaleString("fr-FR").replace(/\s/g, " ") + " " + monnaie;
   }
 
-  /* ---- État de la page : avant le live ou en direct (menu de démo) ---- */
+  /* ---- Heure de la démo : celle du téléphone, avancée depuis le menu de démo (« Avancer le temps ») ---- */
+  function maintenant() {
+    const horloge = Etat.get("fzHorloge");
+    // Heure remise à zéro (« Nouveau supporter ») : départ de la démo, en attendant la prochaine ouverture d'écran
+    if (!horloge) return new Date(FANZONE.debutDemo).getTime();
+    return horloge.simule + (Date.now() - horloge.reel);
+  }
+  /* Place l'heure de la démo à « moment » (millisecondes) ; le temps continue ensuite de s'écouler */
+  function reglerHorloge(moment) {
+    Etat.set("fzHorloge", { reel: Date.now(), simule: moment });
+  }
+  // Première visite : la démo commence le 7 décembre à 10h30 (avant tout rendu, pour ne pas redessiner)
+  if (!Etat.get("fzHorloge")) reglerHorloge(new Date(FANZONE.debutDemo).getTime());
+
+  /* Saut dans le temps demandé par le menu de démo (js/demo.js), appliqué à l'ouverture de l'écran :
+     debut (7 décembre, avant le live), direct (live commencé depuis 1 h), live10 (live dans 10 s),
+     jourSuivant (lendemain à 10h30, avec la notification des questions du jour), tirage10 (tirage dans 10 s). */
+  const saut = Etat.get("fzSaut");
+  if (saut) {
+    Etat.set("fzSaut", null);
+    const live = new Date(FANZONE.debutLive).getTime();
+    if (saut === "debut") { reglerHorloge(new Date(FANZONE.debutDemo).getTime()); Etat.set("fzLive", false); }
+    if (saut === "direct") { reglerHorloge(live + 3600000); Etat.set("fzLive", true); }
+    if (saut === "live10") { reglerHorloge(live - 10000); Etat.set("fzLive", false); }
+    if (saut === "tirage10") { reglerHorloge(new Date(FANZONE.tirage.date).getTime() - 10000); Etat.set("fzLive", true); }
+    if (saut === "jourSuivant") {
+      const demain = new Date(maintenant() + 86400000);
+      demain.setHours(10, 30, 0, 0);
+      reglerHorloge(demain.getTime());
+      Etat.set("fzLive", demain.getTime() >= live);
+      Nav.notificationMaxit({ titre: "La question du jour est en ligne",
+        texte: "3 questions, +1 chance au Grand Tirage console. Tu as " + nbChances(chances().total) + ".", lien: "f04-quiz.html" });
+    }
+    Nav.toast("Démo : " + new Date(maintenant()).toLocaleString("fr-FR", { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }));
+  }
+
+  /* Date locale « 2026-12-07 » d'un moment */
+  function jourIso(moment) {
+    const d = new Date(moment);
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  }
+
+  /* ---- Questions du jour (5 au 11 décembre, 10h) ----
+     Renvoie { index, date, ouvert, fini } : index du jour (0 à 6, -1 avant, 7 après), date « 2026-12-07 »,
+     ouvert : les questions du jour sont publiées (10h passées). */
+  function jourQuestions() {
+    const qdj = FANZONE.questionsDuJour;
+    const t = maintenant();
+    const date = jourIso(t);
+    const debut = new Date(qdj.debut + "T00:00:00");
+    const index = Math.floor((new Date(date + "T00:00:00") - debut) / 86400000);
+    return { index: Math.max(-1, Math.min(index, qdj.jours.length)), date: date,
+      ouvert: new Date(t).getHours() >= qdj.heure, fini: index >= qdj.jours.length };
+  }
+  /* Jeu du jour joué : { tentatives, gagne } */
+  function quizDuJour(date) {
+    return (Etat.get("fzQuiz") || {})[date] || { tentatives: 0, gagne: false };
+  }
+  function enregistrerQuiz(date, gagne) {
+    const tout = Object.assign({}, Etat.get("fzQuiz") || {});
+    const jour = quizDuJour(date);
+    tout[date] = { tentatives: jour.tentatives + 1, gagne: jour.gagne || gagne };
+    Etat.set("fzQuiz", tout);
+  }
+
+  /* ---- Chances au Grand Tirage : questions du jour réussies et Pass Fan achetés (plafonnés) ---- */
+  function chances() {
+    const quiz = Object.values(Etat.get("fzQuiz") || {}).filter((j) => j.gagne).length;
+    const achats = Math.min(Etat.get("fzAchatsPass") || 0, FANZONE.tirage.plafondAchats);
+    return { quiz: quiz, achats: achats, total: quiz + achats };
+  }
+  /* Achat d'un Pass Fan : +1 chance, sauf plafond atteint. Renvoie true si une chance est ajoutée. */
+  function ajouterAchatPass() {
+    const avant = chances().achats;
+    Etat.set("fzAchatsPass", (Etat.get("fzAchatsPass") || 0) + 1);
+    return chances().achats > avant;
+  }
+  /* Le tirage a-t-il commencé ? (13/12 à 18h, heure de Tunis) */
+  function tirageEnCours() {
+    return maintenant() >= new Date(FANZONE.tirage.date).getTime();
+  }
+  /* « 4 chances » */
+  function nbChances(n) {
+    return n + " chance" + (n > 1 ? "s" : "");
+  }
+
+  /* ---- État de la page : avant le live ou en direct (menu de démo, ou fin du compte à rebours) ---- */
   function enDirect() {
     return !!Etat.get("fzLive");
   }
@@ -170,7 +277,7 @@ const Fz = (function () {
     if (liste.length >= FANZONE.codesMax) return null;
     const lettres = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
     const bloc = () => Array.from({ length: 4 }, () => lettres[Math.floor(Math.random() * lettres.length)]).join("");
-    const code = { code: "EAFC-" + bloc() + "-" + bloc(), origine: origine, date: new Date().toISOString().slice(0, 10), revele: false };
+    const code = { code: "EAFC-" + bloc() + "-" + bloc(), origine: origine, date: jourIso(maintenant()), revele: false };
     Etat.set("fzCodes", liste.concat([code]));
     return code;
   }
@@ -214,26 +321,65 @@ const Fz = (function () {
   }
 
   /* ---- Compte à rebours jusqu'au début du live (cases data-rebours="jours|heures|min|sec") ---- */
-  function decompte() {
-    const reste = Math.max(0, new Date(FANZONE.debutLive) - Date.now());
+  /* ---- Comptes à rebours : début du live (cases data-rebours) et Grand Tirage (cases data-rebours-tirage) ---- */
+  function decompte(cible) {
+    const reste = Math.max(0, new Date(cible) - maintenant());
     const s = Math.floor(reste / 1000);
-    return { jours: Math.floor(s / 86400), heures: Math.floor(s / 3600) % 24, min: Math.floor(s / 60) % 60, sec: s % 60 };
+    return { fini: reste === 0, jours: Math.floor(s / 86400), heures: Math.floor(s / 3600) % 24, min: Math.floor(s / 60) % 60, sec: s % 60 };
   }
+  /* Live à zéro : la page passe d'elle-même « En direct ». Tirage à zéro : la page se redessine. */
   function compteRebours() {
     const maj = () => {
-      const d = decompte();
+      const live = decompte(FANZONE.debutLive);
+      if (live.fini && !enDirect() && document.querySelector("[data-rebours]")) {
+        Etat.set("fzLive", true);
+        Nav.toast("Le live commence !");
+        return;
+      }
+      const tirage = decompte(FANZONE.tirage.date);
+      if (tirage.fini && document.querySelector("[data-rebours-tirage]")) {
+        document.dispatchEvent(new CustomEvent("etat-change", { detail: {} }));
+        return;
+      }
       document.querySelectorAll("[data-rebours]").forEach((e) => {
-        e.textContent = String(d[e.dataset.rebours]).padStart(2, "0");
+        e.textContent = String(live[e.dataset.rebours]).padStart(2, "0");
+      });
+      document.querySelectorAll("[data-rebours-tirage]").forEach((e) => {
+        e.textContent = String(tirage[e.dataset.reboursTirage]).padStart(2, "0");
       });
     };
     maj();
     minuteur(maj, 1000);
   }
-  /* Début du live à l'heure locale du téléphone : « samedi 12 décembre à 14:00 » */
-  function debutLocal() {
-    const debut = new Date(FANZONE.debutLive);
+  /* Début du live (ou d'un autre moment) à l'heure locale du téléphone : « samedi 12 décembre à 14:00 » */
+  function debutLocal(moment) {
+    const debut = new Date(moment || FANZONE.debutLive);
     return debut.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" }) +
       " à " + debut.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+  }
+
+  /* Cases d'un compte à rebours : attribut « data-rebours » (live) ou « data-rebours-tirage » */
+  function cases(attribut, classe) {
+    return '<div class="fz-rebours' + (classe ? " " + classe : "") + '" role="timer">' +
+      [["jours", "jours"], ["heures", "heures"], ["min", "min"], ["sec", "sec"]].map((c) =>
+        "<span><b " + attribut + '="' + c[0] + '">00</b><small>' + c[1] + "</small></span>").join("") + "</div>";
+  }
+
+  /* Bloc « Mes chances » au Grand Tirage : total, détail par source, compte à rebours jusqu'au tirage.
+     lien : le bloc ouvre l'écran du tirage (f13) depuis l'accueil */
+  function blocChances(lien) {
+    const c = chances();
+    const debut = '<' + (lien ? 'a href="f13-tirage.html"' : "section") + ' class="fz-chances" aria-label="Mes chances au Grand Tirage">';
+    return debut +
+      '<div class="fz-chances-tete"><span class="fz-pastille">' + icone("manette", "f-primary") + "</span>" +
+      "<span><small>" + FANZONE.tirage.nom + "</small><strong>Tu as " + nbChances(c.total) + "</strong></span>" +
+      (lien ? icone("chevron", "f-primary") : "") + "</div>" +
+      '<div class="fz-chances-detail"><span>' + icone("etoile", "f-fz-neon") + "Questions du jour <b>" + c.quiz + "/" + FANZONE.questionsDuJour.jours.length + "</b></span>" +
+      "<span>" + icone("bundle", "f-fz-neon") + "Pass Fan <b>" + c.achats + "/" + FANZONE.tirage.plafondAchats + "</b></span></div>" +
+      (tirageEnCours()
+        ? '<p class="fz-chances-direct"><span class="fz-badge-direct">EN DIRECT</span>Le tirage a lieu maintenant dans l\'émission</p>'
+        : "<p class=\"fz-chances-quand\">Tirage en direct le 13 décembre, dans</p>" + cases("data-rebours-tirage", "fz-rebours-petit")) +
+      "</" + (lien ? "a" : "section") + ">";
   }
 
   /* ---- Fenêtre « Quel pays soutiens-tu ? » ---- */
@@ -260,8 +406,9 @@ const Fz = (function () {
   }
 
   return {
-    icone, drapeau, avatar, degrade, pays, paysSoutenu, avecArticle, equipesOrdonnees, prixPass, enDirect,
+    icone, drapeau, avatar, portrait, logo, degrade, pays, paysSoutenu, avecArticle, equipesOrdonnees, offre, prix, maintenant, enDirect,
     codes, ajouterCode, revelerCode, codeAffiche, lotsRestants,
-    entete, minuteur, monter, compteRebours, debutLocal, choisirPays
+    reglerHorloge, jourIso, jourQuestions, quizDuJour, enregistrerQuiz, chances, ajouterAchatPass, tirageEnCours, nbChances, blocChances,
+    entete, minuteur, monter, compteRebours, cases, debutLocal, choisirPays
   };
 })();

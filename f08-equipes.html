@@ -1,7 +1,8 @@
 <!DOCTYPE html>
-<!-- Écran f08 — Équipes : grille des 8 pays des quarts de finale (drapeau, pays, joueur, pseudo,
-     statut « Qualifié » pour Tunis ou « Éliminé »). L'équipe du pays soutenu est mise en avant en premier.
-     Carte → fiche de l'équipe (f09). Retour → f01. -->
+<!-- Écran f08 — Équipes : carrousel des 8 pays des quarts de finale, qui défile seul toutes les 4 s (et au doigt).
+     Chaque carte : photo de l'équipe (FANZONE.photos ; sinon portrait dessiné aux couleurs du pays), drapeau, pays,
+     joueur, pseudo, statut « Qualifié » pour Tunis ou « Éliminé ». L'équipe du pays soutenu passe en premier.
+     Dessous : liste compacte des 8 équipes. Carte ou ligne → fiche de l'équipe (f09). Retour → f01. -->
 <html lang="fr">
 <head>
   <meta charset="utf-8">
@@ -26,19 +27,68 @@
 <script>
   document.getElementById("entete").innerHTML = Fz.entete("Équipes", "f01-accueil.html");
 
+  let carte = 0;          // carte affichée
+  let enPause = false;    // défilement automatique arrêté dès que le doigt touche le carrousel
+
+  function statut(p) {
+    return '<span class="fz-statut ' + p.statut + '">' + (p.statut === "qualifie" ? "Qualifié" : "Éliminé") + "</span>";
+  }
+
   function rendre() {
     const soutenu = Etat.get("fzPays");
+    const equipes = Fz.equipesOrdonnees();
     const qualifies = FANZONE.pays.filter((p) => p.statut === "qualifie").length;
     document.getElementById("page").innerHTML = '<div class="fz-page">' +
-      '<p class="fz-intro">' + FANZONE.pays.length + " pays en quarts de finale, " + qualifies + " qualifiés pour les demi-finales à Tunis.</p>" +
-      '<div class="fz-grille-equipes">' + Fz.equipesOrdonnees().map((p) =>
-        '<a href="f09-equipe.html?pays=' + p.code + '" class="fz-equipe' + (p.code === soutenu ? " soutenue" : "") + '">' +
+      '<p class="fz-intro">' + FANZONE.pays.length + " pays en quarts de finale, " + qualifies + " qualifiés pour les demi-finales à Tunis.</p></div>" +
+      '<div class="fz-carrousel" id="carrousel" aria-roledescription="carrousel" aria-label="Équipes">' + equipes.map((p, i) =>
+        '<a href="f09-equipe.html?pays=' + p.code + '" class="fz-carte-equipe' + (p.code === soutenu ? " soutenue" : "") + '" aria-label="' +
+        (i + 1) + " sur " + equipes.length + " : " + p.nom + ", " + p.pseudo + '">' +
+        Fz.portrait(p.code) +
         (p.code === soutenu ? '<span class="fz-ton-equipe">Ton équipe</span>' : "") +
-        Fz.drapeau(p.code) + "<strong>" + p.nom + "</strong>" +
-        '<span class="fz-joueur">' + p.joueur + '</span><span class="fz-pseudo">' + p.pseudo + "</span>" +
-        '<span class="fz-statut ' + p.statut + '">' + (p.statut === "qualifie" ? "Qualifié" : "Éliminé") + "</span></a>"
-      ).join("") + "</div></div>";
+        '<span class="fz-carte-equipe-infos">' + Fz.drapeau(p.code) +
+        "<strong>" + p.nom + "</strong>" +
+        '<span class="fz-pseudo-grand">' + p.pseudo + "</span>" +
+        '<span class="fz-joueur">' + p.joueur + "</span>" + statut(p) + "</span></a>").join("") + "</div>" +
+      '<div class="fz-points" id="points">' + equipes.map((p, i) =>
+        '<button data-carte="' + i + '" aria-label="' + p.nom + '"></button>').join("") + "</div>" +
+      '<div class="fz-page"><h2 class="fz-question">Toutes les équipes</h2>' +
+      '<div class="fz-liste-equipes">' + equipes.map((p) =>
+        '<a href="f09-equipe.html?pays=' + p.code + '" class="fz-ligne-equipe' + (p.code === soutenu ? " soutenue" : "") + '">' +
+        Fz.drapeau(p.code) + "<span><strong>" + p.nom + "</strong><small>" + p.pseudo + "</small></span>" + statut(p) + "</a>").join("") +
+      "</div></div>";
+
+    const carrousel = document.getElementById("carrousel");
+    // Carte visible au doigt : les points suivent
+    carrousel.addEventListener("scroll", () => {
+      const pas = carrousel.children[1].offsetLeft - carrousel.children[0].offsetLeft;   // largeur d'une carte et de l'espace
+      marquer(Math.min(equipes.length - 1, Math.round(carrousel.scrollLeft / pas)));
+    });
+    carrousel.addEventListener("pointerdown", () => { enPause = true; });
+    montrer(carte, false);
+    Fz.minuteur(() => { if (!enPause) montrer((carte + 1) % equipes.length, true); }, 4000);
   }
+
+  function marquer(i) {
+    carte = i;
+    document.querySelectorAll("#points button").forEach((b, j) => {
+      b.classList.toggle("actif", j === i);
+      b.setAttribute("aria-current", j === i ? "true" : "false");
+    });
+  }
+  function montrer(i, doux) {
+    const carrousel = document.getElementById("carrousel");
+    const cible = carrousel.children[i];
+    carrousel.scrollTo({ left: cible.offsetLeft - carrousel.offsetLeft - (carrousel.clientWidth - cible.offsetWidth) / 2, behavior: doux ? "smooth" : "auto" });
+    marquer(i);
+  }
+
+  document.getElementById("page").addEventListener("click", (evenement) => {
+    const point = evenement.target.closest("[data-carte]");
+    if (point) {
+      enPause = true;
+      montrer(Number(point.dataset.carte), true);
+    }
+  });
 
   Fz.monter(rendre);
 </script>

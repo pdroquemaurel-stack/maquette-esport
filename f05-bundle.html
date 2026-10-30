@@ -1,13 +1,14 @@
 <!DOCTYPE html>
-<!-- Écran f05 — Bundle EA FC : offre « Pass Fan EA FC – 2 Go – 7 jours + 1 code EA FC Mobile »,
-     prix fictif en monnaie locale (selon le pays soutenu : MAD, TND, EGP, FCFA, CDF).
-     « Acheter » → f06 (choix Orange Money ou crédit, puis confirmation). Mentions sur le code.
-     Si le joueur a déjà 2 codes : le pass reste achetable, sans code. Retour → f01. -->
+<!-- Écran f05 — Pass data : 3 forfaits (1 Go – 1 jour ; Pass Fan EA FC 2 Go – 7 jours + 1 code EA FC Mobile ;
+     5 Go – 30 jours + 1 code), prix fictifs en monnaie locale (selon le pays soutenu : MAD, TND, EGP, FCFA, CDF).
+     Chaque Pass Fan avec code acheté ici donne +1 chance au Grand Tirage console (5 au plus).
+     Forfait → f06?offre=… (choix Orange Money ou crédit, puis confirmation). Mentions sur le code et le tirage.
+     Si le joueur a déjà 2 codes : les pass restent achetables, sans code. Retour → f01. -->
 <html lang="fr">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Bundle EA FC</title>
+  <title>Pass data</title>
   <link rel="stylesheet" href="css/tokens.css">
   <link rel="stylesheet" href="css/style.css">
 </head>
@@ -25,32 +26,47 @@
 <script src="js/fanzone.js"></script>
 <script src="js/demo.js"></script>
 <script>
-  document.getElementById("entete").innerHTML = Fz.entete("Bundle EA FC", "f01-accueil.html");
+  document.getElementById("entete").innerHTML = Fz.entete("Pass data", "f01-accueil.html");
 
   function rendre() {
-    const pass = FANZONE.pass;
-    const plafond = Fz.codes().length >= FANZONE.codesMax;
+    const plafondCodes = Fz.codes().length >= FANZONE.codesMax;
+    const chances = Fz.chances();
+    const plafondChances = chances.achats >= FANZONE.tirage.plafondAchats;
     const soutenu = Fz.paysSoutenu();
-    let html = '<div class="fz-page"><p class="fz-intro">Suis la finale sans compter ta data, et reçois de quoi jouer sur EA FC Mobile.</p>' +
-      '<section class="fz-offre" aria-label="' + pass.nom + '">' +
-      '<p class="fz-offre-nom">' + pass.nom + "</p>" +
-      '<p class="fz-offre-data">' + pass.data + " <small>· " + pass.duree + "</small></p>" +
-      '<p class="fz-offre-plus">' + Fz.icone("cadeau", "f-fz-neon") + "+ 1 code EA FC Mobile</p>" +
-      '<p class="fz-prix">' + Fz.prixPass() + " <small>TTC" + (soutenu ? " · offre " + soutenu.nom : "") + "</small></p>" +
-      '<div class="fz-actions"><a href="f06-achat.html" class="bouton bouton-primaire bouton-pleine-largeur">Acheter</a></div>' +
-      "</section>";
+    let html = '<div class="fz-page"><p class="fz-intro">Suis la finale sans compter ta data. Avec un Pass Fan, ' +
+      "reçois un code EA FC Mobile et une chance de plus au Grand Tirage console.</p>";
 
-    if (plafond) {
+    html += FANZONE.forfaits.map((f) =>
+      '<section class="fz-offre' + (f.conseille ? " conseillee" : "") + '" aria-label="' + f.nom + '">' +
+      (f.conseille ? '<span class="fz-offre-badge">Le plus choisi</span>' : "") +
+      '<p class="fz-offre-nom">' + f.nom + "</p>" +
+      '<p class="fz-offre-data">' + f.data + " <small>· " + f.duree + "</small></p>" +
+      '<p class="fz-intro">' + f.accroche + "</p>" +
+      (f.code
+        ? '<p class="fz-offre-plus">' + Fz.icone("cadeau", "f-fz-neon") + "+ 1 code EA FC Mobile</p>" +
+          '<p class="fz-offre-plus">' + Fz.icone("manette", "f-fz-neon") + "+ 1 chance au Grand Tirage</p>"
+        : "") +
+      '<p class="fz-prix">' + Fz.prix(f) + " <small>TTC" + (soutenu ? " · offre " + soutenu.nom : "") + "</small></p>" +
+      '<div class="fz-actions"><a href="f06-achat.html?offre=' + f.id + '" class="bouton ' + (f.conseille ? "bouton-primaire" : "fz-contour") +
+      ' bouton-pleine-largeur">Acheter</a></div></section>').join("");
+
+    if (plafondCodes) {
       html += '<div class="fz-encart orange">' + Fz.icone("cadeau", "f-primary") +
-        "<span>Tu as déjà " + FANZONE.codesMax + " codes EA FC Mobile : le pass sera activé avec la data seulement.</span></div>";
+        "<span>Tu as déjà " + FANZONE.codesMax + " codes EA FC Mobile : les pass seront activés sans code.</span></div>";
+    }
+    if (plafondChances) {
+      html += '<div class="fz-encart orange">' + Fz.icone("manette", "f-primary") +
+        "<span>Tu as atteint " + FANZONE.tirage.plafondAchats + " chances grâce aux Pass Fan : les prochains achats n'en ajoutent plus. " +
+        "Les questions du jour, elles, comptent toujours.</span></div>";
     }
 
     html += '<div class="fz-carte"><h2>Bon à savoir</h2><ul class="fz-liste-mentions">' +
-      "<li>Code valable uniquement sur EA FC Mobile.</li>" +
-      "<li>Code valable jusqu'au " + FANZONE.validiteCodes + ".</li>" +
+      "<li>Code valable uniquement sur EA FC Mobile, jusqu'au " + FANZONE.validiteCodes + ".</li>" +
       "<li>" + FANZONE.codesMax + " codes maximum par utilisateur.</li>" +
-      "<li>Les " + pass.data + " sont utilisables pendant " + pass.duree + " à partir de l'achat.</li></ul></div>" +
-      '<div class="fz-actions"><a href="f07-mes-codes.html" class="fz-lien">Mes codes' + Fz.icone("chevron", "f-primary") + "</a></div></div>";
+      "<li>Chaque Pass Fan acheté dans la Fan Zone donne +1 chance au Grand Tirage, " + FANZONE.tirage.plafondAchats + " chances au plus.</li>" +
+      "<li>La data est utilisable dès l'achat, pendant la durée du forfait.</li></ul></div>" +
+      '<div class="fz-actions"><a href="f13-tirage.html" class="fz-lien">Mes chances au Grand Tirage' + Fz.icone("chevron", "f-primary") + "</a>" +
+      '<a href="f07-mes-codes.html" class="fz-lien">Mes codes' + Fz.icone("chevron", "f-primary") + "</a></div></div>";
     document.getElementById("page").innerHTML = html;
   }
 

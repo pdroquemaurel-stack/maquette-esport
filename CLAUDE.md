@@ -178,10 +178,21 @@ et E-sport ne changent pas.
 - Pays soutenu choisi à la première ouverture (« Quel pays soutiens-tu ? ») et mémorisé : drapeau sous l'avatar,
   équipe mise en avant, entourage orange dans l'arbre, monnaie du Pass Fan (MAD, TND, EGP, FCFA, CDF).
 - 8 pays en quarts (Maroc, Tunisie, Égypte, Côte d'Ivoire qualifiés ; Sénégal, Cameroun, Mali, RD Congo éliminés),
-  joueurs et pseudos inventés. Logo EA FC : simple emplacement, pas de reproduction du vrai logo.
+  joueurs et pseudos inventés. Logo EA SPORTS FC : image fournie (images/fanzone/ea-sports-fc.png), usage interne de la
+  maquette uniquement (validé le 2026-10-30). Photos des équipes : portraits dessinés, en attendant de vraies photos
+  (images/fanzone/equipes/<pays>.jpg, déclarées dans FANZONE.photos).
 - Codes EA FC Mobile fictifs : 2 maximum par utilisateur, valables jusqu'au 31/12/2026, regroupés dans « Mes codes » (f07).
+- Le Grand Tirage console (f13) : un seul tirage en direct pendant la finale, le 13/12 à 18h (heure de Tunis). Chances :
+  questions du jour (f04 : 5 au 11 décembre, 3 questions à 10h, 2 tentatives par jour, 2 bonnes réponses = +1 chance,
+  7 au plus, journée manquée perdue) et Pass Fan achetés dans la Fan Zone (+1 chance par achat, 5 au plus).
+  Bloc « Mes chances » (total, détail par source, compte à rebours) sur f01 et f13.
+- Monétisation : Pass data (f05, 3 forfaits), services (f12 : Pass Live HD, Pack Supporter, abonnement e-sport),
+  relais vers les cartes cadeaux gaming du Shop (PlayStation, Xbox ajoutées à js/data-shop.js) et vers Play.
+- Heure de la démo (clé « fzHorloge ») : départ le 7 décembre 2026 à 10h30, puis le temps s'écoule ; les sauts du menu
+  de démo sont appliqués par js/fanzone.js. Le compte à rebours du live bascule seul « En direct » à zéro.
 - La photo de l'avatar reste dans le téléphone ; l'avatar est un dessin SVG aux couleurs du pays.
 - L'interrupteur gratuit / abonné n'a aucun effet dans la Fan Zone.
 
 ### Menu de démo — ajouts Fan Zone
-État de la page : avant le live / en direct ; rejouer le choix du pays ; nouveau supporter (sans pays, avatar ni codes).
+État de la page : avant le live / en direct ; avancer le temps (le live dans 10 s) ; questions du jour : jour suivant
+(avec la notification) ; Grand Tirage dans 10 s ; rejouer le choix du pays ; nouveau supporter (sans pays, avatar, codes ni chances).

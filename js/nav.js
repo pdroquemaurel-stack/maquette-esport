@@ -66,14 +66,16 @@ const ECRANS = {
   "f01": { fichier: "f01-accueil.html", titre: "Accueil de la Fan Zone", pret: true },
   "f02": { fichier: "f02-live.html", titre: "Live Max it TV", pret: true },
   "f03": { fichier: "f03-avatar.html", titre: "Avatar Supporter", pret: true },
-  "f04": { fichier: "f04-quiz.html", titre: "Jouer & Gagner", pret: true },
-  "f05": { fichier: "f05-bundle.html", titre: "Bundle EA FC", pret: true },
-  "f06": { fichier: "f06-achat.html", titre: "Achat du Pass Fan", pret: true },
+  "f04": { fichier: "f04-quiz.html", titre: "Questions du jour", pret: true },
+  "f05": { fichier: "f05-bundle.html", titre: "Pass data", pret: true },
+  "f06": { fichier: "f06-achat.html", titre: "Achat d'une offre", pret: true },
   "f07": { fichier: "f07-mes-codes.html", titre: "Mes codes", pret: true },
   "f08": { fichier: "f08-equipes.html", titre: "Équipes", pret: true },
   "f09": { fichier: "f09-equipe.html", titre: "Fiche d'une équipe", pret: true },
   "f10": { fichier: "f10-arbre.html", titre: "Arbre de la compétition", pret: true },
-  "f11": { fichier: "f11-galerie.html", titre: "Galerie", pret: true }
+  "f11": { fichier: "f11-galerie.html", titre: "Galerie", pret: true },
+  "f12": { fichier: "f12-services.html", titre: "Services de la Fan Zone", pret: true },
+  "f13": { fichier: "f13-tirage.html", titre: "Le Grand Tirage console", pret: true }
 };
 
 /* ---- Fichier unique (maquette-esport.html) ----
@@ -184,6 +186,10 @@ const Etat = (function () {
     fzAvatar: null,         // avatar supporter créé : code du pays de ses couleurs
     fzRappel: false,        // rappel du début du live activé
     fzCodes: null,          // codes EA FC Mobile gagnés au quiz ou achetés : [{ code, origine, date, revele }]
+    fzHorloge: null,        // heure de la démo : { reel, simule } (départ : 7 décembre, avancée par le menu de démo)
+    fzQuiz: null,           // questions du jour jouées : { "2026-12-07": { tentatives, gagne } }
+    fzAchatsPass: 0,        // Pass Fan achetés depuis la Fan Zone (1 chance au Grand Tirage chacun, 5 au plus)
+    fzSaut: null,           // saut dans le temps demandé par le menu de démo, appliqué à l'ouverture d'un écran de la Fan Zone
     scenario: null,         // état alternatif forcé pour l'écran visé
     origine: null           // écran à retrouver après le paiement (S11-03)
   };

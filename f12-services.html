@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<!-- Écran f12 — Services de la Fan Zone : offres payantes autour de la finale.
+     Pass Live HD et Pack Supporter → f06?offre=… (paiement Orange Money ou crédit) ; prix en monnaie locale.
+     Abonnement e-sport Max it → page d'offre de la plateforme e-sport (21), pour jouer les prochains tournois ;
+     son retour ramène ici (origine mémorisée).
+     Relais : Pass data (f05), cartes cadeaux gaming (Shop, s01). Retour → f01. -->
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Services</title>
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-zone="fanzone">
+<div class="cadre">
+  <div class="telephone sombre fanzone">
+    <div class="barre-etat" data-heure="18:30"></div>
+    <div id="entete"></div>
+    <main class="contenu" id="page"></main>
+  </div>
+</div>
+
+<script src="js/nav.js"></script>
+<script src="js/data-fanzone.js"></script>
+<script src="js/fanzone.js"></script>
+<script src="js/demo.js"></script>
+<script>
+  document.getElementById("entete").innerHTML = Fz.entete("Services", "f01-accueil.html");
+
+  function rendre() {
+    let html = '<div class="fz-page"><p class="fz-intro">Vis la finale à fond : regarde en HD, affiche tes couleurs, et prépare tes prochains tournois.</p>';
+
+    html += FANZONE.services.map((s) =>
+      '<section class="fz-service" aria-label="' + s.nom + '">' +
+      '<span class="fz-pastille">' + (s.id === "pack-supporter" ? Fz.avatar(Etat.get("fzPays") || "MA") : Fz.icone(s.icone, "f-primary")) + "</span>" +
+      "<div><h2>" + s.nom + "</h2><p>" + s.accroche + "</p>" +
+      '<p class="fz-prix">' + Fz.prix(s) + " <small>TTC" + (s.duree ? " · " + s.duree : "") + "</small></p></div>" +
+      '<a href="f06-achat.html?offre=' + s.id + '" class="bouton bouton-primaire">Acheter</a></section>').join("");
+
+    // Abonnement e-sport : page d'offre de la plateforme e-sport
+    html += '<section class="fz-service" aria-label="Abonnement e-sport Max it">' +
+      '<span class="fz-pastille">' + Fz.icone("trophee", "f-primary") + "</span>" +
+      "<div><h2>Abonnement e-sport Max it</h2><p>Inscris-toi aux prochains tournois et vise la prochaine finale.</p></div>" +
+      '<button class="bouton fz-contour" data-ecran="21" data-origine>Découvrir</button></section>';
+
+    html += '<h2 class="fz-question">Aussi dans Max it</h2>' +
+      '<a href="f05-bundle.html" class="fz-relais-carte fz-relais-lien"><span class="fz-pastille">' + Fz.icone("bundle", "f-fz-neon") + "</span>" +
+      "<span><strong>Pass data</strong><small>De 1 à 5 Go, avec un code EA FC Mobile et une chance au Grand Tirage</small></span>" + Fz.icone("chevron", "f-primary") + "</a>" +
+      '<a href="s01-accueil.html" class="fz-relais-carte fz-relais-lien"><span class="fz-pastille">' + Fz.icone("carte", "f-fz-neon") + "</span>" +
+      "<span><strong>Cartes cadeaux gaming</strong><small>PlayStation, Xbox, PUBG, Free Fire…</small></span>" + Fz.icone("chevron", "f-primary") + "</a></div>";
+    document.getElementById("page").innerHTML = html;
+  }
+
+  Fz.monter(rendre);
+</script>
+</body>
+</html>
